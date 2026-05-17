@@ -1,7 +1,7 @@
 services:
     db:
         image: mariadb:latest
-        container_name: mariadb-docker
+        container_name: mariadb-docker-saver
         restart: always
         ports:
             - '3306:3306'
@@ -14,7 +14,7 @@ services:
 
     redis:
         image: redis:alpine
-        container_name: redis-docker
+        container_name: redis-docker-saver
         restart: always
         ports:
             - '6379:6379'
@@ -24,7 +24,7 @@ services:
 
     chroma:
         image: chromadb/chroma:latest
-        container_name: chroma
+        container_name: chroma-saver
         restart: always
         ports:
             - '8000:8000'
@@ -33,7 +33,7 @@ services:
 
     meilisearch:
         image: getmeili/meilisearch:latest
-        container_name: meilisearch
+        container_name: meilisearch-saver
         restart: always
         ports:
             - '7700:7700'

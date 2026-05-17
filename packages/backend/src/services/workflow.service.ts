@@ -31,6 +31,10 @@ export class WorkflowService {
         const workflowId = randomUUID();
         const rootJobNode = WorkflowBuilder.buildLinearFlow(flowDef, workflowId);
         const jobNode = await this.flowProducer.add(rootJobNode);
+        const taskId = jobNode.job.id;
+        if (!taskId) {
+            throw new Error('Workflow root job ID missing');
+        }
         const jobIds = this.extractJobIds(jobNode);
 
         const result: Record<string, any> = {};
@@ -42,7 +46,7 @@ export class WorkflowService {
 
         const workflow = Workflow.create({
             id: workflowId,
-            rootJobId: jobNode.job.id!,
+            rootJobId: taskId,
             queueName: jobNode.job.queueName,
             definition: flowDef,
             status: 'active',
@@ -54,7 +58,7 @@ export class WorkflowService {
 
         return {
             workflowId,
-            rootJobId: workflow.rootJobId,
+            taskId,
             jobIds
         };
     }
@@ -146,7 +150,7 @@ export class WorkflowService {
 
     private static formatWorkflowResponse(workflow: Workflow, tasks: any) {
         return {
-            id: workflow.id,
+            workflowId: workflow.id,
             status: workflow.status,
             createdAt: workflow.createdAt,
             updatedAt: workflow.updatedAt,

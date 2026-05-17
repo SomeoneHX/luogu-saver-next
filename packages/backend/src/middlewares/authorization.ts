@@ -45,11 +45,17 @@ export const requiresPermission = (permissionBit: number) => async (ctx: Context
 
 export const checkWorkflowPermission = async (ctx: Context, next: Next) => {
     const templateId = ctx.params.name;
-    const permission = WORKFLOW_TEMPLATES_PERMISSION[templateId];
-    if (!permission) {
+    if (!Object.prototype.hasOwnProperty.call(WORKFLOW_TEMPLATES_PERMISSION, templateId)) {
         ctx.fail(400, 'Invalid workflow template');
         return;
     }
+
+    const permission = WORKFLOW_TEMPLATES_PERMISSION[templateId];
+    if (permission === null) {
+        await next();
+        return;
+    }
+
     if (!ctx.user || ctx.user.id === undefined) {
         ctx.fail(401, 'Unauthorized');
         return;

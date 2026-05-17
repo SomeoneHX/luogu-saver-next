@@ -1,9 +1,7 @@
 import { apiFetch } from '@/utils/request.ts';
 import type { ApiResponse } from '@/types/common';
 import type { Article, PlazaArticle, ArticleHistory } from '@/types/article';
-import type { SaveTask } from '@/types/task';
-import { SaveTarget, TaskType } from '@/shared/task';
-import { createTask } from '@/api/task.ts';
+import { createWorkflowFromTemplate } from '@/api/workflow.ts';
 
 export async function getArticleById(id: string) {
     return (await apiFetch(`/article/query/${id}`)) as ApiResponse<Article>;
@@ -38,12 +36,7 @@ export async function getArticleHistory(id: string) {
 }
 
 export async function saveArticle(id: string) {
-    return await createTask({
-        type: TaskType.SAVE,
-        payload: {
-            target: SaveTarget.ARTICLE,
-            targetId: id,
-            metadata: {}
-        }
-    } as SaveTask);
+    return await createWorkflowFromTemplate('article-save-pipeline', {
+        targetId: id
+    });
 }
