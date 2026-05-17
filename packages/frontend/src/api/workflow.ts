@@ -3,8 +3,9 @@ import type { ApiResponse } from '@/types/common';
 
 interface CreateWorkflowTemplateResponse {
     workflowId: string;
-    taskId: string;
-    jobIds: Record<string, string>;
+    rootJobId: string;
+    taskIds: Record<string, string>;
+    reportTaskIds: Record<string, string>;
 }
 
 export async function createWorkflowFromTemplate(name: string, params: Record<string, unknown>) {

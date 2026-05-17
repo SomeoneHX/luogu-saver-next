@@ -1,8 +1,9 @@
-import { FlowJob, FlowProducer, Job, JobNode } from 'bullmq';
+import { FlowProducer, Job, JobNode } from 'bullmq';
 import { config } from '@/config';
 import { Workflow } from '@/entities/workflow';
+import { Task } from '@/entities/task';
 import { logger } from '@/lib/logger';
-import { validateFlowStructure } from '@/utils/flow-validator';
+import { validateFlowStructure, WorkflowDefinition } from '@/utils/flow-validator';
 import { WORKFLOW_TEMPLATES } from '@/lib/workflow-templates';
 import { randomUUID } from 'node:crypto';
 import { WorkflowBuilder } from './helpers/workflow-builder.helper';
@@ -13,6 +14,7 @@ import {
     getServiceRepository,
     saveServiceEntity
 } from '@/services/helpers/repository.helper';
+import { TaskStatus } from '@/shared/task';
 
 export class WorkflowService {
     private static _flowProducer: FlowProducer;
@@ -31,20 +33,26 @@ export class WorkflowService {
         return this._flowProducer;
     }
 
-    static async createWorkflow(flowDef: any[]) {
-        validateFlowStructure(flowDef);
+    static async createWorkflow(definition: WorkflowDefinition) {
+        validateFlowStructure(definition);
 
         const workflowId = randomUUID();
-        const rootJobNode = WorkflowBuilder.buildLinearFlow(flowDef, workflowId);
+        const taskIds = this.createTaskIds(definition);
+        const reportTasks = new Set(definition.reportTasks);
+        const rootJobNode = WorkflowBuilder.buildLinearFlow(definition.tasks, {
+            workflowId,
+            taskIds,
+            reportTasks
+        });
         const rootJobId = rootJobNode.opts?.jobId;
         if (!rootJobId) {
             throw new Error('Workflow root job ID missing');
         }
-        const jobIds = this.extractJobIdsFromDefinition(rootJobNode);
+        const reportTaskIds = this.pickTaskIds(taskIds, definition.reportTasks);
 
         const result: Record<string, any> = {};
-        flowDef.forEach(task => {
-            if (task.track && jobIds[task.name]) {
+        definition.tasks.forEach(task => {
+            if (task.track && taskIds[task.name]) {
                 result[task.name] = null;
             }
         });
@@ -53,16 +61,18 @@ export class WorkflowService {
             id: workflowId,
             rootJobId,
             queueName: rootJobNode.queueName,
-            definition: flowDef,
+            definition,
             status: 'active',
             result
         });
 
         try {
             await saveServiceEntity<Workflow>(Workflow, workflow);
+            await this.createWorkflowTasks(definition, taskIds);
             await this.flowProducer.add(rootJobNode);
         } catch (error) {
             try {
+                await getServiceRepository<Task>(Task).delete(Object.values(taskIds));
                 await getServiceRepository<Workflow>(Workflow).delete({ id: workflowId });
             } catch (cleanupError) {
                 logger.error({ cleanupError, workflowId }, 'Failed to clean up workflow row');
@@ -73,8 +83,9 @@ export class WorkflowService {
 
         return {
             workflowId,
-            taskId: rootJobId,
-            jobIds
+            rootJobId,
+            taskIds,
+            reportTaskIds
         };
     }
 
@@ -133,14 +144,32 @@ export class WorkflowService {
         }
     }
 
-    private static extractJobIdsFromDefinition(node: FlowJob): Record<string, string> {
-        const map: Record<string, string> = {};
-        const traverse = (n: FlowJob) => {
-            if (n.name && n.opts?.jobId) map[n.name] = n.opts.jobId;
-            n.children?.forEach(traverse);
-        };
-        traverse(node);
-        return map;
+    private static createTaskIds(definition: WorkflowDefinition): Record<string, string> {
+        return Object.fromEntries(definition.tasks.map(task => [task.name, randomUUID()]));
+    }
+
+    private static pickTaskIds(
+        taskIds: Record<string, string>,
+        taskNames: string[]
+    ): Record<string, string> {
+        return Object.fromEntries(taskNames.map(name => [name, taskIds[name]]));
+    }
+
+    private static async createWorkflowTasks(
+        definition: WorkflowDefinition,
+        taskIds: Record<string, string>
+    ) {
+        const tasks = definition.tasks.map(taskDef =>
+            Task.create({
+                id: taskIds[taskDef.name],
+                type: taskDef.data.type,
+                payload: taskDef.data.payload,
+                status: TaskStatus.PENDING,
+                info: null
+            })
+        );
+
+        await getServiceRepository<Task>(Task).save(tasks);
     }
 
     private static async transformFlowTree(flowNode: JobNode): Promise<any[]> {

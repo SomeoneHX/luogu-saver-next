@@ -18,15 +18,6 @@ export class WorkflowStatusStore {
         return this.getStatusById(id);
     }
 
-    static async updateByRootJobId(rootJobId: string, status: string): Promise<number> {
-        const result = await getServiceRepository<Workflow>(Workflow).update(
-            { rootJobId, status: Not(In(TERMINAL_WORKFLOW_STATUSES)) },
-            { status }
-        );
-
-        return result.affected || 0;
-    }
-
     private static async getStatusById(id: string): Promise<string | null> {
         const workflow = await findOneServiceEntity<Workflow>(Workflow, {
             where: { id },

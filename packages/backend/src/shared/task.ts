@@ -1,6 +1,12 @@
 export interface CommonTask {
     id: string;
     type: TaskType;
+    workflowId?: string;
+    taskName?: string;
+    track?: boolean;
+    report?: boolean;
+    __fathers?: string[];
+    __isRoot?: boolean;
     payload: {
         target: string;
         metadata: Record<string, any>;

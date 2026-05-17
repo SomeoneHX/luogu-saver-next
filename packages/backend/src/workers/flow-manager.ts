@@ -35,15 +35,15 @@ export class FlowManager {
         }
     }
 
-    static async updateWorkflowStatus(jobId: string, status: string, reason?: string) {
+    static async updateWorkflowStatus(workflowId: string, status: string, reason?: string) {
         try {
-            const affected = await WorkflowStatusStore.updateByRootJobId(jobId, status);
+            const storedStatus = await WorkflowStatusStore.updateById(workflowId, status);
 
-            if (affected > 0) {
-                logger.info({ jobId, status, reason }, 'Workflow status updated');
+            if (storedStatus === status) {
+                logger.info({ workflowId, status, reason }, 'Workflow status updated');
             }
         } catch (err) {
-            logger.error({ err, jobId }, 'Failed to update workflow status');
+            logger.error({ err, workflowId }, 'Failed to update workflow status');
         }
     }
 
@@ -61,12 +61,10 @@ export class FlowManager {
             });
 
             events.on('completed', async ({ jobId, returnvalue }) => {
-                await this.updateWorkflowStatus(jobId, 'completed');
-
                 const queueWrapper = getQueueByName(queueName);
                 if (queueWrapper) {
                     const job = await Job.fromId(queueWrapper.queue, jobId);
-                    if (job && job.data && job.data.workflowId && job.data.track) {
+                    if (job?.data?.workflowId && job.data.track) {
                         try {
                             await this.updateWorkflowResult(
                                 job.data.workflowId,
@@ -77,11 +75,21 @@ export class FlowManager {
                             logger.error({ err, jobId }, 'Failed to update workflow result');
                         }
                     }
+
+                    if (job?.data?.workflowId && this.isRootWorkflowJob(job)) {
+                        await this.updateWorkflowStatus(job.data.workflowId, 'completed');
+                    }
                 }
             });
 
             events.on('failed', async ({ jobId, failedReason }) => {
-                await this.updateWorkflowStatus(jobId, 'failed', failedReason);
+                const queueWrapper = getQueueByName(queueName);
+                if (!queueWrapper) return;
+
+                const job = await Job.fromId(queueWrapper.queue, jobId);
+                if (job?.data?.workflowId) {
+                    await this.updateWorkflowStatus(job.data.workflowId, 'failed', failedReason);
+                }
             });
 
             this.queueEvents.set(queueName, events);
@@ -92,5 +100,9 @@ export class FlowManager {
         const events = [...this.queueEvents.values()];
         this.queueEvents.clear();
         await Promise.all(events.map(event => event.close()));
+    }
+
+    private static isRootWorkflowJob(job: Job<any>): boolean {
+        return job.data.__isRoot === true;
     }
 }

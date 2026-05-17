@@ -145,7 +145,7 @@ const trackSaveTask = (taskId?: string) => {
                 positiveText: '重试',
                 negativeText: '取消',
                 onPositiveClick: async () => {
-                    trackSaveTask((await saveArticle(articleId)).data.taskId);
+                    trackSaveTask((await saveArticle(articleId)).data.reportTaskIds.save);
                 },
                 maskClosable: false,
                 closable: false,
@@ -157,7 +157,7 @@ const trackSaveTask = (taskId?: string) => {
 
 const submitSaveArticle = async () => {
     const response = await saveArticle(articleId);
-    trackSaveTask(response.data.taskId);
+    trackSaveTask(response.data.reportTaskIds.save);
     return response;
 };
 

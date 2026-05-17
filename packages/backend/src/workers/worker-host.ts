@@ -65,7 +65,9 @@ export class WorkerHost<T extends CommonTask> {
 
         this.worker.on('completed', async job => {
             logger.info({ jobId: job.id }, 'Job completed successfully.');
-            emitToRoom(`task:${job.id}`, `task:${job.id}:completed`, { status: 'completed' });
+            if (this.shouldEmitTaskEvent(job)) {
+                emitToRoom(`task:${job.id}`, `task:${job.id}:completed`, { status: 'completed' });
+            }
             await TaskService.updateTask(
                 job.id!,
                 TaskStatus.COMPLETED,
@@ -77,10 +79,12 @@ export class WorkerHost<T extends CommonTask> {
             const isFinalAttempt = job && job.attemptsMade >= (job.opts.attempts || 1);
             const isUnrecoverable = err instanceof UnrecoverableError;
             if (isFinalAttempt || isUnrecoverable) {
-                emitToRoom(`task:${job?.id}`, `task:${job?.id}:failed`, {
-                    status: 'failed',
-                    error: err.message
-                });
+                if (this.shouldEmitTaskEvent(job)) {
+                    emitToRoom(`task:${job?.id}`, `task:${job?.id}:failed`, {
+                        status: 'failed',
+                        error: err.message
+                    });
+                }
                 logger.error({ jobId: job?.id, err }, 'Job failed PERMANENTLY.');
                 if (job?.id) await TaskService.updateTask(job.id, TaskStatus.FAILED, err.message);
             } else {
@@ -114,6 +118,11 @@ export class WorkerHost<T extends CommonTask> {
         this.queueEvents.on('waiting', (job: { jobId: string }) => {
             logger.debug({ jobId: job?.jobId }, 'Job queued.');
         });
+    }
+
+    private shouldEmitTaskEvent(job?: Job<T>) {
+        if (!job?.data?.workflowId) return true;
+        return job.data.report === true;
     }
 
     public async close() {

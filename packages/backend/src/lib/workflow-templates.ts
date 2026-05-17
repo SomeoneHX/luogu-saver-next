@@ -1,7 +1,7 @@
-import { TaskDefinition } from '@/utils/flow-validator';
+import { TaskDefinition, WorkflowDefinition } from '@/utils/flow-validator';
 import { Permission } from '@/shared/permission';
 
-export type WorkflowTemplateBuilder = (params: any) => TaskDefinition[];
+export type WorkflowTemplateBuilder = (params: any) => WorkflowDefinition;
 
 export const WORKFLOW_TEMPLATES_PERMISSION: { [key: string]: Permission | null } = {
     'article-save-pipeline': null,
@@ -15,7 +15,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
             throw new Error('targetId is required for article-save-pipeline');
         }
 
-        return [
+        const tasks: TaskDefinition[] = [
             {
                 name: 'save',
                 track: true,
@@ -102,6 +102,11 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                 }
             }
         ];
+
+        return {
+            reportTasks: ['save'],
+            tasks
+        };
     },
     'article-censor-pipeline': (params: any) => {
         const { targetId } = params;
@@ -109,7 +114,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
             throw new Error('targetId is required for article-censor-pipeline');
         }
 
-        return [
+        const tasks: TaskDefinition[] = [
             {
                 name: 'censor',
                 track: true,
@@ -137,5 +142,10 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                 }
             }
         ];
+
+        return {
+            reportTasks: ['censor'],
+            tasks
+        };
     }
 };

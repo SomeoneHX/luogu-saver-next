@@ -4,53 +4,89 @@
 
 This specification defines backend workflow orchestration behavior implemented under `packages/backend`.
 
-A workflow is a DAG-like task definition submitted to BullMQ as a single Flow tree.
+A workflow definition is a logical DAG of task definitions. The backend compiles the logical DAG into one linear BullMQ Flow. The `fathers` field controls upstream data visibility and linear order; it does not require parallel execution.
 
 ## 2. Workflow Entity
 
 Table name: `workflow`
 
-| Column        | Type     | Constraints       | Description                                                            |
-| ------------- | -------- | ----------------- | ---------------------------------------------------------------------- |
-| `id`          | UUID     | PRIMARY KEY       | Workflow identifier exposed as `workflowId` in API responses           |
-| `root_job_id` | VARCHAR  | NOT NULL          | BullMQ root job ID used for queue status lookup and websocket tracking |
-| `queue_name`  | VARCHAR  | NOT NULL          | Queue name containing the root job                                     |
-| `status`      | VARCHAR  | DEFAULT `pending` | Last known workflow status                                             |
-| `definition`  | JSON     | NOT NULL          | Submitted workflow task definitions                                    |
-| `result`      | JSON     | NULLABLE          | Tracked task result map                                                |
-| `created_at`  | DATETIME | NOT NULL          | Creation time                                                          |
-| `updated_at`  | DATETIME | NOT NULL          | Last update time                                                       |
+| Column        | Type     | Constraints       | Description                                                  |
+| ------------- | -------- | ----------------- | ------------------------------------------------------------ |
+| `id`          | UUID     | PRIMARY KEY       | Workflow identifier exposed as `workflowId` in API responses |
+| `root_job_id` | VARCHAR  | NOT NULL          | BullMQ root job ID. It equals one workflow node `Task.id`    |
+| `queue_name`  | VARCHAR  | NOT NULL          | Queue name containing the root job                           |
+| `status`      | VARCHAR  | DEFAULT `pending` | Last known workflow status                                   |
+| `definition`  | JSON     | NOT NULL          | Normalized workflow definition                               |
+| `result`      | JSON     | NULLABLE          | Tracked task result map                                      |
+| `created_at`  | DATETIME | NOT NULL          | Creation time                                                |
+| `updated_at`  | DATETIME | NOT NULL          | Last update time                                             |
 
-## 3. API Endpoints
+## 3. Workflow Definition
 
-### 3.1 POST `/workflow/create`
+The API accepts exactly this JSON shape:
+
+```json
+{
+    "reportTasks": ["save"],
+    "tasks": [
+        {
+            "name": "save",
+            "track": true,
+            "fathers": [],
+            "data": {
+                "type": "save",
+                "payload": {}
+            }
+        }
+    ]
+}
+```
+
+Validation rules:
+
+1. `tasks` MUST be a non-empty array.
+2. Each task MUST have a unique non-empty `name`.
+3. If `fathers` is present, it MUST be an array of task names that exist in `tasks`.
+4. The logical graph defined by `fathers` MUST be acyclic.
+5. `reportTasks` MUST be an array of task names that exist in `tasks`.
+6. `reportTasks` MUST NOT contain duplicate names.
+7. `track = true` means the task completion payload is written into `workflow.result[taskName]`.
+8. `reportTasks` means the task emits websocket completion/failure events for clients that join `task:{taskId}`.
+9. `track` and `reportTasks` are independent. A task MAY be tracked but not reported, or reported but not tracked.
+
+## 4. API Endpoints
+
+### 4.1 POST `/workflow/create`
 
 Permission requirement: `CREATE_WORKFLOW`.
 
-Input: workflow definition array.
+Input: normalized workflow definition object as specified in section 3.
 
 Output:
 
 ```json
 {
     "workflowId": "<uuid>",
-    "taskId": "<root_job_id>",
-    "jobIds": {
-        "<taskName>": "<bullmq_job_id>"
+    "rootJobId": "<task_id>",
+    "taskIds": {
+        "<taskName>": "<task_id>"
+    },
+    "reportTaskIds": {
+        "<reportTaskName>": "<task_id>"
     }
 }
 ```
 
 Postconditions:
 
-1. A `workflow` row is created with `id = workflowId`.
-2. The `workflow` row is created before the submitted flow is pushed to BullMQ.
-3. Each BullMQ job in the flow has a job ID assigned before submission.
-4. The submitted flow is pushed to BullMQ.
-5. `taskId` equals the BullMQ root job ID and can be used with existing websocket task rooms (`task:{taskId}`).
+1. A `workflow` row is created with `id = workflowId` before any workflow task row is created.
+2. For every item in `tasks`, one `task` row is created before the BullMQ Flow is submitted.
+3. Each workflow node BullMQ job ID equals the corresponding `task.id`.
+4. `workflow.root_job_id` equals the BullMQ root job ID and equals one value in `taskIds`.
+5. The submitted BullMQ Flow contains every task in `tasks` exactly once.
 6. If workflow creation fails before the API response is sent, no `workflow` row with `id = workflowId` remains in the database.
 
-### 3.2 POST `/workflow/create/template/:name`
+### 4.2 POST `/workflow/create/template/:name`
 
 Input: template parameter object.
 
@@ -60,9 +96,9 @@ Permission model:
 2. If mapped permission is `null`, the endpoint is public and does not require login.
 3. If mapped permission is non-null, requester must be authenticated and satisfy the mapped permission bit.
 
-Output format is identical to section 3.1.
+Output format is identical to section 4.1.
 
-### 3.3 GET `/workflow/query/:id`
+### 4.3 GET `/workflow/query/:id`
 
 Input path parameter: workflow UUID.
 
@@ -76,7 +112,7 @@ Output:
     "updatedAt": "<datetime>",
     "tasks": [
         {
-            "jobId": "<bullmq_job_id>",
+            "jobId": "<task_id>",
             "jobName": "<task_name>",
             "status": "<bullmq_state>"
         }
@@ -94,13 +130,17 @@ If runtime flow data cannot be loaded from Redis and current status is not termi
 If runtime flow data cannot be loaded from Redis and current status is terminal, status is unchanged and `tasks` is returned as `null`.
 For tracked task entries that are not finished yet, `result[taskName]` is `null`.
 
-## 4. Template Definitions
+## 5. Template Definitions
 
-### 4.1 `article-save-pipeline`
+### 5.1 `article-save-pipeline`
 
 Required input: `targetId`.
 
-Task graph (by dependency):
+Report tasks:
+
+1. `save`
+
+Task graph by logical dependency:
 
 1. `save` (tracked)
 2. `summary` depends on `save` (tracked)
@@ -112,9 +152,13 @@ Task graph (by dependency):
 
 Permission: public (`null` permission mapping).
 
-### 4.2 `article-censor-pipeline`
+### 5.2 `article-censor-pipeline`
 
 Required input: `targetId`.
+
+Report tasks:
+
+1. `censor`
 
 Task graph:
 
@@ -123,11 +167,16 @@ Task graph:
 
 Permission: `CREATE_WORKFLOW`.
 
-## 5. Status and Result Synchronization
+## 6. Status, Result, and Report Synchronization
 
-1. Workflow completion/failure status is updated by matching queue events using `root_job_id`.
-2. For tracked tasks (`track = true`), when a job includes `workflowId` and `taskName`, its return payload is merged into `workflow.result[taskName]`.
-3. Result payload is normalized as:
+1. Each workflow node updates the `task` row whose `id` equals the BullMQ job ID.
+2. Only report tasks emit websocket events `task:{taskId}:completed` and `task:{taskId}:failed`.
+3. Non-report workflow tasks do not emit `task:{taskId}` websocket events.
+4. Legacy non-workflow tasks emit websocket task events for every completed or failed task.
+5. Workflow completion status is set to `completed` only when the root job completes successfully.
+6. Workflow failure status is set to `failed` when any workflow node reaches final failure.
+7. For tracked tasks (`track = true`), when a job includes `workflowId` and `taskName`, its return payload is merged into `workflow.result[taskName]`.
+8. Result payload is normalized as:
 
 ```json
 {
@@ -136,13 +185,14 @@ Permission: `CREATE_WORKFLOW`.
 }
 ```
 
-4. Status writes are monotonic with respect to terminal states.
-5. If current `workflow.status` is `completed`, `failed`, or `expired`, later queue status reads or queue events MUST NOT replace it.
-6. If current `workflow.status` is not terminal, a queue status read or queue event MAY replace it with the observed BullMQ state.
+9. Status writes are monotonic with respect to terminal states.
+10. If current `workflow.status` is `completed`, `failed`, or `expired`, later queue status reads or queue events MUST NOT replace it.
+11. If current `workflow.status` is not terminal, a queue status read or queue event MAY replace it with the observed BullMQ state.
 
-## 6. Invariants
+## 7. Invariants
 
-1. `workflowId` is the only workflow identifier exposed in API payloads.
-2. `taskId` is always present in workflow create responses and is always equal to the root BullMQ job ID.
-3. Websocket tracking compatibility is preserved: clients may subscribe to `task:{taskId}` and receive `task:{taskId}:completed` / `task:{taskId}:failed` events.
-4. Template permission lookup is exact-key based; missing keys are rejected as invalid templates.
+1. `workflowId` is the only workflow identifier accepted by `/workflow/query/:id`.
+2. `rootJobId` is exposed only as the BullMQ root job locator.
+3. Every value in `taskIds` is both a `task.id` and a BullMQ job ID.
+4. `reportTaskIds` contains exactly the task-name subset declared by `reportTasks`.
+5. Template permission lookup is exact-key based; missing keys are rejected as invalid templates.

@@ -8,8 +8,14 @@ interface FlowTask extends TaskDefinition {
     type?: string;
 }
 
+type WorkflowBuildOptions = {
+    workflowId: string;
+    taskIds: Record<string, string>;
+    reportTasks: Set<string>;
+};
+
 export class WorkflowBuilder {
-    static buildLinearFlow(tasks: FlowTask[], workflowId: string): FlowJob {
+    static buildLinearFlow(tasks: FlowTask[], options: WorkflowBuildOptions): FlowJob {
         const sortedTasks = this.topologicalSort(tasks);
 
         let childNode: FlowJob | undefined = undefined;
@@ -18,17 +24,21 @@ export class WorkflowBuilder {
             const queueName =
                 task.queueName || QUEUE_NAMES[task.data?.type as TaskType] || 'default';
 
+            const isRoot = index === sortedTasks.length - 1;
             childNode = {
                 name: task.name,
                 queueName: queueName,
                 opts: {
-                    jobId: `${workflowId}-${index}`
+                    jobId: options.taskIds[task.name]
                 },
                 data: {
                     ...task.data,
-                    workflowId,
+                    id: options.taskIds[task.name],
+                    workflowId: options.workflowId,
                     taskName: task.name,
                     track: task.track,
+                    report: options.reportTasks.has(task.name),
+                    __isRoot: isRoot,
                     __fathers: task.fathers || []
                 },
                 children: childNode ? [childNode] : []
