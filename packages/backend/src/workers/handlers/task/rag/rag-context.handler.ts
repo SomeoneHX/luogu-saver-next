@@ -2,7 +2,6 @@ import { Job, UnrecoverableError } from 'bullmq';
 import { RagTask } from '@/shared/task';
 import { ChildrenValues, TaskCommonResult, TaskHandler, WorkflowResult } from '@/workers/types';
 import { ArticleService } from '@/services/article.service';
-import { shouldSkip } from '@/workers/helpers/common.helper';
 
 type MergedHit = {
     id: string;
@@ -10,6 +9,7 @@ type MergedHit = {
     keywordRank?: number;
     vectorDistance?: number;
     sources: string[];
+    queries: string[];
 };
 
 export class RagContextHandler implements TaskHandler<RagTask> {
@@ -20,8 +20,6 @@ export class RagContextHandler implements TaskHandler<RagTask> {
         job: Job<RagTask>
     ): Promise<WorkflowResult<TaskCommonResult>> {
         const childrenValues = (await job.getChildrenValues()) as ChildrenValues;
-        if (shouldSkip(childrenValues))
-            return { skipNextStep: true, data: { text: '', documents: [] } };
 
         const question = this.extractQuestion(childrenValues, task.payload.query);
         if (!question)
@@ -49,13 +47,14 @@ export class RagContextHandler implements TaskHandler<RagTask> {
                 authorName: article.author?.name || '',
                 score: hit.score,
                 sources: hit.sources,
+                queries: hit.queries,
                 vectorDistance: hit.vectorDistance
             });
         }
 
         let text = `<question>\n${question}\n</question>\n<documents>\n`;
         for (const doc of documents) {
-            const candidate = `<document id="${doc.id}" title="${this.escapeAttr(doc.title)}" source="${doc.sources.join(',')}">\n<summary>${doc.summary}</summary>\n<excerpt>${doc.excerpt}</excerpt>\n</document>\n`;
+            const candidate = `<document id="${doc.id}" title="${this.escapeAttr(doc.title)}" source="${doc.sources.join(',')}" queries="${this.escapeAttr(doc.queries.join(' | '))}">\n<summary>${doc.summary}</summary>\n<excerpt>${doc.excerpt}</excerpt>\n</document>\n`;
             if ((text + candidate + '</documents>').length > maxChars) break;
             text += candidate;
         }
@@ -91,8 +90,10 @@ export class RagContextHandler implements TaskHandler<RagTask> {
                 const current: MergedHit = merged.get(hit.id) || {
                     id: hit.id,
                     score: 0,
-                    sources: []
+                    sources: [],
+                    queries: []
                 };
+                const query = typeof hit.query === 'string' ? hit.query.trim() : '';
                 if (hit.source === 'vector') {
                     const vectorScore =
                         typeof hit.score === 'number'
@@ -106,12 +107,16 @@ export class RagContextHandler implements TaskHandler<RagTask> {
                     current.keywordRank = index;
                     if (!current.sources.includes('keyword')) current.sources.push('keyword');
                 }
+                if (query && !current.queries.includes(query)) {
+                    current.queries.push(query);
+                }
                 merged.set(hit.id, current);
             });
         }
 
         for (const hit of merged.values()) {
             if (hit.sources.includes('keyword') && hit.sources.includes('vector')) hit.score += 0.5;
+            if (hit.queries.length > 1) hit.score += (hit.queries.length - 1) * 0.25;
         }
 
         return [...merged.values()].sort((a, b) => b.score - a.score);

@@ -196,14 +196,48 @@ Permission: `MANAGE_SEARCH`.
 
 ### 5.5 `rag-search-pipeline`
 
+Input parameters:
+
+| Parameter     | Type   | Required | Default | Constraint                 |
+| ------------- | ------ | -------- | ------- | -------------------------- |
+| `query`       | string | yes      | absent  | Trimmed non-empty text     |
+| `limit`       | number | no       | 10      | Integer in `[1, 20]`       |
+| `maxArticles` | number | no       | 10      | Integer in `[1, 10]`       |
+| `maxChars`    | number | no       | 20000   | Integer in `[1000, 20000]` |
+
 Task graph:
 
 1. `read-query` (read text from workflow parameters)
-2. `keyword-search` depends on `read-query`
-3. `query-embedding` depends on `read-query`
-4. `vector-search` depends on `query-embedding`
-5. `build-context` depends on `read-query`, `keyword-search`, and `vector-search`
-6. `answer` depends on `build-context` (tracked, reported)
+2. `plan-queries` depends on `read-query`
+3. For each index `i` in `[0, 4]`, `read-planned-query-i` depends on `plan-queries`
+4. For each index `i` in `[0, 4]`, `keyword-search-i` depends on `read-planned-query-i`
+5. For each index `i` in `[0, 4]`, `query-embedding-i` depends on `read-planned-query-i`
+6. For each index `i` in `[0, 4]`, `vector-search-i` depends on `query-embedding-i`
+7. `build-context` depends on `read-query`, every `keyword-search-i`, and every `vector-search-i`
+8. `answer` depends on `build-context` (tracked, reported)
+
+Task `plan-queries` has type `rag` and target `plan_queries`.
+
+Task `plan-queries` SHALL:
+
+1. Read the original question from `read-query.data.text`.
+2. Ask the chat LLM scenario for alternative retrieval queries.
+3. Return `data.queries` as an array of strings.
+4. Set `data.queries[0]` exactly equal to the original question text.
+5. Remove empty strings and duplicate strings after trimming.
+6. Return at most 5 queries.
+7. If the LLM call fails or returns invalid JSON, return exactly `[original question text]`.
+
+Each `read-planned-query-i` task SHALL:
+
+1. Have type `read` and target `planned_query`.
+2. Read `plan-queries.data.queries[i]`.
+3. Return `skipNextStep=true` and `data.text=''` if no query exists at index `i`.
+4. Return `skipNextStep=false` and `data.text=<query>` if a query exists at index `i`.
+
+For every `read-planned-query-i` where `skipNextStep=false`, both `keyword-search-i` and `query-embedding-i` SHALL run over that exact query text, and `vector-search-i` SHALL run over the resulting embedding.
+
+Task `build-context` SHALL include at most `maxArticles` documents and at most `maxChars` characters in `data.text`.
 
 Permission: `CREATE_WORKFLOW`.
 

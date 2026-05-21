@@ -29,7 +29,9 @@ export interface AiTask extends CommonTask {
     type: TaskType.LLM;
     payload: {
         target: 'summary' | 'embedding' | 'chat';
-        metadata: Record<string, never>;
+        metadata: {
+            query?: string;
+        };
     };
 }
 
@@ -62,6 +64,7 @@ export interface ReadTask extends CommonTask {
         targetId?: string;
         metadata: {
             text?: string;
+            queryIndex?: number;
         };
     };
 }
@@ -127,11 +130,13 @@ export enum SearchTarget {
 
 export enum ReadTarget {
     TEXT = 'text',
+    PLANNED_QUERY = 'planned_query',
     ARTICLE = 'article',
     PASTE = 'paste'
 }
 
 export enum RagTarget {
+    PLAN_QUERIES = 'plan_queries',
     CONTEXT = 'context',
     ANSWER = 'answer'
 }

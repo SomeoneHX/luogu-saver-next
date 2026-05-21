@@ -16,11 +16,13 @@ export class VectorSearchHandler implements TaskHandler<SearchTask> {
             return { skipNextStep: true, data: { hits: [], total: 0 } };
         }
 
-        const embedding = extractUpsteamData(
+        const embeddingData = extractUpsteamData(
             childrenValues,
             data => Array.isArray(data.embedding),
             job.id
-        )?.embedding as number[] | undefined;
+        );
+        const embedding = embeddingData?.embedding as number[] | undefined;
+        const query = embeddingData?.text as string | undefined;
 
         if (!embedding) {
             throw new UnrecoverableError(
@@ -38,6 +40,7 @@ export class VectorSearchHandler implements TaskHandler<SearchTask> {
                 id,
                 distance,
                 score: Math.max(0, 1 - distance),
+                query,
                 source: 'vector'
             };
         });

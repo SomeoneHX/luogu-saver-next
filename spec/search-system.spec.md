@@ -172,7 +172,9 @@ Behavior:
 3. Use `metadata.limit` as the number of hits. If absent, use 5. Clamp the value to `[1, 20]`.
 4. Use optional `metadata.category` and `metadata.authorId` as filters.
 5. Return `{ hits, total }` where `hits` has the same item shape as `GET /search/articles`.
-6. If any father task has `skipNextStep=true`, return `{ hits: [], total: 0 }` with `skipNextStep=true`.
+6. Set `query` on each hit to the text query used by the task.
+7. Set `source='keyword'` on each hit.
+8. If any father task has `skipNextStep=true`, return `{ hits: [], total: 0 }` with `skipNextStep=true`.
 
 ### 8.2 `search:vector`
 
@@ -198,7 +200,8 @@ Behavior:
 4. Return `{ hits, total }` where each hit has `{ id, distance, score, source }`.
 5. Set `source` to `vector`.
 6. Set `score=max(0, 1 - distance)`.
-7. If any father task has `skipNextStep=true`, return `{ hits: [], total: 0 }` with `skipNextStep=true`.
+7. Set `query` on each hit to the text query used to produce the embedding, if present in the embedding task result.
+8. If any father task has `skipNextStep=true`, return `{ hits: [], total: 0 }` with `skipNextStep=true`.
 
 ## 9. RAG Tasks
 
@@ -216,11 +219,13 @@ Behavior:
     - keyword hit at rank `i`: add `1 / (i + 1)`.
     - vector hit with distance `d`: add `max(0, 1 - d)`.
     - if the ID appears in both keyword and vector hits: add `0.5`.
-6. Select at most `metadata.maxArticles` articles. If absent, use 6. Clamp to `[1, 10]`.
-7. Load selected articles from the database.
-8. Build `data.text` as XML-like context containing the question and selected documents.
-9. The total context text SHALL be at most `metadata.maxChars` characters. If absent, use 8000. Clamp to `[1000, 20000]`.
-10. Return `{ text, documents }`.
+    - if the ID appears for `n` distinct non-empty query strings and `n > 1`: add `(n - 1) * 0.25`.
+6. Include each distinct non-empty query string in the returned document's `queries` array.
+7. Select at most `metadata.maxArticles` articles. If absent, use 10. Clamp to `[1, 10]`.
+8. Load selected articles from the database.
+9. Build `data.text` as XML-like context containing the question and selected documents.
+10. The total context text SHALL be at most `metadata.maxChars` characters. If absent, use 20000. Clamp to `[1000, 20000]`.
+11. Return `{ text, documents }`.
 
 ### 9.2 `rag:answer`
 
@@ -240,11 +245,18 @@ Task type `read` is available for workflow pipelines.
 
 Return `{ text }` where `text` equals `payload.metadata.text`.
 
-### 10.2 `read:article`
+### 10.2 `read:planned_query`
+
+1. Read `payload.metadata.queryIndex` as integer `i`. If absent, use 0.
+2. Read `data.queries[i]` from the first father result that contains a `queries` array.
+3. If no query exists at index `i`, return `{ text: '', queryIndex: i }` with `skipNextStep=true`.
+4. If a query exists at index `i`, return `{ text: query, queryIndex: i }` with `skipNextStep=false`.
+
+### 10.3 `read:article`
 
 Load an article by `payload.targetId` and return `{ id, title, summary, content, text, authorId, authorName, category, tags }`.
 
-### 10.3 `read:paste`
+### 10.4 `read:paste`
 
 Load a paste by `payload.targetId` and return `{ id, content, text }`.
 

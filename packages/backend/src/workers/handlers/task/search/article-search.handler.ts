@@ -38,7 +38,11 @@ export class ArticleSearchHandler implements TaskHandler<SearchTask> {
         return {
             skipNextStep: false,
             data: {
-                hits: result.hits,
+                hits: result.hits.map((hit: any) => ({
+                    ...hit,
+                    query,
+                    source: 'keyword'
+                })),
                 total: result.total
             }
         };

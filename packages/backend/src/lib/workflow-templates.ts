@@ -190,8 +190,9 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
         if (!query) throw new Error('query is required for rag-search-pipeline');
 
         const limit = Math.min(20, Math.max(1, Number(params?.limit) || 10));
-        const maxArticles = Math.min(10, Math.max(1, Number(params?.maxArticles) || 6));
-        const maxChars = Math.min(20000, Math.max(1000, Number(params?.maxChars) || 8000));
+        const maxQueries = 5;
+        const maxArticles = Math.min(10, Math.max(1, Number(params?.maxArticles) || 10));
+        const maxChars = Math.min(20000, Math.max(1000, Number(params?.maxChars) || 20000));
 
         const tasks: TaskDefinition[] = [
             {
@@ -205,41 +206,73 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                 }
             },
             {
-                name: 'keyword-search',
+                name: 'plan-queries',
                 fathers: ['read-query'],
                 data: {
-                    type: 'search',
+                    type: 'rag',
                     payload: {
-                        target: 'article',
-                        metadata: { limit }
-                    }
-                }
-            },
-            {
-                name: 'query-embedding',
-                fathers: ['read-query'],
-                data: {
-                    type: 'llm',
-                    payload: {
-                        target: 'embedding',
+                        target: 'plan_queries',
                         metadata: {}
                     }
                 }
-            },
-            {
-                name: 'vector-search',
-                fathers: ['query-embedding'],
-                data: {
-                    type: 'search',
-                    payload: {
-                        target: 'vector',
-                        metadata: { limit }
+            }
+        ];
+
+        const contextFathers = ['read-query'];
+        for (let index = 0; index < maxQueries; index += 1) {
+            tasks.push(
+                {
+                    name: `read-planned-query-${index}`,
+                    fathers: ['plan-queries'],
+                    data: {
+                        type: 'read',
+                        payload: {
+                            target: 'planned_query',
+                            metadata: { queryIndex: index }
+                        }
+                    }
+                },
+                {
+                    name: `keyword-search-${index}`,
+                    fathers: [`read-planned-query-${index}`],
+                    data: {
+                        type: 'search',
+                        payload: {
+                            target: 'article',
+                            metadata: { limit }
+                        }
+                    }
+                },
+                {
+                    name: `query-embedding-${index}`,
+                    fathers: [`read-planned-query-${index}`],
+                    data: {
+                        type: 'llm',
+                        payload: {
+                            target: 'embedding',
+                            metadata: {}
+                        }
+                    }
+                },
+                {
+                    name: `vector-search-${index}`,
+                    fathers: [`query-embedding-${index}`],
+                    data: {
+                        type: 'search',
+                        payload: {
+                            target: 'vector',
+                            metadata: { limit }
+                        }
                     }
                 }
-            },
+            );
+            contextFathers.push(`keyword-search-${index}`, `vector-search-${index}`);
+        }
+
+        tasks.push(
             {
                 name: 'build-context',
-                fathers: ['read-query', 'keyword-search', 'vector-search'],
+                fathers: contextFathers,
                 data: {
                     type: 'rag',
                     payload: {
@@ -261,7 +294,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             }
-        ];
+        );
 
         return { tasks };
     },

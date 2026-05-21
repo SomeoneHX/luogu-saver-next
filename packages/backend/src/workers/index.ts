@@ -22,8 +22,10 @@ import { UpdateSearchReindexHandler } from '@/workers/handlers/task/update/updat
 import { ArticleSearchHandler } from '@/workers/handlers/task/search/article-search.handler';
 import { VectorSearchHandler } from '@/workers/handlers/task/search/vector-search.handler';
 import { ReadTextHandler } from '@/workers/handlers/task/read/read-text.handler';
+import { ReadPlannedQueryHandler } from '@/workers/handlers/task/read/read-planned-query.handler';
 import { ReadArticleHandler } from '@/workers/handlers/task/read/read-article.handler';
 import { ReadPasteHandler } from '@/workers/handlers/task/read/read-paste.handler';
+import { RagPlanQueriesHandler } from '@/workers/handlers/task/rag/rag-plan-queries.handler';
 import { RagContextHandler } from '@/workers/handlers/task/rag/rag-context.handler';
 import { RagAnswerHandler } from '@/workers/handlers/task/rag/rag-answer.handler';
 import { config } from '@/config';
@@ -68,9 +70,11 @@ export function bootstrap() {
     searchProcessor.registerHandler(new VectorSearchHandler());
 
     readProcessor.registerHandler(new ReadTextHandler());
+    readProcessor.registerHandler(new ReadPlannedQueryHandler());
     readProcessor.registerHandler(new ReadArticleHandler());
     readProcessor.registerHandler(new ReadPasteHandler());
 
+    ragProcessor.registerHandler(new RagPlanQueriesHandler());
     ragProcessor.registerHandler(new RagContextHandler());
     ragProcessor.registerHandler(new RagAnswerHandler());
 

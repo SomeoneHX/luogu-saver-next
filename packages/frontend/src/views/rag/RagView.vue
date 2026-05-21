@@ -65,8 +65,8 @@ async function askRag() {
     const response = await createWorkflowFromTemplate('rag-search-pipeline', {
         query: question.value,
         limit: 10,
-        maxArticles: 6,
-        maxChars: 8000
+        maxArticles: 10,
+        maxChars: 20000
     });
 
     if (response.code !== 200) {
