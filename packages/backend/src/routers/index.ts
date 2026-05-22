@@ -11,6 +11,7 @@ import userRouter from './user.router';
 import searchRouter from './search.router';
 import adminRouter from './admin.router';
 import markdownRouter from './markdown.router';
+import statsRouter from './stats.router';
 import { DefaultState, Context } from 'koa';
 
 const router = new Router<DefaultState, Context>();
@@ -27,5 +28,6 @@ router.use(userRouter.routes(), userRouter.allowedMethods());
 router.use(searchRouter.routes(), searchRouter.allowedMethods());
 router.use(adminRouter.routes(), adminRouter.allowedMethods());
 router.use(markdownRouter.routes(), markdownRouter.allowedMethods());
+router.use(statsRouter.routes(), statsRouter.allowedMethods());
 
 export default router;
