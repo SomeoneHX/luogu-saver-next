@@ -207,19 +207,6 @@ onMounted(async () => {
                                     placeholder="默认 100，范围 1-500"
                                 />
                             </n-form-item>
-                            <n-form-item
-                                label="并发数"
-                                label-placement="left"
-                                :show-feedback="false"
-                                class="batch-size-field"
-                            >
-                                <n-input-number
-                                    v-model:value="summaryConcurrency"
-                                    :min="1"
-                                    :max="20"
-                                    placeholder="默认 5，范围 1-20"
-                                />
-                            </n-form-item>
                             <n-button
                                 type="primary"
                                 :disabled="!canManageSearch"
@@ -248,6 +235,19 @@ onMounted(async () => {
                                     :min="1"
                                     :max="100"
                                     placeholder="默认 20，范围 1-100"
+                                />
+                            </n-form-item>
+                            <n-form-item
+                                label="并发数"
+                                label-placement="left"
+                                :show-feedback="false"
+                                class="batch-size-field"
+                            >
+                                <n-input-number
+                                    v-model:value="summaryConcurrency"
+                                    :min="1"
+                                    :max="20"
+                                    placeholder="默认 5，范围 1-20"
                                 />
                             </n-form-item>
                             <n-button
