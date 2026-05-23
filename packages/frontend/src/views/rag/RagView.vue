@@ -94,7 +94,7 @@ async function askRag() {
     setupProgressListeners(response.data.reportTaskIds);
 
     setupTaskUpdateListener(
-        response.data.reportTaskIds.answer,
+        response.data.reportTaskIds.answer!,
         async data => {
             const answer =
                 data?.result?.data || (await loadWorkflowAnswer(response.data.workflowId));
@@ -230,10 +230,9 @@ function getProgressDetail(taskName: string, data?: any) {
         <Card class="question-card">
             <n-space vertical size="medium">
                 <n-alert v-if="!isAuthenticated" type="warning" title="需要登录">
-                    RAG 问答会调用 LLM，需要先登录。
-                    <template #action>
-                        <n-button size="small" @click="startCpOAuthLogin('/rag')">登录</n-button>
-                    </template>
+                    使用该功能需要<a href="javascript:void(0)" @click="startCpOAuthLogin('/rag')"
+                        >登录</a
+                    >。
                 </n-alert>
                 <n-input
                     v-model:value="question"
@@ -341,7 +340,7 @@ function getProgressDetail(taskName: string, data?: any) {
 
 <style scoped>
 .rag-page {
-    max-width: 980px;
+    max-width: 1220px;
     margin: 0 auto;
 }
 
