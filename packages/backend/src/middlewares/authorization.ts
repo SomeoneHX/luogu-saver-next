@@ -30,12 +30,12 @@ export const requiresPermission = (permissionBit: number) => async (ctx: Context
 
     const role = ctx.user.role;
 
-    if (!(role & Permission.LOGIN)) {
+    if (role !== -1 && !(role & Permission.LOGIN)) {
         ctx.fail(403, 'You have been banned');
         return;
     }
 
-    if ((role & permissionBit) !== permissionBit) {
+    if (role !== -1 && (role & permissionBit) !== permissionBit) {
         ctx.fail(403, 'Permission denied');
         return;
     }
@@ -63,12 +63,12 @@ export const checkWorkflowPermission = async (ctx: Context, next: Next) => {
 
     const role = ctx.user.role;
 
-    if (!(role & Permission.LOGIN)) {
+    if (role !== -1 && !(role & Permission.LOGIN)) {
         ctx.fail(403, 'You have been banned');
         return;
     }
 
-    if ((role & permission) !== permission) {
+    if (role !== -1 && (role & permission) !== permission) {
         ctx.fail(403, 'Permission denied');
         return;
     }

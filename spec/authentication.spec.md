@@ -234,15 +234,18 @@ Return the authenticated local user.
 
 The permission bitmask SHALL define:
 
-| Name              | Value    | Meaning                                |
-| ----------------- | -------- | -------------------------------------- |
-| `LOGIN`           | `1 << 0` | User may authenticate                  |
-| `CREATE_WORKFLOW` | `1 << 1` | User may create non-public workflows   |
-| `CREATE_TASK`     | `1 << 2` | User may call legacy `/task/create`    |
-| `MANAGE_SEARCH`   | `1 << 3` | User may manage search indexing        |
-| `MANAGE_USERS`    | `1 << 4` | User may inspect and modify user roles |
+| Name                   | Value    | Meaning                                |
+| ---------------------- | -------- | -------------------------------------- |
+| `LOGIN`                | `1 << 0` | User may authenticate                  |
+| `CREATE_WORKFLOW`      | `1 << 1` | User may create non-public workflows   |
+| `CREATE_TASK`          | `1 << 2` | User may call legacy `/task/create`    |
+| `MANAGE_SEARCH`        | `1 << 3` | User may manage search indexing        |
+| `MANAGE_USERS`         | `1 << 4` | User may inspect and modify user roles |
+| `MANAGE_ANNOUNCEMENTS` | `1 << 5` | User may manage site announcements     |
 
 `ROLE_ADMIN = -1` SHALL satisfy all permission checks.
+
+If `registered_user.role = ROLE_ADMIN`, authorization middleware SHALL NOT reject the request as banned.
 
 `ROLE_DEFAULT` SHALL equal `LOGIN | CREATE_WORKFLOW`.
 
@@ -257,6 +260,8 @@ The legacy endpoint `GET /token/inspect` SHALL return the current `registered_us
 The backend admin user endpoints SHALL require `MANAGE_USERS`.
 
 The backend search reindex endpoint SHALL require `MANAGE_SEARCH`.
+
+The backend announcement admin endpoints SHALL require `MANAGE_ANNOUNCEMENTS`.
 
 ## 9. Security Constraints
 

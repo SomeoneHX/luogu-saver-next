@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue';
+import { computed, h, nextTick, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import {
     NAlert,
     NButton,
     NDataTable,
     NFormItem,
+    NInput,
     NInputNumber,
     NSpace,
     NSpin,
+    NSwitch,
     NTag,
     useMessage
 } from 'naive-ui';
@@ -17,23 +20,35 @@ import Card from '@/components/Card.vue';
 import { getCurrentUser } from '@/api/auth.ts';
 import {
     getAdminUsers,
+    getAdminAnnouncement,
     rebuildArticleSummaries,
     reindexSearch,
+    updateAdminAnnouncement,
     updateAdminUserRole,
     type AdminUser
 } from '@/api/admin.ts';
 import { currentAuth, isAuthenticated, setCurrentAuth, startCpOAuthLogin } from '@/utils/auth.ts';
 import { hasAnyPermission, hasPermission, Permission } from '@/utils/permissions.ts';
 import { useContentSaver } from '@/composables/useContentSaver.ts';
+import HtmlCodeEditor from '@/components/HtmlCodeEditor.vue';
 
 const message = useMessage();
+const route = useRoute();
+const announcementSectionRef = ref<InstanceType<typeof Card> | null>(null);
 const users = ref<AdminUser[]>([]);
 const loading = ref(false);
 const reindexing = ref(false);
 const rebuildingSummaries = ref(false);
+const loadingAnnouncement = ref(false);
+const savingAnnouncement = ref(false);
 const batchSize = ref(100);
 const summaryBatchSize = ref(20);
 const summaryConcurrency = ref(5);
+const announcementForm = ref({
+    title: '公告',
+    content: '',
+    enabled: true
+});
 const { setupTaskUpdateListener } = useContentSaver();
 
 const canManageUsers = computed(() =>
@@ -43,7 +58,14 @@ const canManageSearch = computed(() =>
     hasPermission(currentAuth.value?.role, Permission.MANAGE_SEARCH)
 );
 const canOpenAdmin = computed(() =>
-    hasAnyPermission(currentAuth.value?.role, [Permission.MANAGE_USERS, Permission.MANAGE_SEARCH])
+    hasAnyPermission(currentAuth.value?.role, [
+        Permission.MANAGE_USERS,
+        Permission.MANAGE_SEARCH,
+        Permission.MANAGE_ANNOUNCEMENTS
+    ])
+);
+const canManageAnnouncements = computed(() =>
+    hasPermission(currentAuth.value?.role, Permission.MANAGE_ANNOUNCEMENTS)
 );
 
 async function loadCurrentAuth() {
@@ -61,6 +83,45 @@ async function loadUsers() {
         else message.error(response.message);
     } finally {
         loading.value = false;
+    }
+}
+
+async function loadAnnouncement() {
+    if (!canManageAnnouncements.value) return;
+    loadingAnnouncement.value = true;
+    try {
+        const response = await getAdminAnnouncement();
+        if (response.code === 200) {
+            announcementForm.value = {
+                title: response.data.title,
+                content: response.data.content,
+                enabled: response.data.enabled
+            };
+        } else {
+            message.error(response.message);
+        }
+    } finally {
+        loadingAnnouncement.value = false;
+    }
+}
+
+async function handleAnnouncementSave() {
+    if (!canManageAnnouncements.value) return;
+    savingAnnouncement.value = true;
+    try {
+        const response = await updateAdminAnnouncement(announcementForm.value);
+        if (response.code === 200) {
+            announcementForm.value = {
+                title: response.data.title,
+                content: response.data.content,
+                enabled: response.data.enabled
+            };
+            message.success('公告已保存');
+        } else {
+            message.error(response.message);
+        }
+    } finally {
+        savingAnnouncement.value = false;
     }
 }
 
@@ -167,7 +228,11 @@ const columns = [
 
 onMounted(async () => {
     await loadCurrentAuth();
-    await loadUsers();
+    await Promise.all([loadUsers(), loadAnnouncement()]);
+    if (route.query.section === 'announcement') {
+        await nextTick();
+        announcementSectionRef.value?.$el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 });
 </script>
 
@@ -267,9 +332,64 @@ onMounted(async () => {
                     <n-space>
                         <n-tag :type="canManageUsers ? 'success' : 'default'">MANAGE_USERS</n-tag>
                         <n-tag :type="canManageSearch ? 'success' : 'default'">MANAGE_SEARCH</n-tag>
+                        <n-tag :type="canManageAnnouncements ? 'success' : 'default'">
+                            MANAGE_ANNOUNCEMENTS
+                        </n-tag>
                     </n-space>
                 </Card>
             </div>
+
+            <Card ref="announcementSectionRef" title="公告管理" class="announcement-card">
+                <n-spin :show="loadingAnnouncement">
+                    <n-space v-if="canManageAnnouncements" vertical size="large">
+                        <n-space
+                            align="center"
+                            justify="space-between"
+                            class="announcement-toolbar"
+                        >
+                            <n-form-item
+                                label="标题"
+                                label-placement="left"
+                                :show-feedback="false"
+                                class="announcement-title-field"
+                            >
+                                <n-input v-model:value="announcementForm.title" />
+                            </n-form-item>
+                            <n-form-item
+                                label="启用"
+                                label-placement="left"
+                                :show-feedback="false"
+                                class="announcement-enabled-field"
+                            >
+                                <n-switch v-model:value="announcementForm.enabled" />
+                            </n-form-item>
+                        </n-space>
+
+                        <HtmlCodeEditor v-model:value="announcementForm.content" />
+
+                        <div class="announcement-preview-shell">
+                            <div class="muted">预览</div>
+                            <div
+                                class="announcement-preview"
+                                v-html="announcementForm.content"
+                            ></div>
+                        </div>
+
+                        <n-space justify="end">
+                            <n-button
+                                type="primary"
+                                :loading="savingAnnouncement"
+                                @click="handleAnnouncementSave"
+                            >
+                                保存公告
+                            </n-button>
+                        </n-space>
+                    </n-space>
+                    <n-alert v-else type="warning" title="缺少 MANAGE_ANNOUNCEMENTS">
+                        你没有公告管理权限。
+                    </n-alert>
+                </n-spin>
+            </Card>
 
             <Card title="注册用户" class="users-card">
                 <n-spin :show="loading">
@@ -296,6 +416,7 @@ onMounted(async () => {
 
 .admin-header,
 .state-alert,
+.announcement-card,
 .users-card {
     margin-bottom: 16px;
 }
@@ -313,6 +434,35 @@ onMounted(async () => {
 
 .batch-size-field {
     margin-bottom: 0;
+}
+
+.announcement-toolbar {
+    align-items: flex-start;
+}
+
+.announcement-title-field {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.announcement-enabled-field {
+    margin-bottom: 0;
+}
+
+.announcement-preview-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.announcement-preview {
+    min-height: 120px;
+    padding: 16px;
+    border-radius: 6px;
+    background: rgba(248, 251, 255, 0.9);
+    border: 1px solid rgba(22, 119, 255, 0.08);
+    color: #334155;
+    line-height: 1.7;
 }
 
 @media (max-width: 900px) {

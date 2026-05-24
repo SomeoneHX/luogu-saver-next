@@ -1,5 +1,6 @@
 import { apiFetch } from '@/utils/request.ts';
 import type { ApiResponse } from '@/types/common';
+import type { Announcement } from '@/api/announcement.ts';
 
 export interface AdminUser {
     id: number;
@@ -41,4 +42,19 @@ export async function rebuildArticleSummaries(batchSize: number = 20, concurrenc
         method: 'POST',
         data: { batchSize, concurrency }
     })) as ApiResponse<CreateWorkflowTemplateResponse>;
+}
+
+export async function getAdminAnnouncement() {
+    return (await apiFetch('/admin/announcement')) as ApiResponse<Announcement>;
+}
+
+export async function updateAdminAnnouncement(data: {
+    title: string;
+    content: string;
+    enabled: boolean;
+}) {
+    return (await apiFetch('/admin/announcement', {
+        method: 'PUT',
+        data
+    })) as ApiResponse<Announcement>;
 }

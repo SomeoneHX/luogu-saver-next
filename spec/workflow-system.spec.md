@@ -151,7 +151,27 @@ Permission: public (`null` permission mapping).
 
 Task `update-search-index` has `track=true` and `report=true` so clients can observe final search indexing success or failure.
 
-### 5.2 `article-censor-pipeline`
+### 5.2 `paste-save-pipeline`
+
+Required input: `targetId`.
+
+Task graph by logical dependency:
+
+1. `save` (tracked, reported)
+2. `censor` depends on `save` (tracked)
+3. `update-censor` depends on `censor`
+
+Permission: public (`null` permission mapping).
+
+Task `save` has type `save`, target `paste`, targetId equal to the input `targetId`, and empty metadata.
+Task `censor` has type `llm`, target `censor`, and empty metadata.
+Task `update-censor` has type `update`, target `censor`, targetId equal to the input `targetId`, and metadata `{ "censorTarget": "paste" }`.
+
+The template SHALL NOT contain a `summary` task.
+The template SHALL NOT contain an `embedding` task.
+The template SHALL NOT contain an `update-search-index` task.
+
+### 5.3 `article-censor-pipeline`
 
 Required input: `targetId`.
 
@@ -162,7 +182,7 @@ Task graph:
 
 Permission: `CREATE_WORKFLOW`.
 
-### 5.3 `search-reindex-pipeline`
+### 5.4 `search-reindex-pipeline`
 
 Input parameter:
 
@@ -178,7 +198,7 @@ Task `reindex-search` has type `update`, target `search_reindex`, targetId `arti
 
 Permission: `MANAGE_SEARCH`.
 
-### 5.4 `article-summary-rebuild-pipeline`
+### 5.5 `article-summary-rebuild-pipeline`
 
 Input parameters:
 
@@ -195,7 +215,7 @@ Task `rebuild-summary` has type `update`, target `article_summary_rebuild`, targ
 
 Permission: `MANAGE_SEARCH`.
 
-### 5.5 `rag-search-pipeline`
+### 5.6 `rag-search-pipeline`
 
 Input parameters:
 

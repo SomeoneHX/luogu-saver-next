@@ -33,6 +33,7 @@ const normalizeRagArticleIds = (value: any) => {
 
 export const WORKFLOW_TEMPLATES_PERMISSION: { [key: string]: Permission | null } = {
     'article-save-pipeline': null,
+    'paste-save-pipeline': null,
     'article-censor-pipeline': Permission.CREATE_WORKFLOW,
     'search-reindex-pipeline': Permission.MANAGE_SEARCH,
     'article-summary-rebuild-pipeline': Permission.MANAGE_SEARCH,
@@ -144,6 +145,56 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                         target: 'search_index',
                         targetId: targetId,
                         metadata: {}
+                    }
+                }
+            }
+        ];
+
+        return { tasks };
+    },
+    'paste-save-pipeline': (params: any) => {
+        const { targetId } = params;
+        if (!targetId) {
+            throw new Error('targetId is required for paste-save-pipeline');
+        }
+
+        const tasks: TaskDefinition[] = [
+            {
+                name: 'save',
+                track: true,
+                report: true,
+                data: {
+                    type: 'save',
+                    payload: {
+                        target: 'paste',
+                        targetId: targetId,
+                        metadata: {}
+                    }
+                }
+            },
+            {
+                name: 'censor',
+                fathers: ['save'],
+                track: true,
+                data: {
+                    type: 'llm',
+                    payload: {
+                        target: 'censor',
+                        metadata: {}
+                    }
+                }
+            },
+            {
+                name: 'update-censor',
+                fathers: ['censor'],
+                data: {
+                    type: 'update',
+                    payload: {
+                        target: 'censor',
+                        targetId: targetId,
+                        metadata: {
+                            censorTarget: 'paste'
+                        }
                     }
                 }
             }

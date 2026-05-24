@@ -3,7 +3,8 @@ export enum Permission {
     CREATE_WORKFLOW = 1 << 1,
     CREATE_TASK = 1 << 2,
     MANAGE_SEARCH = 1 << 3,
-    MANAGE_USERS = 1 << 4
+    MANAGE_USERS = 1 << 4,
+    MANAGE_ANNOUNCEMENTS = 1 << 5
 }
 
 export const ROLE_ADMIN = -1;

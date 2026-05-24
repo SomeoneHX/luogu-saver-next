@@ -5,6 +5,7 @@ import { Permission, ROLE_ADMIN } from '@/shared/permission';
 import { RegisteredUser } from '@/entities/registered-user';
 import { WorkflowService } from '@/services/workflow.service';
 import { RegisteredUserService } from '@/services/registered-user.service';
+import { AnnouncementService } from '@/services/announcement.service';
 
 const router = new Router<DefaultState, Context>({ prefix: '/admin' });
 
@@ -90,6 +91,24 @@ router.post(
             }
         );
         ctx.success(result);
+    }
+);
+
+router.get(
+    '/announcement',
+    requiresPermission(Permission.MANAGE_ANNOUNCEMENTS),
+    async (ctx: Context) => {
+        const announcement = await AnnouncementService.getAdminAnnouncement();
+        ctx.success(announcement);
+    }
+);
+
+router.put(
+    '/announcement',
+    requiresPermission(Permission.MANAGE_ANNOUNCEMENTS),
+    async (ctx: Context) => {
+        const announcement = await AnnouncementService.updateAnnouncement(ctx.request.body || {});
+        ctx.success(announcement);
     }
 );
 

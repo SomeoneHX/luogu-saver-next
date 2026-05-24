@@ -270,7 +270,11 @@ const handleManualExpand = () => {
 };
 
 const canShowAdminMenu = computed(() =>
-    hasAnyPermission(currentRole.value, [Permission.MANAGE_USERS, Permission.MANAGE_SEARCH])
+    hasAnyPermission(currentRole.value, [
+        Permission.MANAGE_USERS,
+        Permission.MANAGE_SEARCH,
+        Permission.MANAGE_ANNOUNCEMENTS
+    ])
 );
 
 const menuOptions = computed<MenuOption[]>(() => [
