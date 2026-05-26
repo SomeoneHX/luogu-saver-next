@@ -186,7 +186,13 @@ export class EmbeddingService {
             }))
         );
 
-        return 1 + chunkEmbeddings.length;
+        const vectorCount = 1 + chunkEmbeddings.length;
+        logger.info(
+            { articleId: article.id, vectorCount, chunkCount: chunkEmbeddings.length },
+            'Rebuilt article embeddings'
+        );
+
+        return vectorCount;
     }
 
     static async upsertVectors(
