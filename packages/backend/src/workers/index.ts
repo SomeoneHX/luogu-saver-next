@@ -38,13 +38,13 @@ export function bootstrap() {
     const saveTaskPointGuard = new PointGuard(
         'save_task_guard',
         config.queue.save.maxRequestToken,
-        config.queue.save.regenerationInterval
+        (1 / config.queue.save.regenerationInterval) * 1000
     );
     const saveProcessor = new TaskProcessor<SaveTask>();
     const aiTaskPointGuard = new PointGuard(
         'ai_task_guard',
         config.queue.ai.maxRequestToken,
-        config.queue.ai.regenerationInterval
+        (1 / config.queue.ai.regenerationInterval) * 1000
     );
     const aiProcessor = new TaskProcessor<AiTask>();
     const updateProcessor = new TaskProcessor<UpdateTask>();
