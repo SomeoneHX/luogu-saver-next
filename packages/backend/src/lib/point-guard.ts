@@ -19,6 +19,10 @@ export class PointGuard {
         this.rate = rate;
     }
 
+    getRegenerationInterval() {
+        return (1 / this.rate) * 1000;
+    }
+
     /*
      * Attempt to consume points from the bucket.
      * @param cost Number of points to consume (default: 1)

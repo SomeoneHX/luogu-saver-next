@@ -1,10 +1,10 @@
 import {
-    RateLimitError,
     Worker,
     Job,
     QueueEvents,
     type WorkerOptions,
-    UnrecoverableError
+    UnrecoverableError,
+    DelayedError
 } from 'bullmq';
 import { type CommonTask, TaskStatus } from '@/shared/task';
 import { TaskProcessor } from './task-processor';
@@ -53,7 +53,13 @@ export class WorkerHost<T extends CommonTask> {
 
         if (!hasPoints) {
             logger.warn({ jobId: job.id }, 'Rate limited by PointGuard, delaying job...');
-            throw new RateLimitError();
+            await this.worker.pause(false);
+            // Stop the worker immediately
+            setTimeout(() => this.worker.resume(), this.pointGuard.getRegenerationInterval());
+            const jitterDelay =
+                this.pointGuard.getRegenerationInterval() + Math.floor(Math.random() * 4000);
+            await job.moveToDelayed(Date.now() + jitterDelay, job.token);
+            throw new DelayedError();
         }
 
         return await this.processor.process(job);
@@ -83,6 +89,14 @@ export class WorkerHost<T extends CommonTask> {
                 TaskStatus.COMPLETED,
                 'Task completed successfully'
             );
+        });
+
+        this.worker.on('paused', () => {
+            logger.debug({ name: this.worker.name }, 'Worker paused.');
+        });
+
+        this.worker.on('resumed', () => {
+            logger.debug({ name: this.worker.name }, 'Worker resumed.');
         });
 
         this.worker.on('failed', async (job, err) => {
