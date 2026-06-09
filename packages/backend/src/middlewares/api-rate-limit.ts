@@ -3,6 +3,7 @@ import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import { config } from '@/config';
 import { redisClient } from '@/lib/redis';
 import { logger } from '@/lib/logger';
+import { getClientIp } from '@/middlewares/client-ip';
 
 const limiter = new RateLimiterRedis({
     storeClient: redisClient,
@@ -19,7 +20,7 @@ export const apiRateLimit = async (ctx: Context, next: Next) => {
     }
 
     try {
-        await limiter.consume(ctx.ip);
+        await limiter.consume(getClientIp(ctx));
         await next();
     } catch (error) {
         if (error instanceof RateLimiterRes) {

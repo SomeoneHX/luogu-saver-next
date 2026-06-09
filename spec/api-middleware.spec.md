@@ -8,6 +8,12 @@ The API middleware subsystem applies HTTP request preprocessing and postprocessi
 
 For every HTTP request, after authorization middleware has completed, the system SHALL write exactly one info-level log entry.
 
+The client IP address SHALL be resolved by this ordered rule set:
+
+1. If request header `cf-connecting-ip` exists and its first value is a non-empty string, use that value.
+2. Else if request header `x-forwarded-for` exists and its first comma-separated item is a non-empty string, use that first item after trimming whitespace.
+3. Else use Koa `ctx.ip`.
+
 The access log entry SHALL include:
 
 1. Client IP address as `ip`.
@@ -22,7 +28,7 @@ The access log entry SHALL NOT include request body, response body, authorizatio
 
 If `config.apiRateLimit.enabled` is `true`, every HTTP request SHALL be checked by a Redis-backed rate limiter before router execution.
 
-The rate limit key SHALL be the client IP address.
+The rate limit key SHALL be the client IP address resolved by the rule set in section 2.
 
 If the request is within the configured limit, request processing SHALL continue.
 
@@ -43,6 +49,7 @@ The middleware order SHALL satisfy these constraints:
 ## 5. File Locations
 
 - Entry point: `packages/backend/src/index.ts`
+- Client IP helper: `packages/backend/src/middlewares/client-ip.ts`
 - Access log middleware: `packages/backend/src/middlewares/access-log.ts`
 - API rate limit middleware: `packages/backend/src/middlewares/api-rate-limit.ts`
 - Response helper middleware: `packages/backend/src/middlewares/response.ts`

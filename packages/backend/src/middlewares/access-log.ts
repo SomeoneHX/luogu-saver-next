@@ -1,5 +1,6 @@
 import { Context, Next } from 'koa';
 import { logger } from '@/lib/logger';
+import { getClientIp } from '@/middlewares/client-ip';
 
 export const accessLog = async (ctx: Context, next: Next) => {
     try {
@@ -7,7 +8,7 @@ export const accessLog = async (ctx: Context, next: Next) => {
     } finally {
         logger.info(
             {
-                ip: ctx.ip,
+                ip: getClientIp(ctx),
                 userId: ctx.user?.id ?? null,
                 method: ctx.method,
                 path: ctx.path,
