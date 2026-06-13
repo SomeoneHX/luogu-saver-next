@@ -99,7 +99,7 @@ async function handleStart() {
 
 <style scoped>
 .user-article-discovery-page {
-    max-width: 960px;
+    max-width: 1220px;
     margin: 0 auto;
 }
 

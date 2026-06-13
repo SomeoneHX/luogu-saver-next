@@ -326,7 +326,7 @@ onMounted(loadCurrentUser);
 
 <style scoped>
 .settings-page {
-    max-width: 1180px;
+    max-width: 1220px;
     margin: 0 auto;
     width: 100%;
 }
