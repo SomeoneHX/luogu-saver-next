@@ -39,6 +39,7 @@ import { RagPlanQueriesHandler } from '@/workers/handlers/task/rag/rag-plan-quer
 import { RagContextHandler } from '@/workers/handlers/task/rag/rag-context.handler';
 import { RagAnswerHandler } from '@/workers/handlers/task/rag/rag-answer.handler';
 import { ArticlePlazaDiscoveryHandler } from '@/workers/handlers/task/discover/article-plaza.handler';
+import { UserArticlesDiscoveryHandler } from '@/workers/handlers/task/discover/user-articles.handler';
 import { config } from '@/config';
 import { WorkerOptions } from 'bullmq';
 import { FlowManager } from './flow-manager';
@@ -93,6 +94,7 @@ export function bootstrap() {
     ragProcessor.registerHandler(new RagAnswerHandler());
 
     discoverProcessor.registerHandler(new ArticlePlazaDiscoveryHandler());
+    discoverProcessor.registerHandler(new UserArticlesDiscoveryHandler());
 
     const saveWorkerHost = new WorkerHost<SaveTask>(
         QUEUE_NAMES[TaskType.SAVE],

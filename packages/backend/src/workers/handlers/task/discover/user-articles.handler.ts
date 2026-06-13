@@ -1,5 +1,10 @@
 import { Job } from 'bullmq';
-import { DiscoverPlazaMetadata, DiscoverTask, DiscoverTarget, TaskType } from '@/shared/task';
+import {
+    DiscoverTask,
+    DiscoverTarget,
+    DiscoverUserArticlesMetadata,
+    TaskType
+} from '@/shared/task';
 import { TaskHandler, WorkflowResult } from '@/workers/types';
 import { fetch } from '@/utils/fetch';
 import { C3vkMode } from '@/shared/c3vk';
@@ -7,30 +12,26 @@ import { DiscoveredArticleSource } from '@/entities/discovered-article';
 import { DiscoveryService } from '@/services/discovery.service';
 import { TaskService } from '@/services/task.service';
 import { logger } from '@/lib/logger';
-import { ArticleListResponse, extractArticleIds } from './article-list-utils';
+import { ArticleListResponse, extractArticleIds, getTotalPages } from './article-list-utils';
 
-function buildArticlePlazaUrl(page: number, category?: number | null) {
-    const url = new URL('https://www.luogu.com.cn/article');
-    if (category !== null && category !== undefined)
-        url.searchParams.set('category', String(category));
-    if (page > 1) url.searchParams.set('page', String(page));
+function buildUserArticlesUrl(uid: number, page: number) {
+    const url = new URL(`https://www.luogu.com/user/${uid}/article`);
+    url.searchParams.set('page', String(page));
     return url.toString();
 }
 
-export class ArticlePlazaDiscoveryHandler implements TaskHandler<DiscoverTask> {
-    public taskType = `${TaskType.DISCOVER}:${DiscoverTarget.ARTICLE_PLAZA}`;
+export class UserArticlesDiscoveryHandler implements TaskHandler<DiscoverTask> {
+    public taskType = `${TaskType.DISCOVER}:${DiscoverTarget.USER_ARTICLES}`;
 
     public async handle(
         task: DiscoverTask,
         job: Job<DiscoverTask>
     ): Promise<WorkflowResult<{ text: string; articleIds: string[]; nextTaskId?: string }>> {
-        const metadata = task.payload.metadata as DiscoverPlazaMetadata;
+        const metadata = task.payload.metadata as DiscoverUserArticlesMetadata;
         const runId = metadata.runId;
+        const uid = Math.max(1, Math.trunc(Number(metadata.uid) || Number(task.payload.targetId)));
         const page = Math.max(1, Math.trunc(Number(metadata.page) || 1));
-        const category =
-            metadata.category === null || metadata.category === undefined
-                ? null
-                : Math.trunc(Number(metadata.category));
+        const maxPages = Math.max(1, Math.trunc(Number(metadata.maxPages) || 1000));
 
         const isRetry = job.attemptsMade > 0;
         if (!(await DiscoveryService.claimPage(runId, !isRetry))) {
@@ -44,31 +45,36 @@ export class ArticlePlazaDiscoveryHandler implements TaskHandler<DiscoverTask> {
             };
         }
 
-        const url = buildArticlePlazaUrl(page, category);
+        const url = buildUserArticlesUrl(uid, page);
         await job.updateProgress(`Fetching ${url}`);
 
         try {
             const resp: ArticleListResponse = await fetch(url, C3vkMode.MODERN);
             const articleIds = extractArticleIds(resp);
+            const totalPages = getTotalPages(resp);
 
             for (const articleId of articleIds) {
                 await DiscoveryService.discoverArticle({
                     runId,
                     articleId,
-                    source: DiscoveredArticleSource.PLAZA,
+                    source: DiscoveredArticleSource.USER_ARTICLES,
                     forceUpdate: metadata.forceUpdate === true
                 });
             }
 
             let nextTaskId: string | undefined;
-            if (articleIds.length > 0 && page < (metadata.maxPages ?? 50)) {
+            const shouldContinue =
+                articleIds.length > 0 &&
+                page < maxPages &&
+                (totalPages === null || page < totalPages);
+            if (shouldContinue) {
                 const nextTask = await TaskService.createTask(TaskType.DISCOVER, {
-                    target: DiscoverTarget.ARTICLE_PLAZA,
-                    targetId: task.payload.targetId,
+                    target: DiscoverTarget.USER_ARTICLES,
+                    targetId: String(uid),
                     metadata: {
                         ...metadata,
-                        page: page + 1,
-                        category
+                        uid,
+                        page: page + 1
                     }
                 });
                 await TaskService.dispatchTask(nextTask.id);
@@ -76,8 +82,8 @@ export class ArticlePlazaDiscoveryHandler implements TaskHandler<DiscoverTask> {
             }
 
             logger.info(
-                { runId, page, category, articleCount: articleIds.length, nextTaskId },
-                'Article plaza discovery page processed'
+                { runId, uid, page, totalPages, articleCount: articleIds.length, nextTaskId },
+                'User articles discovery page processed'
             );
 
             await DiscoveryService.finishPage(runId, Boolean(nextTaskId));

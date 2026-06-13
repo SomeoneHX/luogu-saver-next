@@ -88,14 +88,24 @@ export interface DiscoverTask extends CommonTask {
     payload: {
         target: DiscoverTarget;
         targetId: string;
-        metadata: DiscoverPlazaMetadata;
+        metadata: DiscoverMetadata;
     };
 }
+
+export type DiscoverMetadata = DiscoverPlazaMetadata | DiscoverUserArticlesMetadata;
 
 export interface DiscoverPlazaMetadata {
     runId: string;
     page?: number;
     category?: number | null;
+    maxPages?: number;
+    forceUpdate?: boolean;
+}
+
+export interface DiscoverUserArticlesMetadata {
+    runId: string;
+    uid: number;
+    page?: number;
     maxPages?: number;
     forceUpdate?: boolean;
 }
@@ -165,7 +175,8 @@ export enum RagTarget {
 }
 
 export enum DiscoverTarget {
-    ARTICLE_PLAZA = 'article_plaza'
+    ARTICLE_PLAZA = 'article_plaza',
+    USER_ARTICLES = 'user_articles'
 }
 
 export enum CensorTarget {

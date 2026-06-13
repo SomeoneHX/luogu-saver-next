@@ -22,6 +22,12 @@ export type StartArticlePlazaDiscoveryInput = {
     includeCategories?: boolean;
 };
 
+export type StartUserArticleDiscoveryInput = {
+    uid?: number | string;
+    maxPages?: number;
+    forceUpdate?: boolean;
+};
+
 export type ArticleDiscoveryInput = {
     runId: string;
     articleId: string;
@@ -89,6 +95,48 @@ export class DiscoveryService {
 
         ArticleDiscoveryBroadcaster.scheduleRunsUpdate();
         return { run, taskIds };
+    }
+
+    static async startUserArticleDiscovery(input: StartUserArticleDiscoveryInput = {}) {
+        const uid = clampInt(input.uid, 0, 1, Number.MAX_SAFE_INTEGER);
+        if (uid <= 0) throw new Error('Valid uid is required');
+
+        const maxPages = clampInt(input.maxPages, 1000, 1, 1000);
+        const forceUpdate = normalizeBool(input.forceUpdate, false);
+        const seedUrl = `https://www.luogu.com/user/${uid}/article`;
+
+        const run = await saveServiceEntity<DiscoveryRun>(
+            DiscoveryRun,
+            DiscoveryRun.create({
+                seedUrl,
+                status: DiscoveryRunStatus.ACTIVE,
+                maxPages,
+                forceUpdate,
+                visitedPages: 0,
+                failedPages: 0,
+                pendingPages: 1,
+                discoveredArticles: 0,
+                createdWorkflows: 0,
+                lastError: null,
+                finishedAt: null
+            })
+        );
+
+        const task = await TaskService.createTask(TaskType.DISCOVER, {
+            target: DiscoverTarget.USER_ARTICLES,
+            targetId: String(uid),
+            metadata: {
+                runId: run.id,
+                uid,
+                page: 1,
+                maxPages,
+                forceUpdate
+            }
+        });
+        await TaskService.dispatchTask(task.id);
+
+        ArticleDiscoveryBroadcaster.scheduleRunsUpdate();
+        return { run, taskIds: [task.id] };
     }
 
     static async getRunById(runId: string) {

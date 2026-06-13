@@ -199,7 +199,8 @@ import {
     GlobeOutline,
     SettingsOutline,
     ShieldCheckmarkOutline,
-    ChatbubbleEllipsesOutline
+    ChatbubbleEllipsesOutline,
+    CloudDownloadOutline
 } from '@vicons/ionicons5';
 
 import { Icon, IconConfigProvider } from '@vicons/utils';
@@ -297,6 +298,11 @@ const menuOptions = computed<MenuOption[]>(() => [
         label: '文章广场',
         key: 'plaza',
         icon: renderIcon(GlobeOutline)
+    },
+    {
+        label: '用户文章爬取',
+        key: 'discovery/user-articles',
+        icon: renderIcon(CloudDownloadOutline)
     },
     // {
     //     label: '用户动态',

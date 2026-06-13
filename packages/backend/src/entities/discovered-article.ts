@@ -16,7 +16,8 @@ export enum DiscoveredArticleStatus {
 }
 
 export enum DiscoveredArticleSource {
-    PLAZA = 'plaza'
+    PLAZA = 'plaza',
+    USER_ARTICLES = 'user_articles'
 }
 
 @Entity({ name: 'discovered_article' })

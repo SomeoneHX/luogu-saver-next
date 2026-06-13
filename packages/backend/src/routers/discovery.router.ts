@@ -1,7 +1,7 @@
 import Router from 'koa-router';
 import { Context, DefaultState } from 'koa';
 import { requiresPermission } from '@/middlewares/authorization';
-import { Permission } from '@/shared/permission';
+import { Permission, ROLE_ADMIN } from '@/shared/permission';
 import { DiscoveryService } from '@/services/discovery.service';
 import { logger } from '@/lib/logger';
 
@@ -29,6 +29,39 @@ router.post(
         }
     }
 );
+
+router.post('/user/:uid/articles/start', async (ctx: Context) => {
+    try {
+        const body = (ctx.request.body || {}) as { forceUpdate?: boolean; maxPages?: number };
+        if (body.forceUpdate === true) {
+            const role = ctx.user?.role;
+            const canForceUpdate =
+                role === ROLE_ADMIN ||
+                (role !== undefined &&
+                    (role & Permission.MANAGE_DISCOVERY) === Permission.MANAGE_DISCOVERY);
+            if (!canForceUpdate) {
+                ctx.fail(403, 'Permission denied');
+                return;
+            }
+        }
+
+        const result = await DiscoveryService.startUserArticleDiscovery({
+            ...body,
+            uid: ctx.params.uid
+        });
+        ctx.success({
+            runId: result.run.id,
+            taskIds: result.taskIds,
+            run: result.run
+        });
+    } catch (error) {
+        logger.error({ error, uid: ctx.params.uid }, 'Failed to start user article discovery');
+        ctx.fail(
+            400,
+            error instanceof Error ? error.message : 'Failed to start user article discovery'
+        );
+    }
+});
 
 router.get('/runs', requiresPermission(Permission.MANAGE_DISCOVERY), async (ctx: Context) => {
     const limit = Number(ctx.query.limit) || 20;

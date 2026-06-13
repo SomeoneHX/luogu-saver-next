@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-This specification defines backend behavior for discovering Luogu articles from the article plaza.
+This specification defines backend behavior for discovering Luogu articles from the article plaza and from a Luogu user's article list.
 
 Article discovery is a producer of existing article save workflows. It SHALL NOT parse saved article
 content for links. It SHALL NOT create recursive discovery runs.
@@ -13,22 +13,22 @@ content for links. It SHALL NOT create recursive discovery runs.
 
 Table name: `discovery_run`
 
-| Column                | Type     | Constraints | Description                                    |
-| --------------------- | -------- | ----------- | ---------------------------------------------- |
-| `id`                  | UUID     | PRIMARY KEY | Discovery run identifier                       |
-| `seed_url`            | VARCHAR  | NOT NULL    | Seed URL. Article plaza runs use the plaza URL |
-| `status`              | VARCHAR  | NOT NULL    | `active`, `completed`, `stopped`, or `failed`  |
-| `max_pages`           | INT      | NOT NULL    | Maximum pages claimed by this run              |
-| `force_update`        | TINYINT  | NOT NULL    | Whether article save workflows force refresh   |
-| `visited_pages`       | INT      | NOT NULL    | Number of page claims consumed by this run     |
-| `failed_pages`        | INT      | NOT NULL    | Number of pages that reached final failure     |
-| `pending_pages`       | INT      | NOT NULL    | Number of page chains that have not terminated |
-| `discovered_articles` | INT      | NOT NULL    | Number of distinct article rows inserted       |
-| `created_workflows`   | INT      | NOT NULL    | Number of save workflows created by this run   |
-| `last_error`          | TEXT     | NULLABLE    | Last final page failure message, truncated     |
-| `finished_at`         | DATETIME | NULLABLE    | Completion or stop timestamp                   |
-| `created_at`          | DATETIME | NOT NULL    | Record creation timestamp                      |
-| `updated_at`          | DATETIME | NOT NULL    | Record update timestamp                        |
+| Column                | Type     | Constraints | Description                                                                                                      |
+| --------------------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| `id`                  | UUID     | PRIMARY KEY | Discovery run identifier                                                                                         |
+| `seed_url`            | VARCHAR  | NOT NULL    | Seed URL. Article plaza runs use the plaza URL. User article runs use `https://www.luogu.com/user/{uid}/article` |
+| `status`              | VARCHAR  | NOT NULL    | `active`, `completed`, `stopped`, or `failed`                                                                    |
+| `max_pages`           | INT      | NOT NULL    | Maximum pages claimed by this run                                                                                |
+| `force_update`        | TINYINT  | NOT NULL    | Whether article save workflows force refresh                                                                     |
+| `visited_pages`       | INT      | NOT NULL    | Number of page claims consumed by this run                                                                       |
+| `failed_pages`        | INT      | NOT NULL    | Number of pages that reached final failure                                                                       |
+| `pending_pages`       | INT      | NOT NULL    | Number of page chains that have not terminated                                                                   |
+| `discovered_articles` | INT      | NOT NULL    | Number of distinct article rows inserted                                                                         |
+| `created_workflows`   | INT      | NOT NULL    | Number of save workflows created by this run                                                                     |
+| `last_error`          | TEXT     | NULLABLE    | Last final page failure message, truncated                                                                       |
+| `finished_at`         | DATETIME | NULLABLE    | Completion or stop timestamp                                                                                     |
+| `created_at`          | DATETIME | NOT NULL    | Record creation timestamp                                                                                        |
+| `updated_at`          | DATETIME | NOT NULL    | Record update timestamp                                                                                          |
 
 ### 2.2 DiscoveredArticle
 
@@ -39,7 +39,7 @@ Table name: `discovered_article`
 | `id`           | UUID        | PRIMARY KEY | Row identifier                         |
 | `run_id`       | VARCHAR     | NOT NULL    | Discovery run identifier               |
 | `article_id`   | VARCHAR(8)  | NOT NULL    | Luogu article LID                      |
-| `source`       | VARCHAR     | NOT NULL    | `plaza`                                |
+| `source`       | VARCHAR     | NOT NULL    | `plaza` or `user_articles`             |
 | `status`       | VARCHAR     | NOT NULL    | `discovered`, `workflow_created`, etc. |
 | `workflow_id`  | VARCHAR(36) | NULLABLE    | Created article save workflow ID       |
 | `reason`       | TEXT        | NULLABLE    | Failure or skip reason                 |
@@ -85,13 +85,54 @@ If fetching or parsing fails:
 1. Non-final BullMQ attempts SHALL rethrow the error without incrementing `failed_pages` and without decrementing `pending_pages`.
 2. The final attempt SHALL increment `failed_pages`, write `last_error`, decrement `pending_pages`, and rethrow the error.
 
+## 4.1 User Article Run Creation
+
+`DiscoveryService.startUserArticleDiscovery(input)` SHALL:
+
+1. Normalize `uid` to a positive integer.
+2. Normalize `maxPages` to an integer in `[1, 1000]`, default `1000`.
+3. Normalize `forceUpdate` to a boolean, default `false`.
+4. Create one `discovery_run` row with:
+    - `seed_url = "https://www.luogu.com/user/{uid}/article"`
+    - `status = active`
+    - `max_pages = maxPages`
+    - `pending_pages = 1`
+    - counters initialized to zero
+5. Create and dispatch one `discover:user_articles` task with page `1`, `uid`, `maxPages`, and `forceUpdate`.
+6. Return the created run and dispatched task ID.
+
+`POST /discover/user/:uid/articles/start` SHALL be a public HTTP API endpoint. It SHALL NOT require Socket.IO authentication or `MANAGE_DISCOVERY` permission when `forceUpdate` is not `true`. It SHALL start one user article discovery run for path parameter `uid`.
+
+If request body field `forceUpdate` is `true`, the endpoint SHALL require the authenticated user to be admin or to have `MANAGE_DISCOVERY` permission.
+
+The frontend SHALL provide a dedicated page with a UID input for starting this endpoint. The frontend SHALL NOT place this start form on the home page.
+
+The frontend SHALL show the `forceUpdate` control only when the current authenticated user is admin or has `MANAGE_DISCOVERY` permission.
+
+## 4.2 User Article Page Task
+
+A `discover:user_articles` task SHALL:
+
+1. Claim one page budget from the run before fetching the page.
+2. On retry attempts, verify the run is still active but SHALL NOT consume another page budget.
+3. Fetch `https://www.luogu.com/user/{uid}/article?page={page}`.
+4. Extract valid article LIDs from `data.articles.result[*].lid`.
+5. Deduplicate article LIDs within the fetched page.
+6. For each extracted article ID, call `DiscoveryService.discoverArticle` with source `user_articles`.
+7. Compute total page count as `ceil(count / perPage)` if both `data.articles.count` and `data.articles.perPage` are positive finite numbers.
+8. If the page contains at least one article and `page < maxPages` and either total page count is unknown or `page < totalPageCount`, create and dispatch the next page task for the same user.
+9. If no continuation task is created, decrement `pending_pages`.
+10. When `pending_pages` reaches zero, mark the run `completed` and set `finished_at`.
+
+If fetching or parsing fails, error handling SHALL match Section 4.
+
 ## 5. Discovered Article Handling
 
 `DiscoveryService.discoverArticle(input)` SHALL:
 
 1. Reject article IDs that do not match `/^[A-Za-z0-9]{1,8}$/`.
 2. Reject inactive or missing runs.
-3. Insert one `discovered_article` row with source `plaza`.
+3. Insert one `discovered_article` row with source `plaza` or `user_articles`.
 4. If `(run_id, article_id)` already exists, update `last_seen_at` and return duplicate.
 5. Create one `article-save-pipeline` workflow with `targetId = articleId`, `forceUpdate`, and BullMQ job priority `10`.
 6. On workflow creation success, set row status to `workflow_created` and store `workflow_id`.
