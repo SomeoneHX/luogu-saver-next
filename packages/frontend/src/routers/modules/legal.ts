@@ -28,7 +28,7 @@ export default [
         props: { docKey: 'deletion' },
         meta: {
             activeMenu: '',
-            title: '账号注销'
+            title: '数据移除政策'
         }
     }
 ] as RouteRecordRaw[];
