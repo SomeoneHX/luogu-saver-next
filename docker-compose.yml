@@ -7,7 +7,7 @@ services:
             - '127.0.0.1:3306:3306'
         environment:
             # Change your root password. THIS IS VERY IMPORTANT!
-            MARIADB_ROOT_PASSWORD: 123456
+            MARIADB_ROOT_PASSWORD: ${SAVER_DB_ROOT_PASSWORD:?Set SAVER_DB_ROOT_PASSWORD}
             TZ: Asia/Shanghai
         volumes:
             - ./mysql-data:/var/lib/mysql
@@ -38,7 +38,7 @@ services:
         ports:
             - '127.0.0.1:7700:7700'
         environment:
-            - MEILI_MASTER_KEY=CHANGE_YOUR_KEY_HERE
-            - MEILI_NO_ANALYTICS=true
+            MEILI_MASTER_KEY: ${SAVER_MEILI_MASTER_KEY:?Set SAVER_MEILI_MASTER_KEY}
+            MEILI_NO_ANALYTICS: 'true'
         volumes:
             - ./meili-data:/meili_data
