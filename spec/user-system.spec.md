@@ -163,7 +163,7 @@ The handler is registered in `packages/backend/src/workers/index.ts` alongside `
     - `slogan: string | null` from `response.data.user.slogan`; treat empty strings and non-strings as `null`
     - `introduction: string | null` from `response.data.user.introduction`; treat empty strings and non-strings as `null`
     - `prizes: UserPrize[]` from `response.data.prizes`. Each element of `response.data.prizes` is a one-level wrapper `{ prize: LuoguPrize }`; the handler MUST unwrap the inner `prize` object before storing. Despite the name, `response.data.user.prize` is unrelated and may be empty; do NOT read from it. Default to `[]` if `response.data.prizes` is absent or non-array.
-5. If `introduction !== null`, render it via the shared `renderMarkdown` pipeline (`packages/backend/src/lib/markdown.ts`) to produce `renderedIntroduction: string`. Otherwise `renderedIntroduction = null`. The handler does not memoize this; idempotent re-runs re-render.
+5. If `introduction !== null`, render it via the shared `renderMarkdown` pipeline (`@luogu-saver-next/markdown-renderer`) to produce `renderedIntroduction: string`. Otherwise `renderedIntroduction = null`. The handler does not memoize this; idempotent re-runs re-render.
 6. Build the payload for `UserService.saveLuoguUserProfile`:
     ```typescript
     {
