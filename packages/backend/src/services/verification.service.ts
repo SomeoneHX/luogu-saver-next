@@ -35,7 +35,7 @@ export class VerificationService {
     }
 
     static async verifyByLuogu(uid: number, pasteId: string) {
-        const url = `https://www.luogu.com/paste/${pasteId}`;
+        const url = `https://www.luogu.com.cn/paste/${pasteId}`;
         const resp: DataResponse<{ paste: LuoguPaste }> = await fetch(url, C3vkMode.MODERN);
 
         if (resp.currentData.paste.user.uid !== uid) {

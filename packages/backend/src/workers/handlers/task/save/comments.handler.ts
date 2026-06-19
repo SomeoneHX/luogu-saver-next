@@ -48,7 +48,7 @@ export class CommentsHandler implements TaskHandler<SaveTask> {
 
         for (let page = 0; page < COMMENTS_MAX_PAGES; page++) {
             const url =
-                `https://www.luogu.com/article/${lid}/replies?sort=` +
+                `https://www.luogu.com.cn/article/${lid}/replies?sort=` +
                 (after !== null ? `&after=${after}` : '');
             const resp: RepliesData = await fetch(url, C3vkMode.MODERN);
 

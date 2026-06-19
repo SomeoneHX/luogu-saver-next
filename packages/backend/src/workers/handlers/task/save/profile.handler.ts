@@ -23,7 +23,7 @@ export class ProfileHandler implements TaskHandler<SaveTask> {
         }
         const uid = Number(rawTargetId);
 
-        const url = `https://www.luogu.com/user/${uid}`;
+        const url = `https://www.luogu.com.cn/user/${uid}`;
         const resp: LentilleDataResponse<UserData> = await fetch(url, C3vkMode.MODERN);
 
         const userData = resp?.data?.user;

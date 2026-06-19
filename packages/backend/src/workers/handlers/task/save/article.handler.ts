@@ -14,7 +14,7 @@ export class ArticleHandler implements TaskHandler<SaveTask> {
     public taskType = 'save:article';
 
     public async handle(task: SaveTask): Promise<WorkflowResult<TaskTextResult>> {
-        const url = `https://www.luogu.com/article/${task.payload.targetId}`;
+        const url = `https://www.luogu.com.cn/article/${task.payload.targetId}`;
         const resp: LentilleDataResponse<ArticleData> = await fetch(url, C3vkMode.MODERN);
         const data = resp.data?.article;
 

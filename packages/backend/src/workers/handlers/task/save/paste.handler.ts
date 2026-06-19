@@ -14,7 +14,7 @@ export class PasteHandler implements TaskHandler<SaveTask> {
     public taskType = 'save:paste';
 
     public async handle(task: SaveTask): Promise<WorkflowResult<TaskTextResult>> {
-        const url = `https://www.luogu.com/paste/${task.payload.targetId}`;
+        const url = `https://www.luogu.com.cn/paste/${task.payload.targetId}`;
         const resp: DataResponse<{ paste: LuoguPaste }> = await fetch(url, C3vkMode.MODERN);
         const data = resp.currentData?.paste;
 

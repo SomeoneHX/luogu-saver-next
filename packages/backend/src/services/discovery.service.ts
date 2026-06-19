@@ -103,7 +103,7 @@ export class DiscoveryService {
 
         const maxPages = clampInt(input.maxPages, 1000, 1, 1000);
         const forceUpdate = normalizeBool(input.forceUpdate, false);
-        const seedUrl = `https://www.luogu.com/user/${uid}/article`;
+        const seedUrl = `https://www.luogu.com.cn/user/${uid}/article`;
 
         const run = await saveServiceEntity<DiscoveryRun>(
             DiscoveryRun,

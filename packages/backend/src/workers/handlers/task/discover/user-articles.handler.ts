@@ -15,7 +15,7 @@ import { logger } from '@/lib/logger';
 import { ArticleListResponse, extractArticleIds, getTotalPages } from './article-list-utils';
 
 function buildUserArticlesUrl(uid: number, page: number) {
-    const url = new URL(`https://www.luogu.com/user/${uid}/article`);
+    const url = new URL(`https://www.luogu.com.cn/user/${uid}/article`);
     url.searchParams.set('page', String(page));
     return url.toString();
 }
