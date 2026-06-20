@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue';
 import 'katex/dist/katex.min.css';
-import renderMathInElement from 'katex/contrib/auto-render';
 import '@/styles/markdown.css';
 import { renderMarkdown } from '@/api/markdown.ts';
 
@@ -36,20 +35,6 @@ const CHECK_SVG = `
   <polyline points="20 6 9 17 4 12"></polyline>
 </svg>
 `;
-
-const renderMath = () => {
-    if (contentRef.value) {
-        renderMathInElement(contentRef.value, {
-            delimiters: [
-                { left: '$$', right: '$$', display: true },
-                { left: '$', right: '$', display: false },
-                { left: '\\(', right: '\\)', display: false },
-                { left: '\\[', right: '\\]', display: true }
-            ],
-            throwOnError: false
-        });
-    }
-};
 
 const toggleMarkdownBlock = (event: Event) => {
     const title = event.currentTarget as HTMLElement;
@@ -140,7 +125,6 @@ const processContent = async () => {
     }
 
     await nextTick();
-    renderMath();
     initMarkdownBlocks();
     addCopyButtons();
     emit('rendered', renderedContent.value);
