@@ -607,13 +607,24 @@ async function getProcessor() {
     return processorPromise;
 }
 
+function normalizeMathDelimiters(s: string): string {
+    // Convert all $$ delimiters to $ to prevent fenced display math
+    // from consuming subsequent inline math content (the merge bug).
+    // remark-math treats $$...$$ inline (same line) as math-inline,
+    // but $$ on its own line opens fenced math-display that never
+    // closes when the article uses inline $$ as closing.
+    // Using single $ makes everything inline math, eliminating
+    // the fenced display math state machine entirely.
+    return s.replace(/\$\$/g, '$');
+}
+
 export default async function renderMarkdown(src: string) {
     if (!src) return '';
 
     const processor = await getProcessor();
 
     try {
-        const file = await processor.process(src);
+        const file = await processor.process(normalizeMathDelimiters(src));
         return replaceUI(String(file));
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Render Error';
