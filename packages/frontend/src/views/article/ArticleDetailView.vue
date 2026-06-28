@@ -87,6 +87,7 @@ interface VersionItem {
 }
 const versionHistory = ref<VersionItem[]>([]);
 const selectedVersion = ref<number | null>(null);
+const renderedCache = ref<Record<number, string>>({});
 
 const isViewingLatest = computed(() => {
     return (
@@ -97,7 +98,13 @@ const isViewingLatest = computed(() => {
 const versionContent = computed(() => {
     if (isViewingLatest.value) return displayContent.value;
     const ver = versionHistory.value.find(v => v.version === selectedVersion.value);
-    return ver?.content ?? displayContent.value;
+    if (!ver) return displayContent.value;
+    return renderedCache.value[ver.version] ?? ver.content;
+});
+
+const isPreRendered = computed(() => {
+    if (isViewingLatest.value) return true;
+    return selectedVersion.value != null && renderedCache.value[selectedVersion.value] != null;
 });
 
 const displayTitle = computed(() => {
@@ -124,6 +131,9 @@ const handleVersionClick = async (version: number) => {
 };
 
 const handleRendered = (html: string) => {
+    if (selectedVersion.value != null && !isViewingLatest.value) {
+        renderedCache.value[selectedVersion.value] = html;
+    }
     const result = generateTocAndProcessHtml(html);
     tocItems.value = result.toc;
 };
@@ -529,7 +539,7 @@ onMounted(() => {
                             <Card v-if="article">
                                 <MarkdownViewer
                                     :content="versionContent"
-                                    :pre-rendered="isViewingLatest"
+                                    :pre-rendered="isPreRendered"
                                     @rendered="handleRendered"
                                 />
                             </Card>
