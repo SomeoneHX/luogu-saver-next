@@ -87,6 +87,7 @@ interface VersionItem {
 }
 const versionHistory = ref<VersionItem[]>([]);
 const selectedVersion = ref<number | null>(null);
+const loadingVersion = ref<number | null>(null);
 const renderedCache = ref<Record<number, string>>({});
 
 const isViewingLatest = computed(() => {
@@ -120,6 +121,9 @@ const displayTime = computed(() => {
 });
 
 const handleVersionClick = async (version: number) => {
+    if (version !== versionHistory.value[0]?.version && !renderedCache.value[version]) {
+        loadingVersion.value = version;
+    }
     selectedVersion.value = version;
     const isLatest = version === versionHistory.value[0]?.version;
     await router.replace({ query: isLatest ? {} : { version: String(version) } });
@@ -131,6 +135,7 @@ const handleVersionClick = async (version: number) => {
 };
 
 const handleRendered = (html: string) => {
+    loadingVersion.value = null;
     if (selectedVersion.value != null && !isViewingLatest.value) {
         renderedCache.value[selectedVersion.value] = html;
     }
@@ -670,13 +675,21 @@ onMounted(() => {
                         <n-timeline-item
                             v-for="ver in versionHistory"
                             :key="ver.version"
-                            :title="`版本 ${ver.version}`"
                             :content="ver.title"
                             :time="formatDate(ver.createdAt)"
                             :type="selectedVersion === ver.version ? 'success' : 'default'"
                             class="version-timeline-item"
                             @click="handleVersionClick(ver.version)"
-                        />
+                        >
+                            <template #header>
+                                <span
+                                    >版本 {{ ver.version
+                                    }}<span
+                                        v-if="loadingVersion === ver.version"
+                                        class="version-loading-spinner"
+                                /></span>
+                            </template>
+                        </n-timeline-item>
                     </n-timeline>
                 </SidebarWidget>
             </aside>
@@ -978,6 +991,25 @@ onMounted(() => {
 
 .version-timeline-item {
     cursor: pointer;
+}
+
+.version-loading-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #d9d9d9;
+    border-top-color: #2f6db5;
+    border-radius: 50%;
+    animation: version-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-left: 4px;
+    margin-top: -2px;
+}
+
+@keyframes version-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* noinspection CssUnusedSymbol */
