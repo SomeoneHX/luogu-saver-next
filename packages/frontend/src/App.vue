@@ -200,7 +200,8 @@ import {
     SettingsOutline,
     ShieldCheckmarkOutline,
     ChatbubbleEllipsesOutline,
-    CloudDownloadOutline
+    CloudDownloadOutline,
+    HammerOutline
 } from '@vicons/ionicons5';
 
 import { Icon, IconConfigProvider } from '@vicons/utils';
@@ -350,11 +351,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     //         }
     //     ]
     // },
-    // {
-    //     label: '陶片放逐',
-    //     key: 'judgement',
-    //     icon: renderIcon(HammerOutline)
-    // },
+    {
+        label: '陶片放逐',
+        key: 'judgement',
+        icon: renderIcon(HammerOutline)
+    },
     {
         label: '统计数据',
         key: 'statistic',
@@ -436,6 +437,8 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
 const handleMenuSelect = (key: string) => {
     if (key === 'home') {
         router.push('/');
+    } else if (key === 'judgement') {
+        window.open('https://jdmt.luogu.me', '_blank');
     } else {
         router.push(`/${key}`);
     }
