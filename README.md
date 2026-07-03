@@ -3,12 +3,16 @@
     <p>A web application for saving user-generated content (UGC) from www.luogu.com.cn.</p>
     <p>
         <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" alt="Node Version"/>
-        <img src="https://img.shields.io/github/last-commit/laikit-dev/luogu-saver" alt="Last Commit"/>
-        <img src="https://img.shields.io/github/actions/workflow/status/laikit-dev/luogu-saver/deploy.yml" alt="Build Status">
-        <img src="https://img.shields.io/github/license/laikit-dev/luogu-saver" alt="License"/>
+        <img src="https://img.shields.io/github/last-commit/SomeoneHX/luogu-saver-next" alt="Last Commit"/>
+        <img src="https://img.shields.io/github/actions/workflow/status/SomeoneHX/luogu-saver-next/deploy-gh-pages.yml" alt="Build Status">
+        <img src="https://img.shields.io/github/license/SomeoneHX/luogu-saver-next" alt="License"/>
     </p>
     <p><a href="README.cn.md">简体中文</a> | English</p>
 </div>
+
+> **ℹ️ This fork (`deploy` branch) is adapted for GitHub Pages deployment.**
+> The frontend is built as a static SPA and deployed via GitHub Actions.
+> See [Deployment](#5-deploy-to-github-pages-this-fork) for details.
 
 ## Description
 
@@ -58,7 +62,7 @@ docker compose up -d
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/laikit-dev/luogu-saver.git
+git clone https://github.com/SomeoneHX/luogu-saver-next.git
 cd luogu-saver-next
 ```
 
@@ -161,6 +165,20 @@ You need a web server (e.g., **Nginx** or **Caddy**) to serve the static files l
 If you did not set the `VITE_API_URL` variable during the frontend build, the application defaults to sending requests to `/api` on the same domain.
 
 **Crucial Step:** You must configure your web server (Nginx/Caddy) to reverse proxy requests starting with `/api` to the running backend service (e.g., `localhost:3000`).
+
+### 5. Deploy to GitHub Pages (this fork)
+
+This fork includes a GitHub Actions workflow (`.github/workflows/deploy-gh-pages.yml`) that automatically builds and deploys the frontend to GitHub Pages.
+
+**Workflow trigger:**
+
+- Push to the `deploy` branch
+- Manual trigger via Actions → Deploy to GitHub Pages → Run workflow
+
+**Prerequisites:**
+
+- Set `BACKEND_API_URL` in your fork's Settings → Secrets and variables → Actions
+- In Settings → Pages, set Source to **GitHub Actions**
 
 ## Contributing
 

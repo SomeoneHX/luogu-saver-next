@@ -3,12 +3,16 @@
     <p>一个用于保存来自 www.luogu.com.cn 的用户生成内容 (UGC) 的 Web 应用程序。</p>
     <p>
         <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" alt="Node 版本"/>
-        <img src="https://img.shields.io/github/last-commit/laikit-dev/luogu-saver" alt="最后提交"/>
-        <img src="https://img.shields.io/github/actions/workflow/status/laikit-dev/luogu-saver/deploy.yml" alt="构建状态">
-        <img src="https://img.shields.io/github/license/laikit-dev/luogu-saver" alt="许可证"/>
+        <img src="https://img.shields.io/github/last-commit/SomeoneHX/luogu-saver-next" alt="最后提交"/>
+        <img src="https://img.shields.io/github/actions/workflow/status/SomeoneHX/luogu-saver-next/deploy-gh-pages.yml" alt="构建状态">
+        <img src="https://img.shields.io/github/license/SomeoneHX/luogu-saver-next" alt="许可证"/>
     </p>
     <p>简体中文 | <a href="README.md">English</a></p>
 </div>
+
+> **ℹ️ 本分支 (`deploy`) 已适配 GitHub Pages 部署。**
+> 前端构建为纯静态 SPA，通过 GitHub Actions 自动部署。
+> 详见[部署](#5-部署到-github-pages本分支)章节。
 
 ## 项目描述
 
@@ -58,7 +62,7 @@ docker compose up -d
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/laikit-dev/luogu-saver.git
+git clone https://github.com/SomeoneHX/luogu-saver-next.git
 cd luogu-saver-next
 ```
 
@@ -158,6 +162,20 @@ node dist/index.js
 如果在构建前端时未设置 `VITE_API_URL` 变量，应用程序默认将请求发送到同一域名的 `/api`。
 
 **关键步骤：** 必须配置 Web 服务器（Nginx/Caddy）将以 `/api` 开头的请求反向代理到正在运行的后端服务（例如 `localhost:3000`）。
+
+### 5. 部署到 GitHub Pages（本分支）
+
+本分支包含一个 GitHub Actions 工作流 (`.github/workflows/deploy-gh-pages.yml`)，可自动构建前端并部署到 GitHub Pages。
+
+**触发方式：**
+
+- 推送 `deploy` 分支
+- 手动触发：Actions → Deploy to GitHub Pages → Run workflow
+
+**前置条件：**
+
+- 在 fork 仓库的 Settings → Secrets and variables → Actions 中设置 `BACKEND_API_URL`
+- 在 Settings → Pages 中，Source 设置为 **GitHub Actions**
 
 ## 贡献
 
