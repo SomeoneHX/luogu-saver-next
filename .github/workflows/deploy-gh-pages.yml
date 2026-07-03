@@ -4,13 +4,13 @@ on:
     workflow_dispatch:
         inputs:
             branch:
-                description: 'Branch to build from (default: master)'
+                description: 'Branch to build from (default: deploy)'
                 required: true
-                default: 'master'
+                default: 'deploy'
                 type: string
     push:
         branches:
-            - master
+            - deploy
 
 jobs:
     deploy-gh-pages:
@@ -20,7 +20,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6.0.1
               with:
-                  ref: ${{ inputs.branch || 'master' }}
+                  ref: ${{ inputs.branch || 'deploy' }}
 
             - uses: actions/setup-node@v6.1.0
               with:
