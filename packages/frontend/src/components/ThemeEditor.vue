@@ -61,10 +61,8 @@ interface ColorEditorGroup {
 const showDrawer = ref(false);
 const defaultExpandedNames = ['main'];
 
-// 模式控制: auto | manual
 const mode = ref<'auto' | 'manual'>('auto');
 
-// 自动模式下跟随系统主题
 watchEffect(() => {
     if (mode.value === 'auto') {
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -332,7 +330,7 @@ const handleReset = () => {
 }
 
 .editor-content.disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     pointer-events: none;
     user-select: none;
 }
