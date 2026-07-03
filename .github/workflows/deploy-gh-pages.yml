@@ -1,0 +1,46 @@
+name: Deploy to GitHub Pages
+
+on:
+    workflow_dispatch:
+        inputs:
+            branch:
+                description: 'Branch to deploy'
+                required: true
+                default: 'master'
+                type: string
+    push:
+        branches:
+            - master
+
+jobs:
+    deploy-gh-pages:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v6.0.1
+              with:
+                  ref: ${{ inputs.branch || 'master' }}
+
+            - uses: actions/setup-node@v6.1.0
+              with:
+                  node-version: 22
+
+            - run: npm install
+
+            - name: Build for GitHub Pages
+              run: npm run build -w @luogu-saver-next/frontend
+              env:
+                  VITE_GITHUB_PAGES: 'true'
+                  VITE_API_URL: ${{ secrets.BACKEND_API_URL }}
+
+            - name: Copy index.html to 404.html (SPA fallback)
+              run: cp packages/frontend/dist/index.html packages/frontend/dist/404.html
+
+            - name: Deploy to gh-pages
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: packages/frontend/dist
+                  publish_branch: gh-pages
+                  force_orphan: true

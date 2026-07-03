@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
                 '@': resolve(__dirname, 'src')
             }
         },
-        base: env.VITE_CDN_URL || '/',
+        base: env.VITE_CDN_URL || (env.VITE_GITHUB_PAGES ? '/luogu-saver-next/' : '/'),
 
         server: {
             allowedHosts: true,
