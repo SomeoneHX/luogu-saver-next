@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
         inputs:
             branch:
-                description: 'Branch to deploy'
+                description: 'Branch to build from (default: master)'
                 required: true
                 default: 'master'
                 type: string
