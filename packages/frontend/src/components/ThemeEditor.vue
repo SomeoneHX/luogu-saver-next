@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, watchEffect } from 'vue';
+import { computed, inject, ref } from 'vue';
 import {
     NButton,
     NCollapse,
@@ -17,13 +17,14 @@ import {
     useMessage
 } from 'naive-ui';
 import { Settings } from '@vicons/ionicons5';
-import { uiThemeKey, type UiThemeVars } from '@/styles/theme/themeKeys.ts';
+import { uiThemeKey, uiThemeModeKey, type UiThemeVars } from '@/styles/theme/themeKeys.ts';
 import { defaultTheme, darkTheme } from '@/styles/theme/default-theme.ts';
 
 const uiTheme = inject(uiThemeKey);
+const mode = inject(uiThemeModeKey);
 const message = useMessage();
 
-if (!uiTheme) {
+if (!uiTheme || !mode) {
     throw new Error('ThemeEditor 必须在 provider 内部使用');
 }
 
@@ -60,15 +61,6 @@ interface ColorEditorGroup {
 
 const showDrawer = ref(false);
 const defaultExpandedNames = ['main'];
-
-const mode = ref<'auto' | 'manual'>('auto');
-
-watchEffect(() => {
-    if (mode.value === 'auto') {
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        uiTheme.value = isDark ? { ...darkTheme } : { ...defaultTheme };
-    }
-});
 
 const radiusNumber = computed({
     get: () => Number.parseInt(uiTheme.value.cardRadius, 10) || 0,
@@ -139,7 +131,11 @@ const advancedColorGroups = [
             { key: 'sliderRailHoverColor', label: '滑动条悬停轨道色' },
             { key: 'sliderFillColor', label: '滑动条填充色' },
             { key: 'sliderFillHoverColor', label: '滑动条悬停填充色' },
-            { key: 'sliderHandleColor', label: '滑动条手柄色' }
+            { key: 'sliderHandleColor', label: '滑动条手柄色' },
+            { key: 'backTopColor', label: '返回顶部背景色' },
+            { key: 'backTopHoverColor', label: '返回顶部悬停背景色' },
+            { key: 'backTopIconColor', label: '返回顶部图标色' },
+            { key: 'backTopIconHoverColor', label: '返回顶部悬停图标色' }
         ]
     },
     {

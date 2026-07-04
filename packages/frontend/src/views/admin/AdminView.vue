@@ -669,6 +669,16 @@ onBeforeUnmount(() => {
     line-height: 1.7;
 }
 
+.announcement-preview :deep(a) {
+    color: var(--ui-link-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.announcement-preview :deep(a:hover) {
+    color: var(--ui-link-hover-color) !important;
+}
+
 @media (max-width: 900px) {
     .admin-grid {
         grid-template-columns: 1fr;

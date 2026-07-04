@@ -280,12 +280,12 @@ pre:not(.shiki) {
 }
 
 a {
-    color: var(--ui-primary-color);
+    color: var(--ui-link-color);
     transition: color 0.2s;
     text-decoration: none;
 }
 a:hover {
-    color: var(--ui-primary-color-pressed) !important;
+    color: var(--ui-link-hover-color) !important;
 }
 
 .table-container::-webkit-scrollbar {

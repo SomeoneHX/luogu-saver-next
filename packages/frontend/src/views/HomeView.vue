@@ -147,6 +147,16 @@ const handleSave = () => {
     padding: 6px 0 0;
 }
 
+.announcement-content :deep(a) {
+    color: var(--ui-link-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.announcement-content :deep(a:hover) {
+    color: var(--ui-link-hover-color) !important;
+}
+
 .stats-container {
     height: 100%;
     display: flex;

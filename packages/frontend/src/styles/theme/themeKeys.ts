@@ -1,6 +1,7 @@
 import { type InjectionKey, type Ref } from 'vue';
 
 export type CodeTheme = 'light' | 'dark';
+export type UiThemeMode = 'auto' | 'manual';
 
 export interface UiThemeVars {
     bodyColor: string;
@@ -33,6 +34,10 @@ export interface UiThemeVars {
     sliderFillColor: string;
     sliderFillHoverColor: string;
     sliderHandleColor: string;
+    backTopColor: string;
+    backTopHoverColor: string;
+    backTopIconColor: string;
+    backTopIconHoverColor: string;
     codeBackgroundColor: string;
     codeTextColor: string;
     codeTheme: CodeTheme;
@@ -82,3 +87,4 @@ export interface UiThemeVars {
 }
 
 export const uiThemeKey = Symbol() as InjectionKey<Ref<UiThemeVars>>;
+export const uiThemeModeKey = Symbol() as InjectionKey<Ref<UiThemeMode>>;

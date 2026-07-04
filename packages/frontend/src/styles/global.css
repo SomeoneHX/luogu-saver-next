@@ -131,7 +131,11 @@
 }
 
 .n-alert a {
-    color: var(--ui-primary-color) !important;
+    color: var(--ui-link-color) !important;
+}
+
+.n-alert a:hover {
+    color: var(--ui-link-hover-color) !important;
 }
 
 .n-pagination .n-pagination-item {

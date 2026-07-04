@@ -58,7 +58,11 @@
                                 </div>
                                 <IconConfigProvider size="14">
                                     <n-layout-footer bordered class="app-footer">
-                                        <n-grid cols="2">
+                                        <n-grid
+                                            class="footer-grid"
+                                            cols="1 m:2"
+                                            responsive="screen"
+                                        >
                                             <n-gi>
                                                 <p class="footer-element">
                                                     <Icon>
@@ -244,7 +248,12 @@ import {
 
 import { renderIcon } from '@/utils/render';
 
-import { uiThemeKey, type UiThemeVars } from '@/styles/theme/themeKeys.ts';
+import {
+    uiThemeKey,
+    uiThemeModeKey,
+    type UiThemeMode,
+    type UiThemeVars
+} from '@/styles/theme/themeKeys.ts';
 import { darkTheme, defaultTheme } from '@/styles/theme/default-theme.ts';
 import TrackingConsent from '@/components/TrackingConsent.vue';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
@@ -318,7 +327,7 @@ const handleSwipeEnd = (clientX: number, clientY: number) => {
     const deltaY = Math.abs(clientY - touchStartY.value);
     if (deltaY > 48) return;
 
-    if (!mobileSiderOpen.value && touchStartX.value <= 28 && deltaX > 64) {
+    if (!mobileSiderOpen.value && deltaX > 64) {
         openMobileSider();
         return;
     }
@@ -458,7 +467,7 @@ const menuOptions = computed<MenuOption[]>(() => [
         : [])
 ]);
 
-import { THEME_STORAGE_KEY } from '@/utils/constants.ts';
+import { THEME_MODE_STORAGE_KEY, THEME_STORAGE_KEY } from '@/utils/constants.ts';
 import { useLocalStorage } from '@/composables/useLocalStorage.ts';
 
 const getInitialTheme = (): UiThemeVars => {
@@ -470,6 +479,7 @@ const getInitialTheme = (): UiThemeVars => {
 };
 
 const themeStorage = useLocalStorage(THEME_STORAGE_KEY, getInitialTheme());
+const themeModeStorage = useLocalStorage<UiThemeMode>(THEME_MODE_STORAGE_KEY, 'auto');
 type StoredUiThemeVars = Partial<UiThemeVars> & { codeRenderFilter?: string };
 
 const normalizeThemeVars = (storedTheme: StoredUiThemeVars | null): UiThemeVars => {
@@ -487,11 +497,32 @@ const normalizeThemeVars = (storedTheme: StoredUiThemeVars | null): UiThemeVars 
     };
 };
 
+const normalizeThemeMode = (storedMode: UiThemeMode | null): UiThemeMode =>
+    storedMode === 'manual' ? 'manual' : 'auto';
+
+const getSystemTheme = (): UiThemeVars =>
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches
+        ? { ...darkTheme }
+        : { ...defaultTheme };
+
+const uiThemeMode = ref<UiThemeMode>(normalizeThemeMode(themeModeStorage.value));
 const uiThemeVars = ref<UiThemeVars>(
-    normalizeThemeVars(themeStorage.value as StoredUiThemeVars | null)
+    uiThemeMode.value === 'auto'
+        ? getSystemTheme()
+        : normalizeThemeVars(themeStorage.value as StoredUiThemeVars | null)
 );
 
 provide(uiThemeKey, uiThemeVars);
+provide(uiThemeModeKey, uiThemeMode);
+
+const systemThemeMedia = window.matchMedia?.('(prefers-color-scheme: dark)');
+const applySystemTheme = () => {
+    if (uiThemeMode.value === 'auto') {
+        uiThemeVars.value = getSystemTheme();
+    }
+};
+
+systemThemeMedia?.addEventListener('change', applySystemTheme);
 
 if (isAuthenticated.value) {
     getCurrentUser()
@@ -504,10 +535,25 @@ if (isAuthenticated.value) {
 watch(
     uiThemeVars,
     newVal => {
+        if (uiThemeMode.value !== 'manual') return;
         themeStorage.value = newVal;
         console.log('UI theme vars updated and saved to localStorage.');
     },
     { deep: true }
+);
+
+watch(
+    uiThemeMode,
+    newMode => {
+        themeModeStorage.value = newMode;
+        if (newMode === 'auto') {
+            applySystemTheme();
+            return;
+        }
+
+        uiThemeVars.value = normalizeThemeVars(themeStorage.value as StoredUiThemeVars | null);
+    },
+    { immediate: true }
 );
 
 const themeOverrides = computed<GlobalThemeOverrides>(() => {
@@ -669,6 +715,17 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
             borderHoverPrimary: `1px solid ${uiThemeVars.value.primaryColorHover}`,
             borderPressedPrimary: `1px solid ${uiThemeVars.value.primaryColorPressed}`,
             borderFocusPrimary: `1px solid ${uiThemeVars.value.primaryColorHover}`
+        },
+        BackTop: {
+            color: uiThemeVars.value.backTopColor,
+            textColor: uiThemeVars.value.backTopIconColor,
+            iconColor: uiThemeVars.value.backTopIconColor,
+            iconColorHover: uiThemeVars.value.backTopIconHoverColor,
+            iconColorPressed: uiThemeVars.value.primaryColorPressed,
+            boxShadow: uiThemeVars.value.elevatedShadow,
+            boxShadowHover: uiThemeVars.value.elevatedShadow,
+            boxShadowPressed: uiThemeVars.value.elevatedShadow,
+            borderRadius: uiThemeVars.value.cardRadius
         },
         Alert: {
             color: uiThemeVars.value.panelColor,
@@ -833,6 +890,10 @@ const themeCssVars = computed(() => {
         '--ui-slider-fill-color': vars.sliderFillColor,
         '--ui-slider-fill-hover-color': vars.sliderFillHoverColor,
         '--ui-slider-handle-color': vars.sliderHandleColor,
+        '--ui-back-top-color': vars.backTopColor,
+        '--ui-back-top-hover-color': vars.backTopHoverColor,
+        '--ui-back-top-icon-color': vars.backTopIconColor,
+        '--ui-back-top-icon-hover-color': vars.backTopIconHoverColor,
         '--ui-code-background-color': vars.codeBackgroundColor,
         '--ui-code-text-color': vars.codeTextColor,
         '--ui-code-theme': vars.codeTheme,
@@ -975,12 +1036,16 @@ setInterval(() => {
 .footer-link {
     display: flex;
     align-items: center;
+}
+.footer-link,
+.footer-element a {
     color: var(--ui-footer-text-color);
     transition: color 0.2s;
     text-decoration: none;
 }
-.footer-link:hover {
-    color: var(--ui-link-hover-color) !important;
+.footer-link:hover,
+.footer-element a:hover {
+    color: var(--ui-footer-text-color) !important;
 }
 .footer-link:not(:first-child) {
     margin-left: 16px;
@@ -989,6 +1054,10 @@ setInterval(() => {
     max-width: min(1680px, 100%);
     margin: 0 auto;
     min-height: calc(100vh - 48px);
+}
+
+:deep(.n-back-top:hover) {
+    background-color: var(--ui-back-top-hover-color) !important;
 }
 
 @media (max-width: 768px) {
@@ -1046,6 +1115,17 @@ setInterval(() => {
     .app-footer {
         padding: 12px 16px;
         margin: 10px -10px -10px -10px;
+    }
+
+    .footer-element,
+    .footer-element.right-aligned {
+        justify-content: center;
+        text-align: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-link {
+        justify-content: center;
     }
 }
 
