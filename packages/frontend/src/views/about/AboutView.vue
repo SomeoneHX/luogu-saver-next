@@ -182,10 +182,6 @@ onMounted(() => {
     font-size: 14px;
 }
 
-.about-card {
-    width: 100%;
-}
-
 .about-paragraph {
     margin: 0;
     line-height: 1.8;
