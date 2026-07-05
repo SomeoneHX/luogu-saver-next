@@ -238,7 +238,7 @@ import {
     ShieldCheckmarkOutline,
     ChatbubbleEllipsesOutline,
     CloudDownloadOutline,
-    MenuOutline
+    MenuOutline,
     HammerOutline
 } from '@vicons/ionicons5';
 
