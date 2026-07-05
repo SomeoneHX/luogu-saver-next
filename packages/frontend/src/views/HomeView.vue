@@ -64,7 +64,10 @@ const handleSave = () => {
                                 <div
                                     class="stat-icon-wrapper"
                                     :style="{
-                                        backgroundColor: themeVars.primaryColor + '20'
+                                        backgroundColor:
+                                            'color-mix(in srgb, ' +
+                                            themeVars.primaryColor +
+                                            ' 12%, transparent)'
                                     }"
                                 >
                                     <n-icon
@@ -80,7 +83,10 @@ const handleSave = () => {
                                 <div
                                     class="stat-icon-wrapper"
                                     :style="{
-                                        backgroundColor: themeVars.primaryColor + '20'
+                                        backgroundColor:
+                                            'color-mix(in srgb, ' +
+                                            themeVars.primaryColor +
+                                            ' 12%, transparent)'
                                     }"
                                 >
                                     <n-icon
@@ -128,7 +134,7 @@ const handleSave = () => {
 .stat-icon-wrapper {
     width: 48px;
     height: 48px;
-    border-radius: 10px;
+    border-radius: var(--ui-card-radius);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,8 +143,18 @@ const handleSave = () => {
 .announcement-content {
     font-size: 16px;
     line-height: 1.8;
-    color: #475569;
+    color: var(--ui-secondary-text-color);
     padding: 6px 0 0;
+}
+
+.announcement-content :deep(a) {
+    color: var(--ui-link-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.announcement-content :deep(a:hover) {
+    color: var(--ui-link-hover-color) !important;
 }
 
 .stats-container {
@@ -149,7 +165,7 @@ const handleSave = () => {
 }
 
 .stat-card :deep(.n-statistic-value__content) {
-    color: #10233f;
+    color: var(--ui-card-title-color);
     font-weight: 700;
 }
 </style>

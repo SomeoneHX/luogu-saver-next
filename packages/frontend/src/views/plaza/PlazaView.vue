@@ -16,8 +16,12 @@ import type { PlazaArticle } from '@/types/article';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
 import UserLink from '@/components/UserLink.vue';
-import { getCategoryColor, getCategoryIcon, getCategoryLabel } from '@/utils/article.ts';
-import { hexToRgba } from '@/utils/render.ts';
+import {
+    getCategoryIcon,
+    getCategoryLabel,
+    getCategoryTagStyle,
+    getTagStyle
+} from '@/utils/article.ts';
 
 const router = useRouter();
 
@@ -112,11 +116,8 @@ const goToDetail = (id: string) => {
                         <template #title-extra>
                             <n-tag
                                 v-if="article.reason === 'hot'"
-                                :color="{
-                                    textColor: '#ff6200',
-                                    color: 'rgba(255, 98, 0, 0.2)',
-                                    borderColor: '#ff6200'
-                                }"
+                                class="article-color-tag"
+                                :style="getTagStyle('var(--ui-orange-color)')"
                                 size="small"
                             >
                                 <template #icon>
@@ -126,11 +127,8 @@ const goToDetail = (id: string) => {
                             </n-tag>
                             <n-tag
                                 v-else-if="article.reason === 'vector'"
-                                :color="{
-                                    textColor: '#00aaff',
-                                    color: 'rgba(0, 170, 255, 0.2)',
-                                    borderColor: '#00aaff'
-                                }"
+                                class="article-color-tag"
+                                :style="getTagStyle('var(--ui-cyan-color)')"
                                 size="small"
                             >
                                 <template #icon>
@@ -151,14 +149,8 @@ const goToDetail = (id: string) => {
                                     <div class="left">
                                         <UserLink :user="article.author" show-avatar />
                                         <n-tag
-                                            :color="{
-                                                textColor: getCategoryColor(article.category),
-                                                color: hexToRgba(
-                                                    getCategoryColor(article.category),
-                                                    0.2
-                                                ),
-                                                borderColor: getCategoryColor(article.category)
-                                            }"
+                                            class="article-color-tag"
+                                            :style="getCategoryTagStyle(article.category)"
                                             size="small"
                                         >
                                             <template #icon>
@@ -194,11 +186,13 @@ const goToDetail = (id: string) => {
         <div ref="loadTrigger" class="load-trigger">
             <div v-if="loading" class="loading-state">
                 <n-spin size="small" />
-                <span style="margin-left: 8px; color: #64748b">正在加载更多推荐...</span>
+                <span style="margin-left: 8px; color: var(--ui-muted-text-color)"
+                    >正在加载更多推荐...</span
+                >
             </div>
 
             <div v-else-if="error" class="error-state">
-                <span style="color: #d03050">加载失败</span>
+                <span style="color: var(--ui-error-color)">加载失败</span>
                 <n-button size="small" style="margin-left: 10px" @click="loadMore">重试</n-button>
             </div>
 
@@ -261,7 +255,7 @@ const goToDetail = (id: string) => {
 }
 
 .article-summary {
-    color: #475569;
+    color: var(--ui-secondary-text-color);
     font-size: 14px;
     line-height: 1.65;
     margin-bottom: 6px;

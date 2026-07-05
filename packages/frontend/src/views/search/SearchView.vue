@@ -21,6 +21,7 @@ import Card from '@/components/Card.vue';
 import { searchArticles, type ArticleSearchHit } from '@/api/search.ts';
 import { ARTICLE_CATEGORIES, UNKNOWN_CATEGORY } from '@/utils/constants.ts';
 import { formatDate, renderSafeMarkedHtml } from '@/utils/render.ts';
+import { getCategoryTagStyle } from '@/utils/article.ts';
 
 const route = useRoute();
 const router = useRouter();
@@ -212,7 +213,11 @@ onMounted(loadSearch);
                     </div>
                     <n-space align="center" justify="space-between" class="result-footer">
                         <n-space size="small" align="center">
-                            <n-tag size="small" :bordered="false">
+                            <n-tag
+                                class="article-color-tag"
+                                size="small"
+                                :style="getCategoryTagStyle(item.category)"
+                            >
                                 <template #icon>
                                     <n-icon :component="getCategory(item.category).icon" />
                                 </template>
@@ -271,7 +276,7 @@ onMounted(loadSearch);
     display: flex;
     justify-content: space-between;
     margin: 4px 4px 14px;
-    color: #64748b;
+    color: var(--ui-muted-text-color);
     font-size: 13px;
 }
 
@@ -301,7 +306,7 @@ onMounted(loadSearch);
 .summary {
     min-height: 54px;
     margin: 0 0 14px;
-    color: #475569;
+    color: var(--ui-secondary-text-color);
     line-height: 1.7;
     display: -webkit-box;
     -webkit-line-clamp: 5;
@@ -310,7 +315,7 @@ onMounted(loadSearch);
 }
 
 .result-footer {
-    color: #64748b;
+    color: var(--ui-muted-text-color);
     font-size: 13px;
 }
 

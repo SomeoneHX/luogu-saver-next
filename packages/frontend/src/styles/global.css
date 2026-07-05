@@ -1,39 +1,219 @@
 /*fixed from https://cdn.luogu.com.cn/css/luogu3.css?ver=20190102 prefix: lg-fg-* */
 
 .user-Red {
-    color: #e74c3c !important;
+    color: var(--ui-user-red-color) !important;
 }
 .user-Orange {
-    color: #e67e22 !important;
+    color: var(--ui-user-orange-color) !important;
 }
 .user-Purple {
-    color: #8e44ad !important;
+    color: var(--ui-user-purple-color) !important;
 }
 .user-Green {
-    color: #2ecc71 !important;
-    color: #5eb95e !important;
+    color: var(--ui-user-green-color) !important;
 }
 .user-Blue {
-    color: #3498db !important;
-    color: #0e90d2 !important;
-	/*note: in luogu homepage, blue using "bluelight"*/
+    color: var(--ui-user-blue-color) !important;
+    /*note: in luogu homepage, blue using "bluelight"*/
 }
 .user-Gray {
-    color: #7f8c8d !important;
-    color: #bbb !important;
+    color: var(--ui-user-gray-color) !important;
 }
 .user-Cheater {
-    color: #ad8b00 !important;
-    color: #996600 !important;
+    color: var(--ui-user-cheater-color) !important;
 }
 
 :not(pre) > code {
-    background: #f1f5f9 !important;
+    font-family: 'Fira Code', Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+    background: var(--ui-inline-code-background-color) !important;
     padding: 2px 6px !important;
-    border-radius: 4px !important;
-    border: 1px solid #e2e8f0 !important;
+    border-radius: var(--ui-card-radius) !important;
+    border: 1px solid var(--ui-border-color) !important;
     font-size: 0.85em !important;
-    color: #e11d48 !important;
+    color: var(--ui-inline-code-text-color) !important;
+}
+
+.n-input .n-input-wrapper,
+.n-input .n-input__input-el,
+.n-input .n-input__textarea-el,
+.n-base-selection .n-base-selection-label {
+    background-color: var(--ui-control-color, transparent) !important;
+    color: var(--ui-control-text-color, inherit) !important;
+}
+
+.n-input .n-input__placeholder,
+.n-base-selection .n-base-selection-placeholder {
+    color: var(--ui-control-placeholder-color, currentColor) !important;
+}
+
+.n-input:not(.n-input--disabled):hover .n-input__border,
+.n-base-selection:not(.n-base-selection--disabled):hover .n-base-selection__border {
+    border-color: var(--ui-control-border-hover-color, currentColor) !important;
+}
+
+.n-input:not(.n-input--disabled).n-input--focus .n-input__state-border,
+.n-base-selection:not(.n-base-selection--disabled).n-base-selection--active
+    .n-base-selection__state-border {
+    border-color: var(--ui-control-border-focus-color, currentColor) !important;
+    box-shadow: var(--ui-focus-ring-shadow, none) !important;
+}
+
+.n-input .n-input__border,
+.n-base-selection .n-base-selection__border {
+    border-color: var(--ui-control-border-color, currentColor) !important;
+}
+
+.n-base-selection .n-base-selection-tags .n-tag,
+.n-tag.n-tag--icon {
+    background-color: var(--ui-control-tag-color, transparent) !important;
+    color: var(--ui-control-tag-text-color, inherit) !important;
+    border-color: var(--ui-control-border-color, currentColor) !important;
+}
+
+.n-tag.n-tag--icon .n-tag__icon,
+.n-tag.n-tag--icon .n-icon {
+    color: inherit !important;
+}
+
+.n-tag.article-color-tag,
+.n-tag.article-color-tag.n-tag--icon {
+    background-color: var(--article-tag-background-color) !important;
+    color: var(--article-tag-color) !important;
+    border-color: var(--article-tag-color) !important;
+}
+
+.n-tag.article-color-tag .n-tag__content,
+.n-tag.article-color-tag .n-tag__icon,
+.n-tag.article-color-tag .n-icon {
+    color: var(--article-tag-color) !important;
+}
+
+.n-tag.article-color-tag .n-tag__border {
+    border-color: var(--article-tag-color) !important;
+}
+
+.n-space {
+    color: inherit;
+}
+
+.n-dialog {
+    background-color: var(--ui-card-color) !important;
+    color: var(--ui-text-color) !important;
+    border: 1px solid var(--ui-border-color) !important;
+    border-radius: var(--ui-card-radius) !important;
+    box-shadow: var(--ui-elevated-shadow) !important;
+}
+
+.n-dialog .n-dialog__title {
+    color: var(--ui-card-title-color) !important;
+}
+
+.n-dialog .n-dialog__content {
+    color: var(--ui-text-color) !important;
+}
+
+.n-dialog .n-dialog__close,
+.n-dialog .n-dialog-icon {
+    color: var(--ui-icon-color) !important;
+}
+
+.n-alert {
+    background-color: var(--ui-panel-color) !important;
+    color: var(--ui-text-color) !important;
+    border-color: var(--ui-border-color) !important;
+}
+
+.n-alert .n-alert-body__title {
+    color: var(--ui-card-title-color) !important;
+}
+
+.n-alert .n-alert-body__content {
+    color: var(--ui-text-color) !important;
+}
+
+.n-alert a {
+    color: var(--ui-link-color) !important;
+}
+
+.n-alert a:hover {
+    color: var(--ui-link-hover-color) !important;
+}
+
+.n-pagination .n-pagination-item {
+    background-color: var(--ui-control-color) !important;
+    color: var(--ui-control-text-color) !important;
+    border-color: var(--ui-control-border-color) !important;
+}
+
+.n-pagination .n-pagination-item:hover {
+    background-color: var(--ui-control-color-focus) !important;
+    color: var(--ui-primary-color-hover) !important;
+    border-color: var(--ui-control-border-hover-color) !important;
+}
+
+.n-pagination .n-pagination-item--active {
+    background-color: var(--ui-primary-color) !important;
+    color: #ffffff !important;
+    border-color: var(--ui-primary-color) !important;
+}
+
+.n-pagination .n-pagination-item--disabled,
+.n-pagination .n-pagination-item--button.n-pagination-item--disabled {
+    background-color: var(--ui-control-color-disabled) !important;
+    color: var(--ui-muted-text-color) !important;
+    border-color: var(--ui-border-color) !important;
+}
+
+.n-slider .n-slider-rail {
+    background-color: var(--ui-slider-rail-color, currentColor) !important;
+}
+
+.n-slider:hover .n-slider-rail {
+    background-color: var(--ui-slider-rail-hover-color, currentColor) !important;
+}
+
+.n-slider .n-slider-rail__fill {
+    background-color: var(--ui-slider-fill-color, currentColor) !important;
+}
+
+.n-slider:hover .n-slider-rail__fill {
+    background-color: var(--ui-slider-fill-hover-color, currentColor) !important;
+}
+
+.n-slider .n-slider-handle {
+    background-color: var(--ui-slider-handle-color, currentColor) !important;
+    box-shadow: 0 0 0 1px var(--ui-control-border-color, currentColor) !important;
+}
+
+.n-slider .n-slider-dot {
+    background-color: var(--ui-control-color, transparent) !important;
+    border-color: var(--ui-control-border-color, currentColor) !important;
+}
+
+.n-slider .n-slider-dot--active {
+    border-color: var(--ui-slider-fill-color, currentColor) !important;
+}
+
+* {
+    scrollbar-color: var(--ui-scrollbar-thumb-color, auto) var(--ui-scrollbar-track-color, auto);
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--ui-scrollbar-track-color, transparent);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--ui-scrollbar-thumb-color, currentColor);
+    border-radius: var(--ui-card-radius, 6px);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-muted-accent-color, currentColor);
 }
 
 :root {
@@ -52,20 +232,28 @@
 
 .shiki,
 .shiki span {
+    font-family: 'Fira Code', Consolas, 'Liberation Mono', 'Courier New', monospace !important;
     color: var(--shiki-light);
-    /*background-color: var(--shiki-light-bg);*/
     font-style: var(--shiki-light-font-style);
     font-weight: var(--shiki-light-font-weight);
     text-decoration: var(--shiki-light-text-decoration);
 }
 
-/*
-html.dark .shiki,
-html.dark .shiki span {
-	color: var(--shiki-dark);
-	background-color: var(--shiki-dark-bg);
-	font-style: var(--shiki-dark-font-style);
-	font-weight: var(--shiki-dark-font-weight);
-	text-decoration: var(--shiki-dark-text-decoration);
+.shiki {
+    background-color: var(--shiki-light-bg, var(--ui-code-background-color)) !important;
 }
-*/
+
+html[data-ui-code-theme='dark'] .shiki,
+html[data-ui-code-theme='dark'] .shiki span,
+[data-ui-code-theme='dark'] .shiki,
+[data-ui-code-theme='dark'] .shiki span {
+    color: var(--shiki-dark);
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+    text-decoration: var(--shiki-dark-text-decoration);
+}
+
+html[data-ui-code-theme='dark'] .shiki,
+[data-ui-code-theme='dark'] .shiki {
+    background-color: var(--shiki-dark-bg, var(--ui-code-background-color)) !important;
+}
