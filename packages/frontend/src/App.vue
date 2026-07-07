@@ -121,7 +121,7 @@
                                                 </p>
                                                 <p class="footer-element">
                                                     <a
-                                                        href="https://github.com/Ark-Aak/luogu-saver-next/graphs/contributors"
+                                                        href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
                                                         class="footer-link"
                                                     >
                                                         <Icon>
@@ -138,7 +138,7 @@
                                                         开发者：Federico2903 & Murasame & quanac-lcx
                                                         &
                                                         <a
-                                                            href="https://github.com/Ark-Aak/luogu-saver-next/graphs/contributors"
+                                                            href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
                                                             target="_blank"
                                                             >其他贡献者</a
                                                         >
@@ -183,7 +183,7 @@
                                                 </p>
                                                 <p class="footer-element right-aligned">
                                                     <a
-                                                        href="https://www.rainyun.com/MjUxMDAy_?s=saver"
+                                                        href="https://www.rainyun.com/federico_?s=saver"
                                                         target="_blank"
                                                         class="footer-link"
                                                     >
