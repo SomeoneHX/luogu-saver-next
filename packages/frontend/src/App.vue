@@ -70,7 +70,7 @@
                                     <n-layout-footer bordered class="app-footer">
                                         <n-grid
                                             class="footer-grid"
-                                            cols="1 m:2"
+                                            cols="1 s:2"
                                             responsive="screen"
                                         >
                                             <n-gi>
@@ -1064,6 +1064,8 @@ setInterval(() => {
 .footer-element {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 .footer-element.right-aligned {
     justify-content: flex-end;
@@ -1077,6 +1079,13 @@ setInterval(() => {
 .footer-link {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.footer-element span,
+.footer-link span {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 .footer-link,
 .footer-element a {
@@ -1194,12 +1203,13 @@ setInterval(() => {
     .mobile-sider-button :deep(.n-button__state-border) {
         border: 0 !important;
     }
+}
 
+@media (max-width: 639px) {
     .footer-element,
     .footer-element.right-aligned {
         justify-content: center;
         text-align: center;
-        flex-wrap: wrap;
     }
 
     .footer-link {
