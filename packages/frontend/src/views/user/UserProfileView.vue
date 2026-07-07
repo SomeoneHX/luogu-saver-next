@@ -554,7 +554,7 @@ onUnmounted(() => {
 }
 .identity-slogan {
     margin-top: 4px;
-    color: var(--n-text-color-2, var(--ui-secondary-text-color));
+    color: var(--ui-secondary-text-color);
     font-size: 13px;
     line-height: 1.4;
     font-style: italic;
@@ -580,7 +580,7 @@ onUnmounted(() => {
     align-items: baseline;
     gap: 12px;
     padding: 6px 0;
-    border-bottom: 1px solid var(--n-divider-color, var(--ui-border-color));
+    border-bottom: 1px solid var(--ui-border-color);
     min-width: 0;
 }
 .identity-field:last-child {
@@ -589,7 +589,7 @@ onUnmounted(() => {
 .identity-field dt {
     margin: 0;
     flex-shrink: 0;
-    color: var(--n-text-color-2, var(--ui-secondary-text-color));
+    color: var(--ui-secondary-text-color);
     font-size: 13px;
     white-space: nowrap;
 }
@@ -599,7 +599,7 @@ onUnmounted(() => {
     min-width: 0;
     font-size: 14px;
     font-weight: 500;
-    color: var(--n-text-color-1, var(--ui-text-color));
+    color: var(--ui-text-color);
     text-align: right;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -607,7 +607,7 @@ onUnmounted(() => {
 }
 .identity-field--faint dd {
     font-weight: 400;
-    color: var(--n-text-color-3, var(--ui-muted-text-color));
+    color: var(--ui-muted-text-color);
     font-size: 12px;
 }
 
@@ -619,7 +619,7 @@ onUnmounted(() => {
 }
 .identity-stale {
     font-size: 12px;
-    color: var(--n-text-color-3, var(--ui-muted-text-color));
+    color: var(--ui-muted-text-color);
 }
 
 /* Compact prize list */
@@ -636,7 +636,7 @@ onUnmounted(() => {
     justify-content: space-between;
     gap: 12px;
     padding: 8px 0;
-    border-bottom: 1px solid var(--n-divider-color, var(--ui-border-color));
+    border-bottom: 1px solid var(--ui-border-color);
 }
 .prize-row:last-child {
     border-bottom: none;
@@ -653,16 +653,16 @@ onUnmounted(() => {
     white-space: nowrap;
 }
 .prize-row-year {
-    color: var(--n-text-color-3, var(--ui-muted-text-color));
+    color: var(--ui-muted-text-color);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
 }
 .prize-row-contest {
-    color: var(--n-text-color-1, var(--ui-text-color));
+    color: var(--ui-text-color);
     font-weight: 500;
 }
 .prize-row-event {
-    color: var(--n-text-color-3, var(--ui-muted-text-color));
+    color: var(--ui-muted-text-color);
     font-size: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
