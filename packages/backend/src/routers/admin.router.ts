@@ -108,6 +108,9 @@ router.post(
             {
                 batchSize: batchSize || 20,
                 concurrency: concurrency || 5
+            },
+            {
+                priority: 10
             }
         );
         ctx.success(result);
