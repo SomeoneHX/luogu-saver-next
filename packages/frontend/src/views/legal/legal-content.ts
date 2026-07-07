@@ -24,7 +24,7 @@ export const LEGAL_DOCUMENTS: Record<LegalKey, LegalDocument> = {
     privacy: {
         icon: 'privacy',
         title: '隐私协议',
-        updatedAt: '2025 年 8 月 20 日',
+        updatedAt: '2026 年 7 月 7 日',
         sections: [
             {
                 heading: '一、信息收集',
@@ -33,7 +33,7 @@ export const LEGAL_DOCUMENTS: Record<LegalKey, LegalDocument> = {
                         kind: 'list',
                         items: [
                             '本网站存储并展示来自 <strong>洛谷平台公开的剪贴板和专栏内容</strong>。',
-                            '通过核验用户指定的洛谷剪贴板内容确认身份，并<strong>仅为本站生成登录凭据</strong>，该凭据仅在本站内部使用，不会影响或替代用户的洛谷账号凭据。',
+                            '通过第三方网站 CP OAuth 的接口确认身份，并<strong>仅为本站生成登录凭据</strong>，该凭据仅在本站内部使用，不会影响或替代用户的洛谷账号凭据。',
                             '本网站服务器日志可能记录包括 <strong>IP 地址、访问时间、浏览器信息</strong> 在内的常规访问记录,用于安全与审计目的。',
                             '除提供服务所必需的数据外，我们不主动收集额外个人信息。'
                         ]
@@ -83,8 +83,7 @@ export const LEGAL_DOCUMENTS: Record<LegalKey, LegalDocument> = {
                     {
                         kind: 'list',
                         items: [
-                            '我们采取合理的安全措施（如 HTTPS、Token 校验、最小化权限）保护数据安全。',
-                            'Token 仅代表<strong>访问授权</strong>,请妥善保管，不与他人共享；如发现泄露请及时重置或联系我们。',
+                            '我们采取合理的安全措施（如 HTTPS、最小化权限）保护数据安全。',
                             '受限于网络传输与技术环境，无法保证绝对安全。'
                         ]
                     }
@@ -125,7 +124,7 @@ export const LEGAL_DOCUMENTS: Record<LegalKey, LegalDocument> = {
     disclaimer: {
         icon: 'disclaimer',
         title: '免责声明',
-        updatedAt: '2025 年 8 月 16 日',
+        updatedAt: '2026 年 7 月 7 日',
         sections: [
             {
                 heading: '一、内容来源说明',
@@ -175,8 +174,7 @@ export const LEGAL_DOCUMENTS: Record<LegalKey, LegalDocument> = {
                     {
                         kind: 'list',
                         items: [
-                            '用户在使用本网站服务时应遵守适用的法律法规与平台规则，不得利用本网站实施违法、侵权或不当行为。',
-                            '由于用户自身保管不当造成的 Token 泄露、账户被冒用等损失，<strong>由用户自行承担</strong>。'
+                            '用户在使用本网站服务时应遵守适用的法律法规与平台规则，不得利用本网站实施违法、侵权或不当行为。'
                         ]
                     }
                 ]
