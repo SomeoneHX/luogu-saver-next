@@ -28,9 +28,10 @@ export interface SaveTask extends CommonTask {
 export interface AiTask extends CommonTask {
     type: TaskType.LLM;
     payload: {
-        target: 'summary' | 'embedding' | 'chat';
+        target: 'summary' | 'embedding' | 'chat' | 'censor';
         metadata: {
             query?: string;
+            mode?: 'article_index';
         };
     };
 }

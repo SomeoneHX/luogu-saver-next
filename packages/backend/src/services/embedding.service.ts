@@ -6,6 +6,7 @@ import { ArticleService } from '@/services/article.service';
 import { runWithConcurrency } from '@/utils/concurrency';
 import { llm } from '@/lib/llm';
 import type { Article } from '@/entities/article';
+import type { TaskEmbeddingRecord } from '@/workers/types';
 
 type ChromaWhere = Record<string, any>;
 
@@ -193,6 +194,63 @@ export class EmbeddingService {
         );
 
         return vectorCount;
+    }
+
+    static async upsertArticleEmbeddingRecords(
+        article: Article,
+        records: TaskEmbeddingRecord[]
+    ): Promise<number> {
+        const validRecords = records.filter(
+            record =>
+                record.document && Array.isArray(record.embedding) && record.embedding.length > 0
+        );
+        const summaryRecord = validRecords.find(record => record.kind === 'summary');
+        const chunkRecords = validRecords.filter(record => record.kind === 'chunk');
+
+        if (!summaryRecord) {
+            throw new Error(`Missing summary embedding record for article ${article.id}`);
+        }
+
+        await this.deleteArticleChunkVectors(article.id);
+
+        const vectorRecords = [
+            {
+                id: article.id,
+                metadata: this.buildArticleMetadata(article, {
+                    articleId: article.id,
+                    kind: 'summary'
+                }),
+                document: summaryRecord.document,
+                embedding: summaryRecord.embedding
+            },
+            ...chunkRecords.map((record, index) => {
+                const chunkIndex = record.chunkIndex ?? index;
+                const chunkMetadata: Metadata = {
+                    articleId: article.id,
+                    kind: 'chunk',
+                    chunkIndex
+                };
+                if (record.start !== undefined) chunkMetadata.start = record.start;
+                if (record.end !== undefined) chunkMetadata.end = record.end;
+                return {
+                    id: this.getChunkVectorId(article.id, chunkIndex),
+                    metadata: this.buildArticleMetadata(article, chunkMetadata),
+                    document: record.document,
+                    embedding: record.embedding
+                };
+            })
+        ];
+
+        await this.upsertVectors(vectorRecords);
+        logger.info(
+            {
+                articleId: article.id,
+                vectorCount: vectorRecords.length,
+                chunkCount: chunkRecords.length
+            },
+            'Updated article embeddings from upstream records'
+        );
+        return vectorRecords.length;
     }
 
     static async upsertVectors(

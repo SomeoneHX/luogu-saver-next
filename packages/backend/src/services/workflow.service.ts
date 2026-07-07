@@ -7,6 +7,7 @@ import { WorkflowHelper } from '@/services/helpers/workflow.helper';
 import { findOneServiceEntity, getServiceRepository } from '@/services/helpers/repository.helper';
 import { TaskStatus } from '@/shared/task';
 import { validateFlowStructure, WorkflowDefinition } from '@/utils/flow-validator';
+import { normalizeErrorReason } from '@/utils/error-reason';
 import { randomUUID } from 'node:crypto';
 
 type WorkflowCreateOptions = {
@@ -166,7 +167,7 @@ export class WorkflowService {
                 ),
                 track: taskDef.track === true,
                 report: taskDef.report === true,
-                info: task?.info || null
+                info: task ? this.formatTaskInfo(task) : null
             };
         });
 
@@ -272,5 +273,10 @@ export class WorkflowService {
             case TaskStatus.FAILED:
                 return 'failed' as const;
         }
+    }
+
+    private static formatTaskInfo(task: Task) {
+        if (!task.info) return null;
+        return task.status === TaskStatus.FAILED ? normalizeErrorReason(task.info) : task.info;
     }
 }

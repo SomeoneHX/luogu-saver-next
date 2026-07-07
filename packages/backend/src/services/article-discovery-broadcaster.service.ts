@@ -3,6 +3,7 @@ import { emitToRoom } from '@/lib/socket';
 import { logger } from '@/lib/logger';
 import { DiscoveryRun } from '@/entities/discovery-run';
 import { getServiceRepository } from '@/services/helpers/repository.helper';
+import { normalizeErrorReason } from '@/utils/error-reason';
 
 export const ARTICLE_DISCOVERY_RUNS_ROOM = 'discovery:runs';
 export const ARTICLE_DISCOVERY_RUNS_EVENT = 'discovery:runs:update';
@@ -43,6 +44,11 @@ export class ArticleDiscoveryBroadcaster {
             order: { createdAt: 'DESC' },
             take: 20
         });
-        return { runs };
+        return {
+            runs: runs.map(run => {
+                if (run.lastError) run.lastError = normalizeErrorReason(run.lastError);
+                return run;
+            })
+        };
     }
 }

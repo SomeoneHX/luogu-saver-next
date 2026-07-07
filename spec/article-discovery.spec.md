@@ -198,6 +198,7 @@ The event payload SHALL be:
 
 `runs` SHALL contain the same discovery run list as `GET /discover/runs?limit=20`, ordered newest
 first.
+Each emitted `lastError` value SHALL be normalized by `task-queue.spec.md` failure reason normalization when it is non-null.
 
 When an authorized client joins `discovery:runs`, the server SHALL emit one
 `discovery:runs:update` event to that socket.
@@ -211,7 +212,7 @@ including:
 4. Inserting or updating discovered article rows when the run counters or workflow status can change.
 
 The websocket payload SHALL NOT include discovered article rows, article IDs, workflow IDs, Luogu
-cookies, or error stack traces.
+cookies, raw HTTP response bodies, HTML error pages, or error stack traces.
 
 To avoid flooding admin clients while one page discovers many articles, the backend SHOULD batch
 rapid updates and emit at most one `discovery:runs:update` event per short debounce window.

@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { config } from '@/config';
 import { logger } from '@/lib/logger';
+import { normalizeErrorReason } from '@/utils/error-reason';
 
 export type LLMScenario = 'chat' | 'summary' | 'answer' | 'embedding' | 'rerank' | 'censor';
 
@@ -145,8 +146,9 @@ class LLMService {
                 raw: response
             };
         } catch (error) {
-            logger.error({ error, providerId, modelId }, 'LLM chat failed');
-            throw error;
+            const reason = normalizeErrorReason(error);
+            logger.error({ reason, providerId, modelId, scenario }, 'LLM chat failed');
+            throw new Error(reason);
         }
     }
 
@@ -168,8 +170,9 @@ class LLMService {
                 raw: response
             };
         } catch (error) {
-            logger.error({ error, providerId, modelId }, 'LLM embedding failed');
-            throw error;
+            const reason = normalizeErrorReason(error);
+            logger.error({ reason, providerId, modelId }, 'LLM embedding failed');
+            throw new Error(reason);
         }
     }
 
@@ -204,8 +207,9 @@ class LLMService {
                 raw: payload
             };
         } catch (error) {
-            logger.error({ error, providerId, modelId }, 'LLM rerank failed');
-            throw error;
+            const reason = normalizeErrorReason(error);
+            logger.error({ reason, providerId, modelId }, 'LLM rerank failed');
+            throw new Error(reason);
         }
     }
 

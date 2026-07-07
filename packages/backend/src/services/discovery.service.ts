@@ -141,14 +141,18 @@ export class DiscoveryService {
     }
 
     static async getRunById(runId: string) {
-        return findOneServiceEntity<DiscoveryRun>(DiscoveryRun, { where: { id: runId } });
+        const run = await findOneServiceEntity<DiscoveryRun>(DiscoveryRun, {
+            where: { id: runId }
+        });
+        return this.normalizeRunForOutput(run);
     }
 
     static async listRuns(limit = 20) {
-        return getServiceRepository<DiscoveryRun>(DiscoveryRun).find({
+        const runs = await getServiceRepository<DiscoveryRun>(DiscoveryRun).find({
             order: { createdAt: 'DESC' },
             take: clampInt(limit, 20, 1, 100)
         });
+        return runs.map(run => this.normalizeRunForOutput(run));
     }
 
     static async stopRun(runId: string) {
@@ -299,5 +303,10 @@ export class DiscoveryService {
             logger.error({ error, input }, 'Failed to create workflow for discovered article');
             return { created: false, reason: message };
         }
+    }
+
+    private static normalizeRunForOutput(run: DiscoveryRun | null): DiscoveryRun | null {
+        if (run?.lastError) run.lastError = normalizeErrorReason(run.lastError);
+        return run;
     }
 }

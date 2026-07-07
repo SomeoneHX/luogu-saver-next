@@ -23,3 +23,13 @@ For a log object field named `err`, `error`, `cleanupError`, or `callbackError`,
 The serialized value SHALL NOT be an empty object when the input value is an `Error` instance.
 
 These rules apply to all logger levels.
+
+## 4. External Service Failure Logs
+
+If an LLM provider request fails, the LLM adapter SHALL log a normalized failure `reason` instead of logging the raw `Error` object.
+
+The normalized failure `reason` SHALL follow `task-queue.spec.md` failure reason normalization and have length at most 80 characters.
+
+LLM provider failure logs SHALL NOT include raw HTTP response bodies, HTML error pages, LLM prompt text, article bodies, paste bodies, or embedding vectors.
+
+After logging, the LLM adapter SHALL throw an `Error` whose message equals the normalized failure `reason`.

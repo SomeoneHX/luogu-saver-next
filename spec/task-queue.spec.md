@@ -180,7 +180,9 @@ Query task status.
 ### 5.4 getTaskById(taskId)
 
 1. Query the database for the task.
-2. Return the task or null.
+2. If no task exists, return null.
+3. If the task exists and `status = FAILED`, return a task object whose `info` is normalized by failure reason normalization.
+4. If the task exists and `status != FAILED`, return the task object unchanged.
 
 ### 5.5 EntityManager support
 

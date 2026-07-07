@@ -109,8 +109,19 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                 }
             },
             {
+                name: 'embedding',
+                fathers: ['save', 'summary'],
+                data: {
+                    type: 'llm',
+                    payload: {
+                        target: 'embedding',
+                        metadata: { mode: 'article_index' }
+                    }
+                }
+            },
+            {
                 name: 'update-embedding',
-                fathers: ['summary'],
+                fathers: ['embedding'],
                 data: {
                     type: 'update',
                     payload: {

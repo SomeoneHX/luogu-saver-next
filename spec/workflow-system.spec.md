@@ -160,6 +160,7 @@ For tracked task entries that are not finished yet, `result[taskName]` is `null`
 For every returned task, `fathers` equals the task definition `fathers` array or `[]` when omitted.
 For every returned task, `fatherIds` maps each father task name to the corresponding SQL task ID when that task row exists.
 For every returned task, `type`, `target`, `track`, and `report` are read from the workflow definition, not from Redis runtime state.
+For every returned task with `status = "failed"`, `info` is normalized by `task-queue.spec.md` failure reason normalization and has length at most 80 characters.
 
 ## 5. Template Definitions
 
@@ -170,16 +171,24 @@ Required input: `targetId`.
 Task graph by logical dependency:
 
 1. `save` (tracked, reported)
-2. `summary` depends on `save` (tracked)
-3. `censor` depends on `save` (tracked)
-4. `update-embedding` depends on `summary`
-5. `update-summary` depends on `summary`
-6. `update-censor` depends on `censor`
-7. `update-search-index` depends on `update-summary`
+2. `save-comment` depends on `save`
+3. `summary` depends on `save` (tracked)
+4. `censor` depends on `save` (tracked)
+5. `embedding` depends on `save` and `summary`
+6. `update-embedding` depends on `embedding`
+7. `update-summary` depends on `summary`
+8. `update-censor` depends on `censor`
+9. `update-search-index` depends on `update-summary`
 
 Permission: public (`null` permission mapping).
 
-Task `update-embedding` SHALL read upstream `summary.data.summary` when present and SHALL NOT depend on `update-summary`.
+Task `embedding` SHALL have type `llm`, target `embedding`, and metadata `{ "mode": "article_index" }`.
+Task `embedding` SHALL read `save.data.text` and `summary.data.text` from its direct fathers.
+Task `embedding` SHALL generate one summary embedding record and zero or more chunk embedding records.
+Task `embedding` SHALL return `data.embeddingRecords` where each item contains `kind`, `document`, and `embedding`, and chunk items also contain `chunkIndex`, `start`, and `end`.
+Task `update-embedding` SHALL read upstream `embedding.data.embeddingRecords` and write vectors to the embedding store.
+Task `update-embedding` SHALL NOT call any LLM provider.
+Task `update-embedding` SHALL NOT depend on `update-summary`.
 
 Task `update-search-index` has `track=true` and `report=true` so clients can observe final search indexing success or failure.
 

@@ -91,6 +91,10 @@ export class TaskService {
     }
 
     static async getTaskById(taskId: string, manager?: EntityManager): Promise<Task | null> {
-        return await findOneServiceEntity<Task>(Task, { where: { id: taskId } }, manager);
+        const task = await findOneServiceEntity<Task>(Task, { where: { id: taskId } }, manager);
+        if (task?.status === TaskStatus.FAILED && task.info) {
+            task.info = normalizeErrorReason(task.info);
+        }
+        return task;
     }
 }

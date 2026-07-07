@@ -23,6 +23,18 @@ export interface TaskTextResult extends TaskCommonResult {
 
 export interface TaskEmbeddingResult extends TaskCommonResult {
     embedding: number[];
+    text?: string;
+    embeddingLength?: number;
+    embeddingRecords?: TaskEmbeddingRecord[];
+}
+
+export interface TaskEmbeddingRecord {
+    kind: 'summary' | 'chunk';
+    document: string;
+    embedding: number[];
+    chunkIndex?: number;
+    start?: number;
+    end?: number;
 }
 
 export interface TaskCensorResult extends TaskCommonResult {
