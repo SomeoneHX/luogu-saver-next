@@ -2,13 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { NSpin, NDivider, NButton, NIcon, NEmpty, NTag } from 'naive-ui';
-import {
-    NewspaperOutline,
-    ArrowForwardOutline,
-    SparklesOutline,
-    GlobeOutline
-} from '@vicons/ionicons5';
-import { FireAlt } from '@vicons/fa';
+import { IconNewspaper, IconArrowRight, IconSparkles, IconGlobe, IconFlame } from '@/utils/icons';
 
 import { getRecommendations } from '@/api/recommendation';
 import type { PlazaArticle } from '@/types/article';
@@ -100,8 +94,8 @@ const goToDetail = (id: string) => {
 
 <template>
     <div class="plaza-page">
-        <CardTitle title="文章广场" :icon="GlobeOutline" class="feed-header" chip="PLAZA">
-            ARTICLE PLAZA!
+        <CardTitle title="文章广场" :icon="IconGlobe" class="feed-header" chip="PLAZA">
+            浏览社区最新收录与个性化推荐
         </CardTitle>
 
         <div class="feed-shell">
@@ -109,8 +103,8 @@ const goToDetail = (id: string) => {
                 <div v-for="article in articles" :key="article.id" class="article-item">
                     <Card
                         :title="article.title"
-                        :icon="NewspaperOutline"
-                        class="clickable-card"
+                        :icon="IconNewspaper"
+                        hoverable
                         @click="goToDetail(article.id)"
                     >
                         <template #title-extra>
@@ -121,7 +115,7 @@ const goToDetail = (id: string) => {
                                 size="small"
                             >
                                 <template #icon>
-                                    <n-icon :component="FireAlt" />
+                                    <n-icon :component="IconFlame" />
                                 </template>
                                 热门
                             </n-tag>
@@ -132,14 +126,14 @@ const goToDetail = (id: string) => {
                                 size="small"
                             >
                                 <template #icon>
-                                    <n-icon :component="SparklesOutline" />
+                                    <n-icon :component="IconSparkles" />
                                 </template>
                                 猜你想看
                             </n-tag>
                         </template>
                         <div class="article-card-body">
                             <div class="article-summary">
-                                {{ article.summary || '暂无预览...' }}...
+                                {{ article.summary ? `${article.summary}……` : '暂无预览' }}
                             </div>
 
                             <div class="article-meta-wrap">
@@ -170,7 +164,7 @@ const goToDetail = (id: string) => {
                                         >
                                             阅读全文
                                             <n-icon
-                                                :component="ArrowForwardOutline"
+                                                :component="IconArrowRight"
                                                 style="margin-left: 4px"
                                             />
                                         </n-button>
@@ -250,15 +244,15 @@ const goToDetail = (id: string) => {
     margin-top: auto;
 }
 
-.clickable-card {
-    cursor: pointer;
-}
-
 .article-summary {
     color: var(--ui-secondary-text-color);
     font-size: 14px;
-    line-height: 1.65;
+    line-height: 1.7;
     margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .article-meta {
