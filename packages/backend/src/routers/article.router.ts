@@ -12,6 +12,20 @@ import { CommentService } from '@/services/comment.service';
 import { TaskService } from '@/services/task.service';
 import { TaskType, SaveTarget } from '@/shared/task';
 import { logger } from '@/lib/logger';
+import type { Article } from '@/entities/article';
+
+async function getViewableArticle(ctx: Context, articleId: string): Promise<Article | null> {
+    const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(articleId);
+    if (!article) {
+        ctx.fail(404, 'Article not found');
+        return null;
+    }
+    if (article.deleted) {
+        ctx.fail(403, article.deleteReason || 'Article has been deleted');
+        return null;
+    }
+    return article;
+}
 
 async function dispatchCommentsRefresh(lid: string): Promise<string | null> {
     try {
@@ -31,18 +45,12 @@ async function dispatchCommentsRefresh(lid: string): Promise<string | null> {
 router.get('/query/:id', async (ctx: Context) => {
     try {
         const articleId = ctx.params.id;
-        const article = await ArticleService.getArticleById(articleId);
-        if (!article) {
-            ctx.fail(404, 'Article not found');
-            return;
-        }
+        const article = await getViewableArticle(ctx, articleId);
+        if (!article) return;
+
         await article.renderContent();
         if (ctx.track) ctx.track(TrackingEvent.VIEW_ARTICLE, articleId);
-        if (article.deleted) {
-            ctx.fail(403, article.deleteReason || 'Article has been deleted');
-        } else {
-            ctx.success(article);
-        }
+        ctx.success(article);
     } catch {
         ctx.fail(500, 'Failed to retrieve article');
     }
@@ -50,6 +58,8 @@ router.get('/query/:id', async (ctx: Context) => {
 
 router.get('/relevant/:id', async (ctx: Context) => {
     try {
+        if (!(await getViewableArticle(ctx, ctx.params.id))) return;
+
         ctx.success(await RecommendationService.getRelevantArticle(ctx.params.id));
     } catch {
         ctx.fail(500, 'Failed to retrieve relevant articles');
@@ -58,6 +68,8 @@ router.get('/relevant/:id', async (ctx: Context) => {
 
 router.get('/history/:id', async (ctx: Context) => {
     try {
+        if (!(await getViewableArticle(ctx, ctx.params.id))) return;
+
         const history = await ArticleHistoryService.getHistoryByArticleId(ctx.params.id);
         ctx.success(history);
     } catch {
@@ -104,11 +116,9 @@ router.get('/comments/:id', async (ctx: Context) => {
         return;
     }
     try {
-        const article = await ArticleService.getArticleById(lid);
-        if (!article) {
-            ctx.fail(404, 'Article not found');
-            return;
-        }
+        const article = await getViewableArticle(ctx, lid);
+        if (!article) return;
+
         const stale = CommentService.isCommentsStale(article);
         if (stale) {
             void dispatchCommentsRefresh(lid);
@@ -144,12 +154,19 @@ router.post('/comments/:id/refresh', async (ctx: Context) => {
         ctx.fail(400, 'Invalid article ID');
         return;
     }
-    const taskId = await dispatchCommentsRefresh(lid);
-    if (!taskId) {
+    try {
+        if (!(await getViewableArticle(ctx, lid))) return;
+
+        const taskId = await dispatchCommentsRefresh(lid);
+        if (!taskId) {
+            ctx.fail(500, 'Failed to dispatch comments refresh');
+            return;
+        }
+        ctx.success({ taskId });
+    } catch (error) {
+        logger.error({ error, lid }, 'Failed to refresh comments');
         ctx.fail(500, 'Failed to dispatch comments refresh');
-        return;
     }
-    ctx.success({ taskId });
 });
 
 export default router;

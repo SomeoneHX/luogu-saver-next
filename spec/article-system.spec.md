@@ -89,7 +89,9 @@ Retrieve a single article by ID.
 
 **Side Effects:**
 
-- Tracks `VIEW_ARTICLE` event if tracking is enabled
+- Tracks `VIEW_ARTICLE` event if tracking is enabled and `deleted = false`
+
+If `deleted = true`, the endpoint SHALL NOT render article content and SHALL NOT track `VIEW_ARTICLE`.
 
 ### 4.2 GET /article/relevant/:id
 
@@ -102,6 +104,8 @@ Get articles relevant to the specified article.
 **Response:**
 
 - 200: Array of relevant articles with `reason` field
+- 403: If source article `deleted = true`, returns `deleteReason` as error message
+- 404: Source article not found
 - 500: Server error
 
 ### 4.3 GET /article/history/:id
@@ -115,6 +119,8 @@ Get version history of an article.
 **Response:**
 
 - 200: Array of `ArticleHistory` entries ordered by version ASC
+- 403: If article `deleted = true`, returns `deleteReason` as error message
+- 404: Article not found
 - 500: Server error
 
 ### 4.4 GET /article/recent

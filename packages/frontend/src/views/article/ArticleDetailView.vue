@@ -14,6 +14,7 @@ import {
     NTimeline,
     NTimelineItem,
     NSpin,
+    NResult,
     useDialog
 } from 'naive-ui';
 import {
@@ -77,6 +78,7 @@ const { buildLuoguUrl } = useLuoguSource();
 const recommended = ref<PlazaArticle[]>([]);
 const recLoading = ref(false);
 const displayContent = ref('');
+const forbiddenReason = ref('');
 
 const tocItems = ref<TocItem[]>([]);
 
@@ -147,6 +149,10 @@ const loadRelevant = async () => {
     recLoading.value = true;
     try {
         const res = await getRelevant(articleId);
+        if (res.code !== 200) {
+            recommended.value = [];
+            return;
+        }
         const items: PlazaArticle[] = res.data;
         recommended.value = items || [];
     } catch (err: any) {
@@ -161,6 +167,10 @@ const loadHistory = async () => {
     if (!articleId) return;
     try {
         const res = await getArticleHistory(articleId);
+        if (res.code !== 200) {
+            versionHistory.value = [];
+            return;
+        }
         if (res.data) {
             versionHistory.value = res.data
                 .map(h => ({
@@ -223,10 +233,25 @@ const submitSaveArticle = async () => {
 
 const loadData = async () => {
     loading.value = true;
+    forbiddenReason.value = '';
     try {
         const res = await getArticleById(articleId);
         if (res.code === 404) {
             handle404(submitSaveArticle);
+            return;
+        }
+        if (res.code === 403) {
+            article.value = null;
+            displayContent.value = '';
+            tocItems.value = [];
+            recommended.value = [];
+            versionHistory.value = [];
+            forbiddenReason.value = res.message || '文章已删除';
+            document.title = '文章不可查看 - 洛谷保存站';
+            return;
+        }
+        if (res.code !== 200 || !res.data) {
+            message.error(res.message || '加载失败');
             return;
         }
         article.value = res.data;
@@ -511,10 +536,35 @@ onMounted(() => {
                                 </n-space>
                             </Card>
                         </div>
+                        <Card
+                            v-else-if="forbiddenReason"
+                            title="文章不可查看"
+                            :icon="NewspaperOutline"
+                        >
+                            <n-result
+                                status="403"
+                                title="文章不可查看"
+                                :description="forbiddenReason"
+                            >
+                                <template #footer>
+                                    <n-space justify="center">
+                                        <n-button secondary @click="router.go(-1)"> 返回 </n-button>
+                                        <n-button
+                                            secondary
+                                            tag="a"
+                                            :href="buildLuoguUrl(`/article/${articleId}`)"
+                                            target="_blank"
+                                        >
+                                            原站
+                                        </n-button>
+                                    </n-space>
+                                </template>
+                            </n-result>
+                        </Card>
                     </LoadingSkeleton>
                 </div>
 
-                <main class="main-content">
+                <main v-if="!forbiddenReason" class="main-content">
                     <div>
                         <LoadingSkeleton :loading="loading">
                             <template #skeleton>
@@ -686,7 +736,7 @@ onMounted(() => {
     max-width: none;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 280px minmax(0, 1fr) 280px;
     gap: 20px;
     align-items: start;
 }

@@ -68,6 +68,8 @@ Re-running `save:comments` for the same article replaces the comment set wholesa
 
 Returns the stored comments for the article. If the article's comments are stale, dispatches a fire-and-forget `save:comments` refresh and still returns whatever is currently stored.
 
+If the article does not exist, return 404. If the article has `deleted = true`, return 403 with `deleteReason` and do not dispatch a refresh.
+
 Response:
 
 ```typescript
@@ -86,6 +88,8 @@ Response:
 ### 6.2 `POST /article/comments/:id/refresh`
 
 Explicitly dispatches a `save:comments` task. Returns `{ taskId }`.
+
+If the article does not exist, return 404. If the article has `deleted = true`, return 403 with `deleteReason` and do not dispatch a refresh task.
 
 ## 7. Frontend
 
