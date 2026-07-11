@@ -78,6 +78,7 @@ onBeforeUnmount(stopTimer);
         @focusout="handleFocusOut"
     >
         <div class="advertisement-frame">
+            <div class="adblock-fallback">若要查看此内容，请关闭 AdBlock 类插件</div>
             <a
                 v-if="currentAdvertisement.targetUrl"
                 :key="currentAdvertisement.id"
@@ -155,10 +156,22 @@ onBeforeUnmount(stopTimer);
     box-shadow: var(--ui-card-shadow);
 }
 
+.adblock-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ui-space-6);
+    color: var(--ui-muted-text-color);
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+}
+
 .advertisement-link {
-    display: block;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
 }
 
 .advertisement-image {
@@ -166,6 +179,11 @@ onBeforeUnmount(stopTimer);
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.advertisement-frame > .advertisement-image {
+    position: absolute;
+    inset: 0;
 }
 
 .advertisement-label {
