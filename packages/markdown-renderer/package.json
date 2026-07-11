@@ -4,6 +4,7 @@
     "description": "Markdown renderer shared by luogu-saver-next packages.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "repository": "https://github.com/laikit-dev/luogu-saver",
     "files": [
         "dist"
     ],
