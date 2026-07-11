@@ -260,6 +260,9 @@ function handleSearch() {
 
 .home-search {
     width: min(100%, 720px);
+    overflow: hidden;
+    border-radius: var(--ui-pill-radius);
+    background: transparent;
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
 
