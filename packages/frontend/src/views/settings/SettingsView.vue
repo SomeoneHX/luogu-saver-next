@@ -19,7 +19,7 @@ import {
     RefreshOutline,
     SettingsOutline,
     TrashOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
 import {

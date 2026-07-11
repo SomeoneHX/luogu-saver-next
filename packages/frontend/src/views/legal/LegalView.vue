@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Icon } from '@vicons/utils';
-import { UserShield, ExclamationCircle, TrashAlt } from '@vicons/fa';
+import { ExclamationCircle, TrashAlt, UserShield } from '@/components/icons/lucide.ts';
 
 import Card from '@/components/Card.vue';
 import { LEGAL_DOCUMENTS, type LegalKey } from '@/views/legal/legal-content.ts';
@@ -26,9 +25,7 @@ const iconComponent = computed(() => ICON_MAP[doc.value.icon]);
         <Card class="legal-card">
             <div class="legal-header">
                 <span class="legal-icon">
-                    <Icon>
-                        <component :is="iconComponent" />
-                    </Icon>
+                    <component :is="iconComponent" :size="28" />
                 </span>
                 <div class="legal-header-text">
                     <h1 class="legal-title">{{ doc.title }}</h1>
@@ -65,13 +62,13 @@ const iconComponent = computed(() => ICON_MAP[doc.value.icon]);
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--ui-section-gap);
 }
 
 .legal-header {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--ui-space-4);
 }
 .legal-icon {
     display: inline-flex;
@@ -97,13 +94,13 @@ const iconComponent = computed(() => ICON_MAP[doc.value.icon]);
 }
 
 .legal-section {
-    margin-bottom: 22px;
+    margin-bottom: var(--ui-section-gap);
 }
 .legal-section:last-child {
     margin-bottom: 0;
 }
 .legal-heading {
-    margin: 0 0 10px;
+    margin: 0 0 var(--ui-space-3);
     font-size: 16px;
     font-weight: 600;
     line-height: 1.4;
@@ -116,10 +113,10 @@ const iconComponent = computed(() => ICON_MAP[doc.value.icon]);
 }
 .legal-list {
     margin: 0;
-    padding-left: 20px;
+    padding-left: var(--ui-space-5);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--ui-inline-gap);
 }
 .legal-list li {
     line-height: 1.8;
@@ -127,6 +124,6 @@ const iconComponent = computed(() => ICON_MAP[doc.value.icon]);
     color: var(--ui-text-color);
 }
 .legal-paragraph + .legal-list {
-    margin-top: 10px;
+    margin-top: var(--ui-space-3);
 }
 </style>

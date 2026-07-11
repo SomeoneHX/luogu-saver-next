@@ -20,7 +20,7 @@ import {
     PlayCircleOutline,
     SyncOutline,
     TimeOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
 import {
@@ -412,7 +412,7 @@ onUnmounted(stopPolling);
 .workflow-page {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--ui-section-gap);
     width: 100%;
     max-width: 1220px;
     margin: 0 auto;
@@ -443,7 +443,7 @@ onUnmounted(stopPolling);
 .overview-content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 18px;
+    gap: var(--ui-space-5);
     align-items: start;
 }
 
@@ -557,7 +557,7 @@ onUnmounted(stopPolling);
     min-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--ui-space-4);
 }
 
 .tree-layer {
@@ -598,7 +598,7 @@ onUnmounted(stopPolling);
     display: flex;
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 10px;
+    gap: var(--ui-control-gap);
     min-width: 0;
 }
 
@@ -699,7 +699,7 @@ onUnmounted(stopPolling);
 
 .node-meta {
     flex-wrap: wrap;
-    gap: 5px;
+    gap: var(--ui-space-1);
     margin-top: 8px;
 }
 
@@ -714,7 +714,7 @@ onUnmounted(stopPolling);
 .dependency-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: var(--ui-space-1);
     margin-top: 8px;
     margin-bottom: 8px;
 }
@@ -760,7 +760,7 @@ onUnmounted(stopPolling);
 
 .result-list {
     display: grid;
-    gap: 10px;
+    gap: var(--ui-control-gap);
 }
 
 .result-row {
@@ -768,7 +768,7 @@ onUnmounted(stopPolling);
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 14px;
+    padding: var(--ui-space-3) var(--ui-space-4);
     border: 1px solid var(--ui-border-color);
     border-radius: var(--ui-card-radius);
     background: var(--ui-card-color);

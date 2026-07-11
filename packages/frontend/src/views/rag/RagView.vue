@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { NAlert, NButton, NCheckbox, NInput, NProgress, NSpace, NTag, useMessage } from 'naive-ui';
-import { ChatbubbleEllipsesOutline, NewspaperOutline } from '@vicons/ionicons5';
+import { ChatbubbleEllipsesOutline, NewspaperOutline } from '@/components/icons/lucide.ts';
 import CardTitle from '@/components/CardTitle.vue';
 import Card from '@/components/Card.vue';
 import MarkdownViewer from '@/components/MarkdownViewer.vue';

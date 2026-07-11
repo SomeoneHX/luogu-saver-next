@@ -6,9 +6,9 @@ import {
     NewspaperOutline,
     ArrowForwardOutline,
     SparklesOutline,
-    GlobeOutline
-} from '@vicons/ionicons5';
-import { FireAlt } from '@vicons/fa';
+    GlobeOutline,
+    FireAlt
+} from '@/components/icons/lucide.ts';
 
 import { getRecommendations } from '@/api/recommendation';
 import type { PlazaArticle } from '@/types/article';

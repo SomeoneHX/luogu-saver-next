@@ -42,6 +42,17 @@ export interface AdminSiteNotification {
     updatedAt?: string;
 }
 
+export interface AdminAdvertisement {
+    id?: number;
+    imageUrl: string;
+    altText: string;
+    targetUrl: string | null;
+    enabled: boolean;
+    sortOrder: number;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 interface CreateWorkflowTemplateResponse {
     workflowId: string;
     taskIds: Record<string, string>;
@@ -107,6 +118,19 @@ export async function updateAdminNotifications(notifications: AdminSiteNotificat
         method: 'PUT',
         data: { notifications }
     })) as ApiResponse<{ notifications: AdminSiteNotification[] }>;
+}
+
+export async function getAdminAdvertisements() {
+    return (await apiFetch('/admin/advertisements')) as ApiResponse<{
+        advertisements: AdminAdvertisement[];
+    }>;
+}
+
+export async function updateAdminAdvertisements(advertisements: AdminAdvertisement[]) {
+    return (await apiFetch('/admin/advertisements', {
+        method: 'PUT',
+        data: { advertisements }
+    })) as ApiResponse<{ advertisements: AdminAdvertisement[] }>;
 }
 
 export async function startArticlePlazaDiscovery(data: {

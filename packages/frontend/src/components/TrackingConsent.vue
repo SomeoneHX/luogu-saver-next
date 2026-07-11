@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { NCard, NSpace, NButton, NText, NIcon } from 'naive-ui';
-import { AnalyticsOutline } from '@vicons/ionicons5';
+import { AnalyticsOutline } from '@/components/icons/lucide.ts';
 
 const show = ref(false);
 const emit = defineEmits<{

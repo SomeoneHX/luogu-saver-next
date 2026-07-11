@@ -10,7 +10,7 @@ import {
     NSpin,
     useMessage
 } from 'naive-ui';
-import { NotificationsOutline } from '@vicons/ionicons5';
+import { NotificationsOutline } from '@/components/icons/lucide.ts';
 import {
     getUnreadNotificationCount,
     getUserNotifications,
@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
                 <n-button
                     circle
                     secondary
-                    class="notification-bell"
+                    class="app-floating-control notification-bell"
                     aria-label="站内通知"
                     @click="openDrawer"
                 >
@@ -208,8 +208,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .notification-bell-shell {
     position: fixed;
-    top: 20px;
-    right: 24px;
+    top: var(--ui-floating-control-inset);
+    right: var(--ui-floating-control-inset);
     z-index: 1100;
 }
 
@@ -224,11 +224,11 @@ onBeforeUnmount(() => {
 .notification-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--ui-control-gap);
 }
 
 .notification-item {
-    padding: 12px 14px;
+    padding: var(--ui-space-3) var(--ui-space-4);
     border: 1px solid var(--ui-border-color);
     border-radius: var(--ui-card-radius);
     background: var(--ui-card-color);
@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--ui-inline-gap);
 }
 
 .item-title {

@@ -51,7 +51,7 @@
 
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
-                            <n-layout-content content-style="padding: 28px;">
+                            <n-layout-content content-style="padding: var(--ui-page-padding);">
                                 <div class="router-view">
                                     <n-button
                                         v-if="!mobileSiderOpen"
@@ -65,139 +65,107 @@
                                     </n-button>
                                     <SiteNotificationCenter />
                                     <UserNotificationCenter />
-                                    <n-back-top :right="50" :bottom="200" />
+                                    <n-back-top
+                                        class="app-floating-control back-top-action"
+                                        aria-label="返回顶部"
+                                    />
                                     <router-view />
                                 </div>
-                                <IconConfigProvider size="14">
-                                    <n-layout-footer bordered class="app-footer">
-                                        <n-grid
-                                            class="footer-grid"
-                                            cols="1 s:2"
-                                            responsive="screen"
-                                        >
-                                            <n-gi>
-                                                <p class="footer-element">
-                                                    <Icon>
-                                                        <Copyright />
-                                                    </Icon>
-                                                    <span> 2025-2026 洛谷保存站 </span>
-                                                </p>
-                                                <p class="footer-element">
-                                                    <a
-                                                        href="https://github.com/Ark-Aak/luogu-saver-next"
-                                                        class="footer-link"
-                                                    >
-                                                        <Icon>
-                                                            <Github />
-                                                        </Icon>
-                                                        <span> GitHub </span>
-                                                    </a>
-                                                    <a
-                                                        href="https://help.luogu.me"
-                                                        class="footer-link"
-                                                    >
-                                                        <Icon>
-                                                            <Book />
-                                                        </Icon>
-                                                        <span> 帮助文档 </span>
-                                                    </a>
-                                                    <a
-                                                        href="https://help.luogu.me/docs/update"
-                                                        class="footer-link"
-                                                    >
-                                                        <Icon>
-                                                            <History />
-                                                        </Icon>
-                                                        <span> 更新日志 </span>
-                                                    </a>
-                                                </p>
-                                                <p class="footer-element">
-                                                    <Icon>
-                                                        <Clock />
-                                                    </Icon>
-                                                    <span>
-                                                        本网站已运行
-                                                        {{ timeSinceFound }} 秒
-                                                    </span>
-                                                </p>
-                                                <p class="footer-element">
+                                <n-layout-footer bordered class="app-footer">
+                                    <n-grid class="footer-grid" cols="1 s:2" responsive="screen">
+                                        <n-gi>
+                                            <p class="footer-element">
+                                                <Copyright :size="14" />
+                                                <span> 2025-2026 洛谷保存站 </span>
+                                            </p>
+                                            <p class="footer-element">
+                                                <a
+                                                    href="https://github.com/Ark-Aak/luogu-saver-next"
+                                                    class="footer-link"
+                                                >
+                                                    <Github :size="14" />
+                                                    <span> GitHub </span>
+                                                </a>
+                                                <a href="https://help.luogu.me" class="footer-link">
+                                                    <Book :size="14" />
+                                                    <span> 帮助文档 </span>
+                                                </a>
+                                                <a
+                                                    href="https://help.luogu.me/docs/update"
+                                                    class="footer-link"
+                                                >
+                                                    <History :size="14" />
+                                                    <span> 更新日志 </span>
+                                                </a>
+                                            </p>
+                                            <p class="footer-element">
+                                                <Clock :size="14" />
+                                                <span>
+                                                    本网站已运行
+                                                    {{ timeSinceFound }} 秒
+                                                </span>
+                                            </p>
+                                            <p class="footer-element">
+                                                <a
+                                                    href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
+                                                    class="footer-link"
+                                                >
+                                                    <Users :size="14" />
+                                                    <span> 项目贡献者 </span>
+                                                </a>
+                                            </p>
+                                        </n-gi>
+                                        <n-gi>
+                                            <p class="footer-element right-aligned">
+                                                <Code :size="14" />
+                                                <span>
+                                                    开发者：Federico2903 & Murasame & quanac-lcx &
                                                     <a
                                                         href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
-                                                        class="footer-link"
-                                                    >
-                                                        <Icon>
-                                                            <Users />
-                                                        </Icon>
-                                                        <span> 项目贡献者 </span>
-                                                    </a>
-                                                </p>
-                                            </n-gi>
-                                            <n-gi>
-                                                <p class="footer-element right-aligned">
-                                                    <Icon><Code /></Icon>
-                                                    <span>
-                                                        开发者：Federico2903 & Murasame & quanac-lcx
-                                                        &
-                                                        <a
-                                                            href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
-                                                            target="_blank"
-                                                            >其他贡献者</a
-                                                        >
-                                                    </span>
-                                                </p>
-                                                <p class="footer-element right-aligned">
-                                                    <a
-                                                        href="https://qm.qq.com/q/QVM9YFEb26"
                                                         target="_blank"
-                                                        class="footer-link"
+                                                        >其他贡献者</a
                                                     >
-                                                        <Icon>
-                                                            <Qq />
-                                                        </Icon>
-                                                        <span
-                                                            >洛谷保存站用户群：1017248143（点击加入）</span
-                                                        >
-                                                    </a>
-                                                </p>
-                                                <p class="footer-element right-aligned">
-                                                    <router-link to="/privacy" class="footer-link">
-                                                        <Icon>
-                                                            <UserShield />
-                                                        </Icon>
-                                                        <span>隐私协议</span>
-                                                    </router-link>
-                                                    <router-link
-                                                        to="/disclaimer"
-                                                        class="footer-link"
+                                                </span>
+                                            </p>
+                                            <p class="footer-element right-aligned">
+                                                <a
+                                                    href="https://qm.qq.com/q/QVM9YFEb26"
+                                                    target="_blank"
+                                                    class="footer-link"
+                                                >
+                                                    <Qq :size="14" />
+                                                    <span
+                                                        >洛谷保存站用户群：1017248143（点击加入）</span
                                                     >
-                                                        <Icon>
-                                                            <ExclamationCircle />
-                                                        </Icon>
-                                                        <span>免责声明</span>
-                                                    </router-link>
-                                                    <router-link to="/deletion" class="footer-link">
-                                                        <Icon>
-                                                            <TrashAlt />
-                                                        </Icon>
-                                                        <span>数据移除政策</span>
-                                                    </router-link>
-                                                </p>
-                                                <p class="footer-element right-aligned">
-                                                    <a
-                                                        href="https://www.rainyun.com/federico_?s=saver"
-                                                        target="_blank"
-                                                        class="footer-link"
-                                                    >
-                                                        <Icon>
-                                                            <Server />
-                                                        </Icon>
-                                                        <span>本站由雨云提供支持</span>
-                                                    </a>
-                                                </p>
-                                            </n-gi>
-                                        </n-grid>
-                                    </n-layout-footer>
-                                </IconConfigProvider>
+                                                </a>
+                                            </p>
+                                            <p class="footer-element right-aligned">
+                                                <router-link to="/privacy" class="footer-link">
+                                                    <UserShield :size="14" />
+                                                    <span>隐私协议</span>
+                                                </router-link>
+                                                <router-link to="/disclaimer" class="footer-link">
+                                                    <ExclamationCircle :size="14" />
+                                                    <span>免责声明</span>
+                                                </router-link>
+                                                <router-link to="/deletion" class="footer-link">
+                                                    <TrashAlt :size="14" />
+                                                    <span>数据移除政策</span>
+                                                </router-link>
+                                            </p>
+                                            <p class="footer-element right-aligned">
+                                                <a
+                                                    href="https://www.rainyun.com/federico_?s=saver"
+                                                    target="_blank"
+                                                    class="footer-link"
+                                                >
+                                                    <Server :size="14" />
+                                                    <span>本站由雨云提供支持</span>
+                                                </a>
+                                            </p>
+                                        </n-gi>
+                                    </n-grid>
+                                </n-layout-footer>
                             </n-layout-content>
                         </n-layout>
                     </n-dialog-provider>
@@ -243,9 +211,7 @@ import {
     CloudDownloadOutline,
     MenuOutline,
     HammerOutline
-} from '@vicons/ionicons5';
-
-import { Icon, IconConfigProvider } from '@vicons/utils';
+} from '@/components/icons/lucide.ts';
 
 import {
     Copyright,
@@ -260,7 +226,7 @@ import {
     Book,
     History,
     Users
-} from '@vicons/fa';
+} from '@/components/icons/lucide.ts';
 
 import { renderIcon } from '@/utils/render';
 
@@ -1044,7 +1010,7 @@ setInterval(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--ui-control-gap);
     border-bottom: 1px solid var(--ui-border-color);
     background: var(--ui-card-color);
 }
@@ -1064,8 +1030,9 @@ setInterval(() => {
 }
 
 .app-footer {
-    margin: 28px -28px -28px -28px;
-    padding: 14px 40px;
+    margin: var(--ui-page-padding) calc(-1 * var(--ui-page-padding))
+        calc(-1 * var(--ui-page-padding));
+    padding: var(--ui-space-4) var(--ui-space-10);
     background: var(--ui-translucent-card-color);
     color: var(--ui-footer-text-color);
     backdrop-filter: blur(16px);
@@ -1108,20 +1075,22 @@ setInterval(() => {
     color: var(--ui-footer-text-color) !important;
 }
 .footer-link:not(:first-child) {
-    margin-left: 16px;
+    margin-left: var(--ui-space-4);
 }
 .router-view {
     max-width: min(1680px, 100%);
     margin: 0 auto;
-    min-height: calc(100vh - 48px);
+    min-height: calc(100vh - var(--ui-page-padding) - var(--ui-page-padding));
 }
 
 :deep(.n-back-top:hover) {
     background-color: var(--ui-back-top-hover-color) !important;
 }
 
-:deep(.n-back-top) {
+:deep(.back-top-action) {
     border-radius: var(--ui-pill-radius) !important;
+    color: var(--ui-back-top-icon-color) !important;
+    background: var(--ui-back-top-color) !important;
 }
 
 .mobile-sider-button {
@@ -1160,7 +1129,7 @@ setInterval(() => {
     }
 
     .app-main :deep(.n-layout-scroll-container) {
-        padding: 10px !important;
+        padding: var(--ui-page-padding-mobile) !important;
     }
 
     :deep(.n-layout-content) {
@@ -1181,19 +1150,23 @@ setInterval(() => {
     }
 
     .app-footer {
-        padding: 12px 16px;
-        margin: 10px -10px -10px -10px;
+        padding: var(--ui-space-3) var(--ui-space-4);
+        margin: var(--ui-page-padding-mobile) calc(-1 * var(--ui-page-padding-mobile))
+            calc(-1 * var(--ui-page-padding-mobile));
     }
 
     .mobile-sider-button {
         position: fixed;
-        right: 20px;
-        bottom: 76px;
+        right: var(--ui-floating-control-inset);
+        bottom: calc(
+            var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
+                var(--ui-floating-control-gap)
+        );
         z-index: 1000;
         display: flex;
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
+        width: var(--ui-floating-control-size);
+        height: var(--ui-floating-control-size);
+        min-width: var(--ui-floating-control-size);
         padding: 0;
         color: var(--ui-back-top-icon-color) !important;
         background: var(--ui-back-top-color) !important;

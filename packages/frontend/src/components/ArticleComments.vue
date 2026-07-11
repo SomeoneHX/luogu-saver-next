@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import { NSpin, NEmpty, NButton, NIcon, NTime, useMessage } from 'naive-ui';
-import { ChatbubblesOutline, SyncOutline } from '@vicons/ionicons5';
+import { ChatbubblesOutline, SyncOutline } from '@/components/icons/lucide.ts';
 
 import { getArticleComments, refreshArticleComments } from '@/api/comment';
 import socket from '@/utils/websocket';

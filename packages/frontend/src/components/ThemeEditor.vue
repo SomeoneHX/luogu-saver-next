@@ -16,7 +16,7 @@ import {
     NSpace,
     useMessage
 } from 'naive-ui';
-import { Settings } from '@vicons/ionicons5';
+import { Settings } from '@/components/icons/lucide.ts';
 import { uiThemeKey, uiThemeModeKey, type UiThemeVars } from '@/styles/theme/themeKeys.ts';
 import { defaultTheme, darkTheme } from '@/styles/theme/default-theme.ts';
 
@@ -204,10 +204,10 @@ const handleReset = () => {
 
 <template>
     <n-button
-        type="primary"
         circle
-        size="large"
-        class="theme-editor-trigger"
+        secondary
+        class="app-floating-control theme-editor-trigger"
+        aria-label="主题设置"
         @click="showDrawer = true"
     >
         <template #icon>
@@ -320,13 +320,13 @@ const handleReset = () => {
 <style scoped>
 .theme-editor-trigger {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    right: var(--ui-floating-control-inset);
+    bottom: var(--ui-floating-control-inset);
     z-index: 1000;
 }
 
 .mode-selector {
-    margin-bottom: 16px;
+    margin-bottom: var(--ui-space-4);
 }
 
 .editor-content.disabled {
@@ -336,6 +336,6 @@ const handleReset = () => {
 }
 
 .theme-editor-form :deep(.n-collapse-item__content-inner) {
-    padding-top: 8px;
+    padding-top: var(--ui-space-2);
 }
 </style>

@@ -101,7 +101,7 @@ const showHeader = computed(() => {
 
 <style scoped>
 .saver-card {
-    padding: 20px;
+    padding: var(--ui-card-padding);
     border: 1px solid var(--ui-border-color);
     transition:
         transform 0.3s ease,
@@ -121,13 +121,13 @@ const showHeader = computed(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: var(--ui-space-4);
 }
 
 .card-title-wrapper {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--ui-control-gap);
 }
 
 .card-title-wrapper > .n-icon {

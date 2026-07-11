@@ -13,7 +13,7 @@ import {
     SearchOutline,
     ShareSocialOutline,
     AtOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 
 import { getArticleCount } from '@/api/article.ts';
 import { getPasteCount } from '@/api/paste.ts';
@@ -164,7 +164,7 @@ onMounted(() => {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--ui-section-gap);
 }
 
 .about-header {
@@ -195,7 +195,7 @@ onMounted(() => {
     padding: 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: var(--ui-space-4);
 }
 @media (min-width: 640px) {
     .feature-list {
@@ -205,7 +205,7 @@ onMounted(() => {
 .feature-item {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: var(--ui-control-gap);
 }
 .feature-icon {
     flex-shrink: 0;
@@ -230,8 +230,8 @@ onMounted(() => {
 .about-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 12px;
+    gap: var(--ui-inline-gap);
+    margin-top: var(--ui-space-3);
     font-size: 14px;
     word-break: break-all;
     text-decoration: none;
@@ -245,10 +245,10 @@ onMounted(() => {
 }
 .disclaimer-list {
     margin: 0;
-    padding-left: 18px;
+    padding-left: var(--ui-space-5);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--ui-inline-gap);
 }
 .disclaimer-list li {
     font-size: 13px;

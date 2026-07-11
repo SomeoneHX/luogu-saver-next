@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NAlert, NButton, NInputNumber, NSpace, NSwitch, useMessage } from 'naive-ui';
-import { CloudDownloadOutline } from '@vicons/ionicons5';
+import { CloudDownloadOutline } from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
 import { startUserArticleDiscovery } from '@/api/discovery.ts';

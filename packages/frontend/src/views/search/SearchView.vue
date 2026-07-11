@@ -15,7 +15,12 @@ import {
     NTag,
     useMessage
 } from 'naive-ui';
-import { SearchOutline, NewspaperOutline, PersonOutline, CalendarOutline } from '@vicons/ionicons5';
+import {
+    CalendarOutline,
+    NewspaperOutline,
+    PersonOutline,
+    SearchOutline
+} from '@/components/icons/lucide.ts';
 import CardTitle from '@/components/CardTitle.vue';
 import Card from '@/components/Card.vue';
 import { searchArticles, type ArticleSearchHit } from '@/api/search.ts';
@@ -273,13 +278,13 @@ onMounted(loadSearch);
 
 .search-header,
 .search-controls {
-    margin-bottom: 16px;
+    margin-bottom: var(--ui-space-4);
 }
 
 .result-meta {
     display: flex;
     justify-content: space-between;
-    margin: 4px 4px 14px;
+    margin: var(--ui-space-1) var(--ui-space-1) var(--ui-space-4);
     color: var(--ui-muted-text-color);
     font-size: 13px;
 }
@@ -287,7 +292,7 @@ onMounted(loadSearch);
 .result-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: var(--ui-space-4);
 }
 
 .result-card {
@@ -309,7 +314,7 @@ onMounted(loadSearch);
 
 .summary {
     min-height: 54px;
-    margin: 0 0 14px;
+    margin: 0 0 var(--ui-space-4);
     color: var(--ui-secondary-text-color);
     line-height: 1.7;
     display: -webkit-box;
@@ -332,7 +337,7 @@ onMounted(loadSearch);
 .pagination {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: var(--ui-space-5);
 }
 
 @media (max-width: 900px) {

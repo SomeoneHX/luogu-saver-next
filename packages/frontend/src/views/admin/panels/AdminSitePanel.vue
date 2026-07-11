@@ -3,7 +3,9 @@ import { computed, onMounted, ref } from 'vue';
 import {
     NAlert,
     NButton,
+    NEmpty,
     NFormItem,
+    NIcon,
     NInput,
     NSpace,
     NSpin,
@@ -11,13 +13,23 @@ import {
     NTag,
     useMessage
 } from 'naive-ui';
+import {
+    AddOutline,
+    ArrowDownOutline,
+    ArrowUpOutline,
+    SaveOutline,
+    TrashOutline
+} from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import HtmlCodeEditor from '@/components/HtmlCodeEditor.vue';
 import {
     getAdminAnnouncement,
+    getAdminAdvertisements,
     getAdminNotifications,
     updateAdminAnnouncement,
+    updateAdminAdvertisements,
     updateAdminNotifications,
+    type AdminAdvertisement,
     type AdminSiteNotification
 } from '@/api/admin.ts';
 import type { NotificationChannel } from '@/api/notification.ts';
@@ -30,6 +42,8 @@ const loadingAnnouncement = ref(false);
 const savingAnnouncement = ref(false);
 const loadingNotifications = ref(false);
 const savingNotifications = ref(false);
+const loadingAdvertisements = ref(false);
+const savingAdvertisements = ref(false);
 const announcementForm = ref({
     title: '公告',
     content: '',
@@ -39,6 +53,13 @@ const announcementForm = ref({
 type NotificationDraft = AdminSiteNotification & { localId: string };
 const notificationDrafts = ref<NotificationDraft[]>([]);
 let nextNotificationDraftId = 0;
+
+type AdvertisementDraft = Omit<AdminAdvertisement, 'targetUrl'> & {
+    targetUrl: string;
+    localId: string;
+};
+const advertisementDrafts = ref<AdvertisementDraft[]>([]);
+let nextAdvertisementDraftId = 0;
 
 const canManageAnnouncements = computed(() =>
     hasPermission(currentAuth.value?.role, Permission.MANAGE_ANNOUNCEMENTS)
@@ -77,6 +98,23 @@ async function loadNotifications() {
         }
     } finally {
         loadingNotifications.value = false;
+    }
+}
+
+async function loadAdvertisements() {
+    if (!canManageAnnouncements.value) return;
+    loadingAdvertisements.value = true;
+    try {
+        const response = await getAdminAdvertisements();
+        if (response.code === 200) {
+            advertisementDrafts.value = response.data.advertisements.map(toAdvertisementDraft);
+        } else {
+            message.error(response.message);
+        }
+    } catch {
+        message.error('广告配置加载失败');
+    } finally {
+        loadingAdvertisements.value = false;
     }
 }
 
@@ -157,6 +195,49 @@ function buildNotificationPayload() {
     }));
 }
 
+function toAdvertisementDraft(item: AdminAdvertisement): AdvertisementDraft {
+    return {
+        ...item,
+        targetUrl: item.targetUrl ?? '',
+        localId: `advertisement-draft-${++nextAdvertisementDraftId}`
+    };
+}
+
+function addAdvertisement() {
+    if (advertisementDrafts.value.length >= 10) return;
+    advertisementDrafts.value.push({
+        localId: `advertisement-draft-${++nextAdvertisementDraftId}`,
+        imageUrl: '',
+        altText: '',
+        targetUrl: '',
+        enabled: true,
+        sortOrder: advertisementDrafts.value.length * 10
+    });
+}
+
+function removeAdvertisement(index: number) {
+    advertisementDrafts.value.splice(index, 1);
+}
+
+function moveAdvertisement(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= advertisementDrafts.value.length) return;
+    const [item] = advertisementDrafts.value.splice(index, 1);
+    if (!item) return;
+    advertisementDrafts.value.splice(targetIndex, 0, item);
+}
+
+function buildAdvertisementPayload(): AdminAdvertisement[] {
+    return advertisementDrafts.value.map((item, index) => ({
+        id: item.id,
+        imageUrl: item.imageUrl,
+        altText: item.altText,
+        targetUrl: item.targetUrl,
+        enabled: item.enabled,
+        sortOrder: index * 10
+    }));
+}
+
 async function handleAnnouncementSave() {
     if (!canManageAnnouncements.value) return;
     savingAnnouncement.value = true;
@@ -193,8 +274,26 @@ async function handleNotificationsSave() {
     }
 }
 
+async function handleAdvertisementsSave() {
+    if (!canManageAnnouncements.value) return;
+    savingAdvertisements.value = true;
+    try {
+        const response = await updateAdminAdvertisements(buildAdvertisementPayload());
+        if (response.code === 200) {
+            advertisementDrafts.value = response.data.advertisements.map(toAdvertisementDraft);
+            message.success('广告配置已保存');
+        } else {
+            message.error(response.message);
+        }
+    } catch {
+        message.error('保存失败，请检查图片地址、跳转地址和替代文本');
+    } finally {
+        savingAdvertisements.value = false;
+    }
+}
+
 onMounted(async () => {
-    await Promise.all([loadAnnouncement(), loadNotifications()]);
+    await Promise.all([loadAnnouncement(), loadNotifications(), loadAdvertisements()]);
 });
 </script>
 
@@ -429,6 +528,132 @@ onMounted(async () => {
                 </n-alert>
             </n-spin>
         </Card>
+
+        <Card title="广告轮播" class="announcement-card">
+            <n-spin :show="loadingAdvertisements">
+                <div v-if="canManageAnnouncements" class="advertisement-editor">
+                    <div class="advertisement-editor-heading">
+                        <n-tag type="info">{{ advertisementDrafts.length }} / 10</n-tag>
+                        <n-button
+                            secondary
+                            :disabled="advertisementDrafts.length >= 10"
+                            @click="addAdvertisement"
+                        >
+                            <template #icon><n-icon :component="AddOutline" /></template>
+                            新增广告
+                        </n-button>
+                    </div>
+
+                    <n-alert v-if="advertisementDrafts.length === 0" type="info" title="暂无广告">
+                        保存空列表后，主页不会显示广告轮播。
+                    </n-alert>
+
+                    <div
+                        v-for="(item, index) in advertisementDrafts"
+                        :key="item.localId"
+                        class="advertisement-item-editor"
+                    >
+                        <div class="advertisement-item-toolbar">
+                            <n-space align="center">
+                                <n-tag>广告 #{{ index + 1 }}</n-tag>
+                                <n-form-item
+                                    label="启用"
+                                    label-placement="left"
+                                    :show-feedback="false"
+                                    class="announcement-enabled-field"
+                                >
+                                    <n-switch v-model:value="item.enabled" />
+                                </n-form-item>
+                            </n-space>
+                            <n-space size="small">
+                                <n-button
+                                    circle
+                                    size="small"
+                                    :disabled="index === 0"
+                                    aria-label="上移广告"
+                                    title="上移"
+                                    @click="moveAdvertisement(index, -1)"
+                                >
+                                    <template #icon
+                                        ><n-icon :component="ArrowUpOutline"
+                                    /></template>
+                                </n-button>
+                                <n-button
+                                    circle
+                                    size="small"
+                                    :disabled="index === advertisementDrafts.length - 1"
+                                    aria-label="下移广告"
+                                    title="下移"
+                                    @click="moveAdvertisement(index, 1)"
+                                >
+                                    <template #icon
+                                        ><n-icon :component="ArrowDownOutline"
+                                    /></template>
+                                </n-button>
+                                <n-button
+                                    circle
+                                    size="small"
+                                    type="error"
+                                    secondary
+                                    aria-label="删除广告"
+                                    title="删除"
+                                    @click="removeAdvertisement(index)"
+                                >
+                                    <template #icon><n-icon :component="TrashOutline" /></template>
+                                </n-button>
+                            </n-space>
+                        </div>
+
+                        <div class="advertisement-fields">
+                            <n-form-item label="图片地址" :show-feedback="false">
+                                <n-input
+                                    v-model:value="item.imageUrl"
+                                    placeholder="https://example.com/banner.webp"
+                                />
+                            </n-form-item>
+                            <n-form-item label="跳转地址（可选）" :show-feedback="false">
+                                <n-input
+                                    v-model:value="item.targetUrl"
+                                    placeholder="https://example.com"
+                                />
+                            </n-form-item>
+                        </div>
+
+                        <n-form-item label="替代文本" :show-feedback="false">
+                            <n-input
+                                v-model:value="item.altText"
+                                maxlength="255"
+                                show-count
+                                placeholder="描述广告图片内容"
+                            />
+                        </n-form-item>
+
+                        <div class="advertisement-preview">
+                            <img
+                                v-if="item.imageUrl.trim()"
+                                :src="item.imageUrl"
+                                :alt="item.altText || `广告 ${index + 1} 预览`"
+                            />
+                            <n-empty v-else description="暂无预览" size="small" />
+                        </div>
+                    </div>
+
+                    <n-space justify="end">
+                        <n-button
+                            type="primary"
+                            :loading="savingAdvertisements"
+                            @click="handleAdvertisementsSave"
+                        >
+                            <template #icon><n-icon :component="SaveOutline" /></template>
+                            保存广告配置
+                        </n-button>
+                    </n-space>
+                </div>
+                <n-alert v-else type="warning" title="缺少 MANAGE_ANNOUNCEMENTS">
+                    你没有广告管理权限。
+                </n-alert>
+            </n-spin>
+        </Card>
     </div>
 </template>
 
@@ -523,5 +748,66 @@ onMounted(async () => {
 
 .announcement-preview :deep(a:hover) {
     color: var(--ui-link-hover-color) !important;
+}
+
+.advertisement-editor {
+    display: grid;
+    gap: var(--ui-space-4);
+}
+
+.advertisement-editor-heading,
+.advertisement-item-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
+}
+
+.advertisement-item-editor {
+    display: grid;
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-4);
+    border: 1px solid var(--ui-border-color);
+    border-radius: var(--ui-card-radius);
+    background: var(--ui-panel-color);
+}
+
+.advertisement-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ui-space-4);
+}
+
+.advertisement-item-editor :deep(.n-form-item) {
+    margin-bottom: 0;
+}
+
+.advertisement-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 520px);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--ui-border-color);
+    border-radius: var(--ui-card-radius);
+    background: var(--ui-card-color);
+}
+
+.advertisement-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 720px) {
+    .advertisement-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .advertisement-item-toolbar {
+        align-items: flex-start;
+    }
 }
 </style>

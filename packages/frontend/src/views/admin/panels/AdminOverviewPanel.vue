@@ -7,7 +7,7 @@ import {
     ConstructOutline,
     MegaphoneOutline,
     PeopleOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import { getAdminDeletionRequests } from '@/api/deletion-request.ts';
 import { currentAuth } from '@/utils/auth.ts';

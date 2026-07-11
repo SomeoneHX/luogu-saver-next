@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { NButton, NCard, NIcon, NTooltip } from 'naive-ui';
-import { CloseOutline, StarOutline } from '@vicons/ionicons5';
-import { Github } from '@vicons/fa';
+import { CloseOutline, Github, StarOutline } from '@/components/icons/lucide.ts';
 import { useStarPrompt } from '@/composables/useStarPrompt.ts';
 import { GITHUB_STAR_PROMPT_STORAGE_KEY } from '@/utils/constants.ts';
 

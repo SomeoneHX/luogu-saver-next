@@ -1,6 +1,24 @@
 /*fixed from https://cdn.luogu.com.cn/css/luogu3.css?ver=20190102 prefix: lg-fg-* */
 
 :root {
+    --ui-space-1: 4px;
+    --ui-space-2: 8px;
+    --ui-space-3: 12px;
+    --ui-space-4: 16px;
+    --ui-space-5: 20px;
+    --ui-space-6: 24px;
+    --ui-space-8: 32px;
+    --ui-space-10: 40px;
+    --ui-space-12: 48px;
+    --ui-page-padding: var(--ui-space-6);
+    --ui-page-padding-mobile: var(--ui-space-4);
+    --ui-section-gap: var(--ui-space-6);
+    --ui-card-padding: var(--ui-space-5);
+    --ui-control-gap: var(--ui-space-3);
+    --ui-inline-gap: var(--ui-space-2);
+    --ui-floating-control-size: 44px;
+    --ui-floating-control-inset: var(--ui-space-6);
+    --ui-floating-control-gap: var(--ui-space-3);
     --ui-body-color: #f6f9fd;
     --ui-body-gradient-start: #f7fbff;
     --ui-body-gradient-end: #eef6ff;
@@ -86,6 +104,47 @@
     --ui-category-unknown-color: #95a5a6;
     --article-tag-background-color: transparent;
     --article-tag-color: var(--ui-muted-text-color);
+}
+
+.app-floating-control {
+    width: var(--ui-floating-control-size) !important;
+    height: var(--ui-floating-control-size) !important;
+    min-width: var(--ui-floating-control-size) !important;
+    padding: 0 !important;
+    color: var(--ui-back-top-icon-color) !important;
+    background: var(--ui-back-top-color) !important;
+    border: 0 !important;
+    border-radius: var(--ui-pill-radius) !important;
+    box-shadow: var(--ui-elevated-shadow) !important;
+}
+
+.app-floating-control:hover,
+.app-floating-control:focus {
+    color: var(--ui-back-top-icon-hover-color) !important;
+    background: var(--ui-back-top-hover-color) !important;
+}
+
+.app-floating-control .n-button__border,
+.app-floating-control .n-button__state-border {
+    border: 0 !important;
+}
+
+.back-top-action {
+    right: var(--ui-floating-control-inset) !important;
+    bottom: calc(
+        var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
+            var(--ui-floating-control-gap)
+    ) !important;
+}
+
+@media (max-width: 768px) {
+    .back-top-action {
+        bottom: calc(
+            var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
+                var(--ui-floating-control-size) + var(--ui-floating-control-gap) +
+                var(--ui-floating-control-gap)
+        ) !important;
+    }
 }
 
 .user-Red {

@@ -28,7 +28,7 @@ import {
     ListOutline,
     TimeOutline,
     LibraryOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 
 import { useContentSaver } from '@/composables/useContentSaver';
 import { getArticleById, getRelevant, getArticleHistory, saveArticle } from '@/api/article';

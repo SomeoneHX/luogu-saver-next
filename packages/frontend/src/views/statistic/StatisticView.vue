@@ -8,7 +8,7 @@ import {
     ServerOutline,
     TimeOutline,
     WarningOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
 import { getQueueStats, type QueueStatsItem, type QueueStatsResponse } from '@/api/statistic.ts';

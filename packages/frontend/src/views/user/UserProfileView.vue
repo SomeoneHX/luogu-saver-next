@@ -19,7 +19,7 @@ import {
     ReaderOutline,
     PersonCircleOutline,
     ShareSocialOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 
 import { getUserProfile, refreshUserProfile } from '@/api/user';
 import type { UserProfile } from '@/types/user';
@@ -476,7 +476,7 @@ onUnmounted(() => {
 .profile-grid {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 16px;
+    gap: var(--ui-space-4);
     align-items: start;
     min-width: 0;
 }
@@ -492,7 +492,7 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--ui-space-4);
     /* prevent any oversized child from overflowing the grid cell */
     overflow: hidden;
 }
@@ -530,9 +530,9 @@ onUnmounted(() => {
 /* Identity card */
 .identity-header {
     display: flex;
-    gap: 14px;
+    gap: var(--ui-space-4);
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: var(--ui-space-4);
     min-width: 0;
 }
 .identity-name-block {
@@ -580,8 +580,8 @@ onUnmounted(() => {
 .identity-field {
     display: flex;
     align-items: baseline;
-    gap: 12px;
-    padding: 6px 0;
+    gap: var(--ui-control-gap);
+    padding: var(--ui-space-2) 0;
     border-bottom: 1px solid var(--ui-border-color);
     min-width: 0;
 }
@@ -614,10 +614,10 @@ onUnmounted(() => {
 }
 
 .identity-actions {
-    margin-top: 14px;
+    margin-top: var(--ui-space-4);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--ui-control-gap);
 }
 .identity-stale {
     font-size: 12px;
@@ -636,8 +636,8 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 8px 0;
+    gap: var(--ui-control-gap);
+    padding: var(--ui-space-2) 0;
     border-bottom: 1px solid var(--ui-border-color);
 }
 .prize-row:last-child {
@@ -648,7 +648,7 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: var(--ui-inline-gap);
     font-size: 14px;
     overflow: hidden;
     text-overflow: ellipsis;

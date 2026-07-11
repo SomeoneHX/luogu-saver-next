@@ -20,7 +20,7 @@ import {
     OpenOutline,
     SyncOutline,
     TrashOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 
 import { getPasteById, savePaste } from '@/api/paste';
 import type { Paste } from '@/types/paste';

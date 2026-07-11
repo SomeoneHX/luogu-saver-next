@@ -7,6 +7,7 @@ import { WorkflowService } from '@/services/workflow.service';
 import { RegisteredUserService } from '@/services/registered-user.service';
 import { AnnouncementService } from '@/services/announcement.service';
 import { SiteNotificationService } from '@/services/site-notification.service';
+import { AdvertisementService } from '@/services/advertisement.service';
 import { DeletionRequestService } from '@/services/deletion-request.service';
 
 const router = new Router<DefaultState, Context>({ prefix: '/admin' });
@@ -153,6 +154,26 @@ router.put(
             ctx.request.body || {}
         );
         ctx.success({ notifications });
+    }
+);
+
+router.get(
+    '/advertisements',
+    requiresPermission(Permission.MANAGE_ANNOUNCEMENTS),
+    async (ctx: Context) => {
+        const advertisements = await AdvertisementService.getAdminAdvertisements();
+        ctx.success({ advertisements });
+    }
+);
+
+router.put(
+    '/advertisements',
+    requiresPermission(Permission.MANAGE_ANNOUNCEMENTS),
+    async (ctx: Context) => {
+        const advertisements = await AdvertisementService.replaceAdminAdvertisements(
+            ctx.request.body || {}
+        );
+        ctx.success({ advertisements });
     }
 );
 

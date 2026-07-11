@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NAlert, NButton, NTabPane, NTabs } from 'naive-ui';
-import { ShieldCheckmarkOutline } from '@vicons/ionicons5';
+import { ShieldCheckmarkOutline } from '@/components/icons/lucide.ts';
 import CardTitle from '@/components/CardTitle.vue';
 import { getCurrentUser } from '@/api/auth.ts';
 import { currentAuth, isAuthenticated, setCurrentAuth, startCpOAuthLogin } from '@/utils/auth.ts';

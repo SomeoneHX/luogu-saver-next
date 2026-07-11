@@ -8,7 +8,7 @@ import {
     GameControllerOutline,
     ChatbubblesOutline,
     HelpCircleOutline
-} from '@vicons/ionicons5';
+} from '@/components/icons/lucide.ts';
 
 export const ARTICLE_CATEGORIES: Record<number, { label: string; icon: any; color: string }> = {
     1: { label: '个人记录', icon: PersonOutline, color: 'var(--ui-category-personal-color)' },
