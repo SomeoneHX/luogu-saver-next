@@ -28,7 +28,7 @@
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
                     >
-                        <div class="brand-shell">
+                        <div class="brand-shell" @click="goHome">
                             <n-icon class="brand-logo" :component="LuoguLogo" />
                             <span v-if="!collapsed" class="brand-text">洛谷保存站</span>
                         </div>
@@ -973,6 +973,11 @@ watch(
     { immediate: true }
 );
 
+const goHome = () => {
+    closeMobileSider();
+    router.push('/');
+};
+
 const handleMenuSelect = (key: string) => {
     closeMobileSider();
     if (key === 'home') {
@@ -1018,6 +1023,7 @@ setInterval(() => {
     box-sizing: border-box;
     border-bottom: 1px solid var(--ui-border-color);
     background: var(--ui-card-color);
+    cursor: pointer;
 }
 
 .brand-logo {
