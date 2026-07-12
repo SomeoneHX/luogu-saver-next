@@ -28,7 +28,7 @@
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
                     >
-                        <div class="brand-shell" @click="goHome">
+                        <div class="brand-shell" @click="handleMenuSelect('home')">
                             <n-icon class="brand-logo" :component="LuoguLogo" />
                             <span v-if="!collapsed" class="brand-text">洛谷保存站</span>
                         </div>
@@ -972,11 +972,6 @@ watch(
     },
     { immediate: true }
 );
-
-const goHome = () => {
-    closeMobileSider();
-    router.push('/');
-};
 
 const handleMenuSelect = (key: string) => {
     closeMobileSider();
