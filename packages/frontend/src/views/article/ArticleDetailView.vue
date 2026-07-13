@@ -312,8 +312,8 @@ const handleUpdate = async () => {
     if (!articleId) return;
     try {
         router.replace({ query: {} });
-        if (article.value?.title) {
-            document.title = `${article.value.title} - 洛谷保存站`;
+        if (displayTitle.value) {
+            document.title = `${displayTitle.value} - 洛谷保存站`;
         }
         const response = await submitSaveArticle();
         notifyWorkflowSubmitted(response, '更新请求已提交');
