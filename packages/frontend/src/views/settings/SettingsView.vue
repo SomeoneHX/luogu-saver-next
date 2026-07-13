@@ -49,6 +49,12 @@ const currentUser = ref<AuthMeResponse | null>(null);
 const errorMessage = ref('');
 const trackingStorage = useLocalStorage(CONSENT_TRACKING_STORAGE_KEY, 'denied');
 const sidebarLogoNavEnabled = inject('sidebarLogoNavEnabled') as Ref<boolean | null>;
+const logoNavEnabled = computed({
+    get: () => sidebarLogoNavEnabled.value ?? true,
+    set: val => {
+        sidebarLogoNavEnabled.value = val;
+    }
+});
 const knowledgeBase = useKnowledgeBase();
 const kbArticles = computed(() => knowledgeBase.getArticles());
 const { selectedSource, sourceBaseUrl, sourceOptions } = useLuoguSource();
@@ -323,7 +329,7 @@ onMounted(loadCurrentUser);
                             <div class="setting-title">侧边栏Logo点击导航</div>
                             <div class="setting-desc">启用后点击侧边栏Logo会跳转到首页</div>
                         </div>
-                        <n-switch v-model:value="sidebarLogoNavEnabled" />
+                        <n-switch v-model:value="logoNavEnabled" />
                     </div>
                 </n-space>
             </Card>
