@@ -9,10 +9,6 @@
                     has-sider
                     :style="themeCssVars"
                     :data-ui-code-theme="uiThemeVars.codeTheme"
-                    @touchstart.passive="handleTouchStart"
-                    @touchend.passive="handleTouchEnd"
-                    @pointerdown.passive="handlePointerStart"
-                    @pointerup.passive="handlePointerEnd"
                 >
                     <n-layout-sider
                         class="app-sider"
@@ -264,8 +260,6 @@ const collapsed = ref(true);
 const manualToggle = ref(false);
 const mobileSiderOpen = ref(false);
 const trackingConsentBlocking = ref(true);
-const touchStartX = ref(0);
-const touchStartY = ref(0);
 
 const isMobileViewport = () => window.innerWidth <= 768;
 
@@ -304,43 +298,6 @@ const closeMobileSider = () => {
     if (!isMobileViewport()) return;
     mobileSiderOpen.value = false;
     collapsed.value = true;
-};
-
-const handleTouchStart = (event: TouchEvent) => {
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    touchStartX.value = touch.clientX;
-    touchStartY.value = touch.clientY;
-};
-
-const handleSwipeEnd = (clientX: number, clientY: number) => {
-    const deltaX = clientX - touchStartX.value;
-    const deltaY = Math.abs(clientY - touchStartY.value);
-    if (deltaY > 48) return;
-
-    if (!mobileSiderOpen.value && deltaX > 64) {
-        openMobileSider();
-        return;
-    }
-
-    if (mobileSiderOpen.value && deltaX < -64) {
-        closeMobileSider();
-    }
-};
-
-const handleTouchEnd = (event: TouchEvent) => {
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    handleSwipeEnd(touch.clientX, touch.clientY);
-};
-
-const handlePointerStart = (event: PointerEvent) => {
-    touchStartX.value = event.clientX;
-    touchStartY.value = event.clientY;
-};
-
-const handlePointerEnd = (event: PointerEvent) => {
-    handleSwipeEnd(event.clientX, event.clientY);
 };
 
 const canShowAdminMenu = computed(() =>
@@ -977,8 +934,6 @@ const handleMenuSelect = (key: string) => {
     closeMobileSider();
     if (key === 'home') {
         router.push('/');
-    } else if (key === 'judgement') {
-        window.open('https://jdmt.luogu.me', '_blank');
     } else {
         router.push(`/${key}`);
     }
