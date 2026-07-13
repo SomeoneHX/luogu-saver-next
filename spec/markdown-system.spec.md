@@ -109,7 +109,61 @@ Given input lines `normal text`, an empty line, `$$`, `inline math: $$ a = b $$`
 
 A display math fence with a valid closing fence SHALL retain normal display-math behavior. Dollar-sign sequences inside indented code or fenced code blocks SHALL retain normal code behavior.
 
-## 6.2 GFM Task Lists
+## 6.2 Multiline Display Math With Attached Content
+
+A display math region in normal Markdown text is an attached-content multiline region if all of these conditions hold:
+
+1. Its opening sequence contains two or more dollar signs.
+2. Non-whitespace math content follows the opening sequence on the same line.
+3. Its closing dollar-sign sequence occurs on a later line.
+4. The closing sequence contains at least as many dollar signs as the opening sequence.
+
+The attached-content multiline region MAY place math content before its closing dollar-sign sequence on the same line.
+
+For each attached-content multiline region, the renderer SHALL:
+
+1. Preserve the math content located on the opening-fence line after the opening sequence.
+2. Preserve the math content located on the closing-fence line before the closing sequence.
+3. Parse all content between the two sequences as one display-math node.
+4. Render valid LaTeX through KaTeX with class `katex-display`.
+5. Not emit a `katex-error` element solely because content shares a line with either fence.
+6. Preserve the whitespace prefix located before the opening fence on each inserted line.
+
+For the following input, the output SHALL contain one `katex-display` element and SHALL NOT contain `katex-error`:
+
+```text
+$$\begin{aligned}a&=\begin{vmatrix}
+    1 & 0 \\
+    0 & 1
+\end{vmatrix}\end{aligned}$$
+```
+
+Dollar-sign sequences inside indented code blocks or fenced code blocks SHALL retain normal code behavior.
+
+## 6.3 Single-Line Display Math
+
+A line in normal Markdown text is a single-line display math region if all of these conditions hold:
+
+1. The line contains only optional whitespace, an opening sequence of two or more dollar signs, non-whitespace math content, a closing dollar-sign sequence, and optional whitespace.
+2. The closing sequence contains at least as many dollar signs as the opening sequence.
+3. The opening and closing sequences are distinct sequences.
+
+For each single-line display math region, the renderer SHALL:
+
+1. Preserve the math content between the opening and closing sequences.
+2. Render valid LaTeX through KaTeX with class `katex-display`.
+3. Not join the region with a later single-line display math region.
+4. Preserve the whitespace prefix located before the opening fence on each inserted line.
+
+A paragraph containing prose and exactly one single-dollar inline math region SHALL render the math without class `katex-display`.
+
+The frontend SHALL center elements with class `katex-display`.
+
+The frontend SHALL NOT center a paragraph solely because its only element child has class `katex`.
+
+Dollar-sign sequences inside indented code blocks or fenced code blocks SHALL retain normal code behavior.
+
+## 6.4 GFM Task Lists
 
 For GFM task list input `- [ ] item` or `- [x] item`, the renderer SHALL preserve checkbox inputs in the output HTML.
 

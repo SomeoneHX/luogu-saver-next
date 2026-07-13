@@ -217,8 +217,98 @@ function escapeMathFences(src: string, fences: Array<{ length: number; offset: n
     return parts.join('');
 }
 
+function normalizeDisplayMathFences(src: string) {
+    const lines: Array<{ start: number; text: string }> = [];
+    let lineStart = 0;
+    while (lineStart <= src.length) {
+        const lineFeed = src.indexOf('\n', lineStart);
+        const rawEnd = lineFeed === -1 ? src.length : lineFeed;
+        const lineEnd = rawEnd > lineStart && src[rawEnd - 1] === '\r' ? rawEnd - 1 : rawEnd;
+        lines.push({ start: lineStart, text: src.slice(lineStart, lineEnd) });
+        if (lineFeed === -1) break;
+        lineStart = lineFeed + 1;
+    }
+
+    const isTextOffset = createTextOffsetLookup(src);
+    const insertions: Array<{ offset: number; value: string }> = [];
+    const lineEnding = src.includes('\r\n') ? '\r\n' : '\n';
+    const openerPattern = /^[ \t]*(\${2,})(?!\$)[ \t]*(\S.*)$/;
+
+    for (let index = 0; index < lines.length; index++) {
+        const openingLine = lines[index];
+        const openingMatch = openerPattern.exec(openingLine.text);
+        if (!openingMatch) continue;
+        const openingFenceOffset = openingLine.start + openingLine.text.indexOf(openingMatch[1]);
+        if (!isTextOffset(openingFenceOffset)) continue;
+        const insertedLine =
+            lineEnding + openingLine.text.slice(0, openingFenceOffset - openingLine.start);
+
+        const sameLineClosingFence = /(\${2,})[ \t]*$/.exec(openingMatch[2]);
+        if (sameLineClosingFence && sameLineClosingFence[1].length >= openingMatch[1].length) {
+            const closingFenceOffset =
+                openingLine.start + openingLine.text.lastIndexOf(sameLineClosingFence[1]);
+            if (
+                closingFenceOffset > openingFenceOffset + openingMatch[1].length &&
+                isTextOffset(closingFenceOffset)
+            ) {
+                insertions.push({
+                    offset: openingFenceOffset + openingMatch[1].length,
+                    value: insertedLine
+                });
+                insertions.push({ offset: closingFenceOffset, value: insertedLine });
+            }
+            continue;
+        }
+
+        for (let closingIndex = index + 1; closingIndex < lines.length; closingIndex++) {
+            const closingLine = lines[closingIndex];
+            const closingMatch = /(\${2,})[ \t]*$/.exec(closingLine.text);
+            if (!closingMatch || closingMatch[1].length < openingMatch[1].length) continue;
+            const selfContainedMatch = openerPattern.exec(closingLine.text);
+            const selfContainedClosing = selfContainedMatch
+                ? /(\${2,})[ \t]*$/.exec(selfContainedMatch[2])
+                : null;
+            if (
+                selfContainedMatch &&
+                selfContainedClosing &&
+                selfContainedClosing[1].length >= selfContainedMatch[1].length
+            ) {
+                continue;
+            }
+
+            const closingFenceOffset = closingLine.start + closingMatch.index;
+            if (!isTextOffset(closingFenceOffset)) continue;
+
+            // remark-math drops content attached to a multiline opening fence unless the fence is isolated.
+            insertions.push({
+                offset: openingFenceOffset + openingMatch[1].length,
+                value: insertedLine
+            });
+            if (closingLine.text.slice(0, closingMatch.index).trim() !== '') {
+                insertions.push({ offset: closingFenceOffset, value: insertedLine });
+            }
+            index = closingIndex;
+            break;
+        }
+    }
+
+    if (insertions.length === 0) return src;
+
+    const uniqueInsertions = [
+        ...new Map(insertions.map(insertion => [insertion.offset, insertion])).values()
+    ].sort((a, b) => a.offset - b.offset);
+    const parts: string[] = [];
+    let cursor = 0;
+    for (const insertion of uniqueInsertions) {
+        parts.push(src.slice(cursor, insertion.offset), insertion.value);
+        cursor = insertion.offset;
+    }
+    parts.push(src.slice(cursor));
+    return parts.join('');
+}
+
 function parseMarkdown(processor: any, src: string) {
-    let protectedSrc = src;
+    let protectedSrc = normalizeDisplayMathFences(src);
 
     while (true) {
         const file = new VFile(protectedSrc);

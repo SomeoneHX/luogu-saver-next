@@ -21,6 +21,76 @@ test('preserves valid display math fences', async () => {
     assert.doesNotMatch(html, /katex-error/);
 });
 
+test('preserves attached content in multiline display math fences', async () => {
+    const html = await renderMarkdown(
+        [
+            '$$\\begin{aligned}a&=\\begin{vmatrix}',
+            '    1 & 0 \\\\',
+            '    0 & 1',
+            '\\end{vmatrix}\\end{aligned}$$'
+        ].join('\n')
+    );
+
+    assert.match(html, /class="katex-display"/);
+    assert.match(html, /<mi>a<\/mi>/);
+    assert.doesNotMatch(html, /katex-error/);
+});
+
+test('does not normalize attached multiline dollar signs in fenced code', async () => {
+    const markdown = ['```text', '$$not math', 'still not math$$', '```'].join('\n');
+    const html = await renderMarkdown(markdown);
+
+    assert.match(html, /\$\$not math/);
+    assert.match(html, /still not math\$\$/);
+    assert.doesNotMatch(html, /class="katex(?:-display)?"/);
+});
+
+test('does not join consecutive single-line double-dollar formulas', async () => {
+    const html = await renderMarkdown(['$$a = b$$', '', 'between', '', '$$c = d$$'].join('\n'));
+
+    assert.equal((html.match(/class="katex"/g) || []).length, 2);
+    assert.equal((html.match(/class="katex-display"/g) || []).length, 2);
+    assert.match(html, /<p>between<\/p>/);
+    assert.doesNotMatch(html, /katex-error/);
+});
+
+test('keeps a prose paragraph with one single-dollar formula inline', async () => {
+    const html = await renderMarkdown('connect the given $k$ key points');
+
+    assert.match(html, /^<p>connect the given <span class="katex">/);
+    assert.match(html, / key points<\/p>$/);
+    assert.doesNotMatch(html, /class="katex-display"/);
+});
+
+test('separates inline prose math from a standalone DP formula', async () => {
+    const html = await renderMarkdown(
+        [
+            'connect the given $k$ key points',
+            '',
+            'define $dp(i,S)$ as the minimum cost',
+            '',
+            '$$dp(j,S)+w(j,i)\\to dp(i,S)$$',
+            '',
+            'relax the graph once for every $S$'
+        ].join('\n')
+    );
+
+    assert.equal((html.match(/class="katex-display"/g) || []).length, 1);
+    assert.match(html, /^<p>connect the given <span class="katex">/);
+    assert.match(html, /<p>define <span class="katex">/);
+    assert.match(html, /<p>relax the graph once for every <span class="katex">/);
+    assert.doesNotMatch(html, /katex-error/);
+});
+
+test('preserves list indentation around a single-line display formula', async () => {
+    const html = await renderMarkdown(
+        ['1. item', '', '    $$a = b$$', '', '    following'].join('\n')
+    );
+
+    assert.match(html, /<li>[\s\S]*class="katex-display"[\s\S]*<p>following<\/p>[\s\S]*<\/li>/);
+    assert.doesNotMatch(html, /katex-error/);
+});
+
 test('parses code and links after an unclosed math fence', async () => {
     const html = await renderMarkdown(
         [
