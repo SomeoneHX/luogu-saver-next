@@ -84,6 +84,12 @@ export function useBookmarkIcons(
     const cleanup = () => {
         observer?.disconnect();
         observer = null;
+        const container = document.querySelector(contentContainerSelector);
+        const headings = (container ?? document).querySelectorAll<HTMLElement>(headingSelector);
+        headings.forEach(heading => {
+            heading.style.removeProperty('position');
+            heading.style.removeProperty('padding-left');
+        });
         document.querySelectorAll('.bookmark-heading-btn').forEach(btn => btn.remove());
     };
 
