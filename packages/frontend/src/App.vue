@@ -266,8 +266,6 @@ const mobileSiderOpen = ref(false);
 const trackingConsentBlocking = ref(true);
 const sidebarLogoNavEnabled = useLocalStorage(SIDEBAR_LOGO_NAV_STORAGE_KEY, true);
 provide('sidebarLogoNavEnabled', sidebarLogoNavEnabled);
-const touchStartX = ref(0);
-const touchStartY = ref(0);
 
 const isMobileViewport = () => window.innerWidth <= 768;
 
