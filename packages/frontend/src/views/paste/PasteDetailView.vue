@@ -5,6 +5,7 @@ import {
     NButton,
     NDivider,
     NIcon,
+    NResult,
     NSkeleton,
     NSpace,
     NSpin,
@@ -53,6 +54,7 @@ const pasteId = route.params.id as string;
 const paste = ref<Paste | null>(null);
 const loading = ref(true);
 const displayContent = ref('');
+const forbiddenReason = ref('');
 const { buildLuoguUrl } = useLuoguSource();
 let stopTaskListener: (() => void) | null = null;
 
@@ -108,15 +110,27 @@ const submitSavePaste = async () => {
 
 const loadData = async () => {
     loading.value = true;
+    forbiddenReason.value = '';
     try {
         const res = await getPasteById(pasteId);
         if (res.code === 404) {
             handle404(submitSavePaste);
             return;
         }
+        if (res.code === 403) {
+            paste.value = null;
+            displayContent.value = '';
+            forbiddenReason.value = res.message || '剪贴板已删除';
+            document.title = '剪贴板不可查看 - 洛谷保存站';
+            return;
+        }
+        if (res.code !== 200 || !res.data) {
+            message.error(res.message || '加载失败');
+            return;
+        }
 
         paste.value = res.data;
-        displayContent.value = paste.value?.renderedContent || '';
+        displayContent.value = paste.value.renderedContent || '';
     } catch (err: any) {
         message.error(err.message || '加载失败');
     } finally {
@@ -261,10 +275,35 @@ onMounted(() => {
                                 </n-space>
                             </Card>
                         </div>
+                        <Card
+                            v-else-if="forbiddenReason"
+                            title="剪贴板不可查看"
+                            :icon="ClipboardOutline"
+                        >
+                            <n-result
+                                status="403"
+                                title="剪贴板不可查看"
+                                :description="forbiddenReason"
+                            >
+                                <template #footer>
+                                    <n-space justify="center">
+                                        <n-button secondary @click="router.go(-1)">返回</n-button>
+                                        <n-button
+                                            secondary
+                                            tag="a"
+                                            :href="buildLuoguUrl(`/paste/${pasteId}`)"
+                                            target="_blank"
+                                        >
+                                            原站
+                                        </n-button>
+                                    </n-space>
+                                </template>
+                            </n-result>
+                        </Card>
                     </LoadingSkeleton>
                 </div>
 
-                <main class="main-content">
+                <main v-if="!forbiddenReason" class="main-content">
                     <div>
                         <LoadingSkeleton :loading="loading">
                             <template #skeleton>
@@ -297,7 +336,7 @@ onMounted(() => {
         </div>
     </n-spin>
 
-    <div v-if="hasUpdate" class="update-floater">
+    <div v-if="hasUpdate && !forbiddenReason" class="update-floater">
         <n-button type="primary" circle size="large" class="shadow-button" @click="triggerRefresh">
             <template #icon>
                 <NIcon :component="SyncOutline" />

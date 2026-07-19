@@ -47,6 +47,15 @@ Retrieve a single paste by ID.
 - 404: Paste not found
 - 500: Server error
 
+When the frontend paste detail request returns code `403`, the frontend SHALL:
+
+1. Clear any loaded paste object and rendered paste content.
+2. Render one result state with status `403` and exact title `剪贴板不可查看`.
+3. Render the response message as the result description; if the message is empty, use
+   `剪贴板已删除`.
+4. Render commands for returning to the previous route and opening the original Luogu paste.
+5. Not render the paste content card.
+
 ### 3.2 GET /paste/count
 
 Get total count of non-deleted pastes.
