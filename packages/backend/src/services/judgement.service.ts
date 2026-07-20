@@ -10,7 +10,7 @@ import {
     type LuoguJudgementRecord
 } from '@/shared/judgement';
 import { normalizeErrorReason } from '@/utils/error-reason';
-import { JudgementUpstreamService } from './judgement-upstream.service';
+import type { JudgementUpstreamResult } from './judgement-upstream.service';
 import { In } from 'typeorm';
 
 export interface JudgementSyncResult {
@@ -42,84 +42,75 @@ function recordValues(record: LuoguJudgementRecord, fetchLogId: number) {
 }
 
 export class JudgementService {
-    static async syncFromLuogu(): Promise<JudgementSyncResult> {
-        try {
-            const upstream = await JudgementUpstreamService.fetch();
-            const result = await AppDataSource.transaction(async manager => {
-                const logRepository = manager.getRepository(JudgementFetchLog);
-                const recordRepository = manager.getRepository(JudgementRecord);
-                const fetchLog = await logRepository.save(
-                    logRepository.create({
-                        recordCount: upstream.data.logs.length,
-                        newRecordCount: 0,
-                        skippedCount: 0,
-                        status: 'success',
-                        errorMessage: null,
-                        rawResponse: upstream.rawResponse
-                    })
-                );
-
-                const uniqueRecords = new Map<string, ReturnType<typeof recordValues>>();
-                for (const record of upstream.data.logs) {
-                    const values = recordValues(record, fetchLog.id);
-                    if (!uniqueRecords.has(values.dedupKey)) {
-                        uniqueRecords.set(values.dedupKey, values);
-                    }
-                }
-
-                const values = [...uniqueRecords.values()];
-                const existingRecords = values.length
-                    ? await recordRepository.find({
-                          select: { dedupKey: true },
-                          where: { dedupKey: In(values.map(record => record.dedupKey)) }
-                      })
-                    : [];
-                const existingKeys = new Set(existingRecords.map(record => record.dedupKey));
-                const pendingValues = values.filter(record => !existingKeys.has(record.dedupKey));
-                let newRecordCount = 0;
-                if (pendingValues.length) {
-                    await recordRepository
-                        .createQueryBuilder()
-                        .insert()
-                        .values(pendingValues as any)
-                        .orIgnore()
-                        .execute();
-                    const [rowCount] = await manager.query('SELECT ROW_COUNT() AS affectedRows');
-                    newRecordCount = Number(rowCount?.affectedRows ?? 0);
-                }
-                const skippedCount = upstream.data.logs.length - newRecordCount;
-
-                await logRepository.update(fetchLog.id, { newRecordCount, skippedCount });
-                return {
-                    fetchLogId: fetchLog.id,
-                    fetchedCount: upstream.data.logs.length,
-                    newRecordCount,
-                    skippedCount
-                };
-            });
-
-            logger.info(result, 'Judgement synchronization completed');
-            return result;
-        } catch (error) {
-            const reason = normalizeErrorReason(error);
-            try {
-                await JudgementFetchLog.getRepository().save({
-                    recordCount: 0,
+    static async persistFetchedResult(
+        upstream: JudgementUpstreamResult
+    ): Promise<JudgementSyncResult> {
+        const result = await AppDataSource.transaction(async manager => {
+            const logRepository = manager.getRepository(JudgementFetchLog);
+            const recordRepository = manager.getRepository(JudgementRecord);
+            const fetchLog = await logRepository.save(
+                logRepository.create({
+                    recordCount: upstream.data.logs.length,
                     newRecordCount: 0,
                     skippedCount: 0,
-                    status: 'error',
-                    errorMessage: reason,
-                    rawResponse: null
-                });
-            } catch (logError) {
-                logger.error(
-                    { reason: normalizeErrorReason(logError) },
-                    'Failed to persist judgement synchronization error log'
-                );
+                    status: 'success',
+                    errorMessage: null,
+                    rawResponse: upstream.rawResponse
+                })
+            );
+
+            const uniqueRecords = new Map<string, ReturnType<typeof recordValues>>();
+            for (const record of upstream.data.logs) {
+                const values = recordValues(record, fetchLog.id);
+                if (!uniqueRecords.has(values.dedupKey)) {
+                    uniqueRecords.set(values.dedupKey, values);
+                }
             }
-            logger.error({ reason }, 'Judgement synchronization failed');
-            throw new Error(reason);
-        }
+
+            const values = [...uniqueRecords.values()];
+            const existingRecords = values.length
+                ? await recordRepository.find({
+                      select: { dedupKey: true },
+                      where: { dedupKey: In(values.map(record => record.dedupKey)) }
+                  })
+                : [];
+            const existingKeys = new Set(existingRecords.map(record => record.dedupKey));
+            const pendingValues = values.filter(record => !existingKeys.has(record.dedupKey));
+            let newRecordCount = 0;
+            if (pendingValues.length) {
+                await recordRepository
+                    .createQueryBuilder()
+                    .insert()
+                    .values(pendingValues as any)
+                    .orIgnore()
+                    .execute();
+                const [rowCount] = await manager.query('SELECT ROW_COUNT() AS affectedRows');
+                newRecordCount = Number(rowCount?.affectedRows ?? 0);
+            }
+            const skippedCount = upstream.data.logs.length - newRecordCount;
+
+            await logRepository.update(fetchLog.id, { newRecordCount, skippedCount });
+            return {
+                fetchLogId: fetchLog.id,
+                fetchedCount: upstream.data.logs.length,
+                newRecordCount,
+                skippedCount
+            };
+        });
+
+        logger.info(result, 'Judgement synchronization completed');
+        return result;
+    }
+
+    static async recordFetchFailure(reason: string): Promise<void> {
+        await JudgementFetchLog.getRepository().save({
+            recordCount: 0,
+            newRecordCount: 0,
+            skippedCount: 0,
+            status: 'error',
+            errorMessage: normalizeErrorReason(reason),
+            rawResponse: null
+        });
     }
 
     static async list(query: JudgementQuery) {

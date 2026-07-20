@@ -65,16 +65,19 @@ Only HTTP 2xx responses SHALL be accepted. The response SHALL be JSON with a `lo
 
 Upstream failure reasons SHALL NOT contain response bodies, cookies, HTML pages, or judgement snapshots.
 
-## 4. Synchronization Service
+## 4. Synchronization Persistence Service
 
-`JudgementService.syncFromLuogu()` SHALL:
+`JudgementService.persistFetchedResult(result)` SHALL accept one already fetched and schema-validated upstream result containing `data` and `rawResponse`.
 
-1. Fetch and validate one upstream response.
-2. In one database transaction, create a successful fetch log and insert each non-duplicate judgement record.
-3. Store the successful raw JSON response in the fetch log for forensic recovery.
-4. Return `fetchLogId`, `fetchedCount`, `newRecordCount`, and `skippedCount`.
+The method SHALL:
 
-If fetching, validation, or the transaction fails, the service SHALL persist one error fetch log outside the failed transaction and rethrow a normalized error. Runtime logs SHALL contain counts and identifiers but SHALL NOT contain raw responses or snapshots.
+1. In one database transaction, create a successful fetch log and insert each non-duplicate judgement record.
+2. Store the successful raw JSON response in the fetch log for forensic recovery.
+3. Return `fetchLogId`, `fetchedCount`, `newRecordCount`, and `skippedCount`.
+
+`JudgementService.recordFetchFailure(reason)` SHALL persist one error fetch log with zero counts, no raw response, and the supplied normalized reason. This method SHALL execute outside any failed successful-fetch transaction.
+
+The persistence service SHALL not perform upstream HTTP requests or response validation. Runtime logs SHALL contain counts and identifiers but SHALL NOT contain raw responses or snapshots.
 
 ## 5. Read-only HTTP API
 
@@ -133,7 +136,9 @@ This endpoint SHALL return `totalJudgements`, `totalFetchLogs`, `lastFetchAt`, a
 
 ## 6. Queue Handler and Scheduler
 
-`JudgementHandler` SHALL register exact task key `save:judgement`. It SHALL accept only `targetId = "latest"`, call `JudgementService.syncFromLuogu()`, and return the synchronization counts.
+`JudgementHandler` SHALL register exact task key `save:judgement`. It SHALL accept only `targetId = "latest"`, call the upstream adapter, pass the validated result to `JudgementService.persistFetchedResult()`, and return the synchronization counts.
+
+If the upstream request, response validation, or persistence fails, the handler SHALL normalize the failure reason, call `JudgementService.recordFetchFailure()` once, and rethrow the normalized error. Failure-log persistence errors SHALL be logged without replacing the original task failure.
 
 The scheduler SHALL be disabled by default. When enabled it SHALL optionally dispatch once during startup and then dispatch every configured interval. It SHALL create and dispatch a save task with target `judgement` and target ID `latest`.
 
