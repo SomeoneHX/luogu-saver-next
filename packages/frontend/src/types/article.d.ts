@@ -14,7 +14,7 @@ export interface Article {
     tags?: string;
     createdAt: string;
     updatedAt: string;
-    deleteReason?: string;
+    deleteReason?: string | null;
     contentHash?: string;
     viewCount: number;
     author?: User;
