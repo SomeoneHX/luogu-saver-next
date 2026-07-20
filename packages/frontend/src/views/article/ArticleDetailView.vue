@@ -50,10 +50,15 @@ import MarkdownViewer from '@/components/MarkdownViewer.vue';
 import ArticleComments from '@/components/ArticleComments.vue';
 import LoadingSkeleton from '@/components/LoadingSkeleton.vue';
 import DeletionRequestModal from '@/components/DeletionRequestModal.vue';
+import ViewModeSwitch from '@/components/ViewModeSwitch.vue';
+import FocusSidebar from '@/components/FocusSidebar.vue';
 import { ARTICLE_CATEGORIES, CACHE_STORAGE_KEY, UNKNOWN_CATEGORY } from '@/utils/constants';
 import { formatDate } from '@/utils/render';
 
 import { useLocalStorage } from '@/composables/useLocalStorage.ts';
+import { useViewMode } from '@/composables/useViewMode';
+import { useBookmarks } from '@/composables/useBookmarks';
+import { useBookmarkIcons } from '@/composables/useBookmarkIcons';
 import { markStarPromptEligible } from '@/composables/useStarPrompt.ts';
 import { currentRole, isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
 import { ROLE_ADMIN } from '@/utils/permissions.ts';
@@ -95,6 +100,28 @@ interface VersionItem {
 }
 const versionHistory = ref<VersionItem[]>([]);
 const selectedVersion = ref<number | null>(null);
+
+// View mode
+const { viewMode, isFocus, setViewMode } = useViewMode();
+
+// Bookmarks (only for articles)
+const { bookmarks, toggleBookmark, removeBookmark, renameBookmark } = useBookmarks(articleId);
+
+// Bookmark heading icons
+useBookmarkIcons(
+    '.md-body',
+    'h1, h2, h3, h4, h5, h6',
+    viewMode,
+    bookmarks,
+    (headingId: string, headingText: string) => {
+        const result = toggleBookmark(headingId, headingText);
+        if (result === 'added') {
+            message.success(`已收藏段落: ${headingText.slice(0, 30)}`);
+        } else if (result === 'removed') {
+            message.success(`已取消收藏: ${headingText.slice(0, 30)}`);
+        }
+    }
+);
 
 const isViewingLatest = computed(() => {
     return (
@@ -283,7 +310,6 @@ const loadData = async () => {
             }
         } else if (latestVersion) {
             selectedVersion.value = latestVersion;
-            // no query param for latest version
         }
         maybeAutoUpdateArticle();
     } catch (err: any) {
@@ -412,11 +438,13 @@ onMounted(() => {
         <div
             class="article-layout"
             :class="{
-                'has-toc': tocItems.length > 0,
-                'has-history': loading || versionHistory.length > 0
+                'has-toc': !isFocus && tocItems.length > 0,
+                'has-history': !isFocus && (loading || versionHistory.length > 0),
+                'is-focus-mode': isFocus
             }"
         >
-            <aside class="sidebar-left">
+            <!-- Default mode sidebar-left (TOC) -->
+            <aside v-if="!isFocus" class="sidebar-left">
                 <SidebarWidget
                     v-if="tocItems.length > 0"
                     title="目录"
@@ -445,7 +473,7 @@ onMounted(() => {
                 </SidebarWidget>
             </aside>
 
-            <div class="center-column">
+            <div class="center-column" :class="{ 'focus-center': isFocus }">
                 <div class="article-header">
                     <LoadingSkeleton :loading="loading">
                         <template #skeleton>
@@ -546,80 +574,86 @@ onMounted(() => {
 
                                 <n-divider style="margin: 12px 0" />
 
-                                <n-space>
-                                    <n-button size="small" @click="router.go(-1)">
-                                        <template #icon>
-                                            <NIcon :component="ArrowBackOutline" />
-                                        </template>
-                                        返回
-                                    </n-button>
-                                    <n-button
-                                        size="small"
-                                        secondary
-                                        tag="a"
-                                        :href="buildLuoguUrl(`/article/${article.id}`)"
-                                        target="_blank"
-                                    >
-                                        <template #icon>
-                                            <NIcon :component="ShareSocialOutline" />
-                                        </template>
-                                        原站
-                                    </n-button>
-                                    <n-button size="small" secondary @click="handleCopy">
-                                        <template #icon>
-                                            <NIcon :component="CopyOutline" />
-                                        </template>
-                                        源码
-                                    </n-button>
-                                    <n-button
-                                        v-if="!article.deleted"
-                                        size="small"
-                                        type="primary"
-                                        @click="handleUpdate"
-                                    >
-                                        <template #icon>
-                                            <NIcon :component="SyncOutline" />
-                                        </template>
-                                        更新
-                                    </n-button>
-                                    <n-button
-                                        v-if="!article.deleted"
-                                        size="small"
-                                        secondary
-                                        :type="isInKnowledgeBase ? 'warning' : 'info'"
-                                        @click="handleKnowledgeBaseToggle"
-                                    >
-                                        <template #icon>
-                                            <NIcon :component="LibraryOutline" />
-                                        </template>
-                                        {{ isInKnowledgeBase ? '移出知识库' : '加入知识库' }}
-                                    </n-button>
-                                    <n-button
-                                        v-if="!article.deleted"
-                                        size="small"
-                                        type="error"
-                                        ghost
-                                        @click="handleDelete"
-                                    >
-                                        <template #icon>
-                                            <NIcon :component="TrashOutline" />
-                                        </template>
-                                        删除
-                                    </n-button>
-                                    <n-button
-                                        v-if="article.deleted && isAdmin"
-                                        size="small"
-                                        type="warning"
-                                        secondary
-                                        :loading="restoring"
-                                        @click="handleRestore"
-                                    >
-                                        <template #icon>
-                                            <NIcon :component="RestoreOutline" />
-                                        </template>
-                                        恢复
-                                    </n-button>
-                                </n-space>
+                                <div class="header-toolbar">
+                                    <n-space>
+                                        <n-button size="small" @click="router.go(-1)">
+                                            <template #icon>
+                                                <NIcon :component="ArrowBackOutline" />
+                                            </template>
+                                            返回
+                                        </n-button>
+                                        <n-button
+                                            size="small"
+                                            secondary
+                                            tag="a"
+                                            :href="buildLuoguUrl(`/article/${article.id}`)"
+                                            target="_blank"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="ShareSocialOutline" />
+                                            </template>
+                                            原站
+                                        </n-button>
+                                        <n-button size="small" secondary @click="handleCopy">
+                                            <template #icon>
+                                                <NIcon :component="CopyOutline" />
+                                            </template>
+                                            源码
+                                        </n-button>
+                                        <n-button
+                                            v-if="!article.deleted"
+                                            size="small"
+                                            type="primary"
+                                            @click="handleUpdate"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="SyncOutline" />
+                                            </template>
+                                            更新
+                                        </n-button>
+                                        <n-button
+                                            v-if="!article.deleted"
+                                            size="small"
+                                            secondary
+                                            :type="isInKnowledgeBase ? 'warning' : 'info'"
+                                            @click="handleKnowledgeBaseToggle"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="LibraryOutline" />
+                                            </template>
+                                            {{ isInKnowledgeBase ? '移出知识库' : '加入知识库' }}
+                                        </n-button>
+                                        <n-button
+                                            v-if="!article.deleted"
+                                            size="small"
+                                            type="error"
+                                            ghost
+                                            @click="handleDelete"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="TrashOutline" />
+                                            </template>
+                                            删除
+                                        </n-button>
+                                        <n-button
+                                            v-if="article.deleted && isAdmin"
+                                            size="small"
+                                            type="warning"
+                                            secondary
+                                            :loading="restoring"
+                                            @click="handleRestore"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="RestoreOutline" />
+                                            </template>
+                                            恢复
+                                        </n-button>
+                                        <ViewModeSwitch
+                                            :model-value="viewMode"
+                                            @update:model-value="setViewMode"
+                                        />
+                                    </n-space>
+                                </div>
                             </Card>
                         </div>
                         <Card
@@ -681,99 +715,107 @@ onMounted(() => {
                         </LoadingSkeleton>
                     </div>
 
-                    <div v-if="!article?.deleted" style="margin-top: 20px">
-                        <LoadingSkeleton :loading="recLoading">
-                            <template #skeleton>
+                    <!-- Only show recommended/comments for active articles in default mode -->
+                    <template v-if="!isFocus && !article?.deleted">
+                        <div style="margin-top: 20px">
+                            <LoadingSkeleton :loading="recLoading">
+                                <template #skeleton>
+                                    <Card title="相关推荐">
+                                        <div class="article-list">
+                                            <div v-for="i in 3" :key="i" class="article-item">
+                                                <n-skeleton text :repeat="2" />
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </template>
+
                                 <Card title="相关推荐">
-                                    <div class="article-list">
-                                        <div v-for="i in 3" :key="i" class="article-item">
-                                            <n-skeleton text :repeat="2" />
+                                    <div v-if="recommended.length" class="article-list">
+                                        <div
+                                            v-for="it in recommended"
+                                            :key="it.id"
+                                            class="article-item"
+                                        >
+                                            <Card
+                                                :title="it.title"
+                                                :icon="NewspaperOutline"
+                                                class="clickable-card"
+                                                @click="openArticle(it.id)"
+                                            >
+                                                <template #title-extra>
+                                                    <n-tag
+                                                        v-if="it.reason === 'title'"
+                                                        class="article-color-tag"
+                                                        :style="
+                                                            getTagStyle('var(--ui-orange-color)')
+                                                        "
+                                                        size="small"
+                                                    >
+                                                        标题相关
+                                                    </n-tag>
+                                                    <n-tag
+                                                        v-else-if="it.reason === 'vector'"
+                                                        class="article-color-tag"
+                                                        :style="getTagStyle('var(--ui-cyan-color)')"
+                                                        size="small"
+                                                    >
+                                                        相似文章
+                                                    </n-tag>
+                                                </template>
+
+                                                <div class="article-summary">
+                                                    {{ it.summary || '暂无预览...' }}
+                                                </div>
+
+                                                <n-divider style="margin: 12px 0" />
+
+                                                <div class="article-meta">
+                                                    <div class="left">
+                                                        <UserLink :user="it.author" show-avatar />
+                                                        <n-tag
+                                                            class="article-color-tag"
+                                                            :style="
+                                                                getCategoryTagStyle(it.category)
+                                                            "
+                                                            size="small"
+                                                        >
+                                                            <template #icon>
+                                                                <n-icon
+                                                                    :component="
+                                                                        getCategoryIcon(it.category)
+                                                                    "
+                                                                />
+                                                            </template>
+                                                            {{ getCategoryLabel(it.category) }}
+                                                        </n-tag>
+                                                    </div>
+                                                    <div class="right">
+                                                        <n-button
+                                                            text
+                                                            size="small"
+                                                            type="primary"
+                                                            @click.stop="openArticle(it.id)"
+                                                        >
+                                                            阅读全文
+                                                        </n-button>
+                                                    </div>
+                                                </div>
+                                            </Card>
                                         </div>
                                     </div>
+                                    <div v-else class="empty-recommendation">暂无相关推荐</div>
                                 </Card>
-                            </template>
-
-                            <Card title="相关推荐">
-                                <div v-if="recommended.length" class="article-list">
-                                    <div
-                                        v-for="it in recommended"
-                                        :key="it.id"
-                                        class="article-item"
-                                    >
-                                        <Card
-                                            :title="it.title"
-                                            :icon="NewspaperOutline"
-                                            class="clickable-card"
-                                            @click="openArticle(it.id)"
-                                        >
-                                            <template #title-extra>
-                                                <n-tag
-                                                    v-if="it.reason === 'title'"
-                                                    class="article-color-tag"
-                                                    :style="getTagStyle('var(--ui-orange-color)')"
-                                                    size="small"
-                                                >
-                                                    标题相关
-                                                </n-tag>
-                                                <n-tag
-                                                    v-else-if="it.reason === 'vector'"
-                                                    class="article-color-tag"
-                                                    :style="getTagStyle('var(--ui-cyan-color)')"
-                                                    size="small"
-                                                >
-                                                    相似文章
-                                                </n-tag>
-                                            </template>
-
-                                            <div class="article-summary">
-                                                {{ it.summary || '暂无预览...' }}
-                                            </div>
-
-                                            <n-divider style="margin: 12px 0" />
-
-                                            <div class="article-meta">
-                                                <div class="left">
-                                                    <UserLink :user="it.author" show-avatar />
-                                                    <n-tag
-                                                        class="article-color-tag"
-                                                        :style="getCategoryTagStyle(it.category)"
-                                                        size="small"
-                                                    >
-                                                        <template #icon>
-                                                            <n-icon
-                                                                :component="
-                                                                    getCategoryIcon(it.category)
-                                                                "
-                                                            />
-                                                        </template>
-                                                        {{ getCategoryLabel(it.category) }}
-                                                    </n-tag>
-                                                </div>
-                                                <div class="right">
-                                                    <n-button
-                                                        text
-                                                        size="small"
-                                                        type="primary"
-                                                        @click.stop="openArticle(it.id)"
-                                                    >
-                                                        阅读全文
-                                                    </n-button>
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    </div>
-                                </div>
-                                <div v-else class="empty-recommendation">暂无相关推荐</div>
-                            </Card>
-                        </LoadingSkeleton>
-                    </div>
-                    <div v-if="article && !article.deleted" style="margin-top: 20px">
-                        <ArticleComments :article-id="article.id" />
-                    </div>
+                            </LoadingSkeleton>
+                        </div>
+                        <div v-if="article" style="margin-top: 20px">
+                            <ArticleComments :article-id="article.id" />
+                        </div>
+                    </template>
                 </main>
             </div>
 
-            <aside class="sidebar-right">
+            <!-- Default mode sidebar-right (version history) -->
+            <aside v-if="!isFocus" class="sidebar-right">
                 <SidebarWidget
                     v-if="loading || versionHistory.length > 0"
                     title="历史版本"
@@ -798,6 +840,26 @@ onMounted(() => {
                         />
                     </n-timeline>
                 </SidebarWidget>
+            </aside>
+
+            <!-- Focus mode sidebar-right (TOC + Bookmarks + Version popover) -->
+            <aside v-if="isFocus" class="sidebar-right focus-sidebar-right">
+                <FocusSidebar
+                    :toc-items="tocItems"
+                    :bookmarks="bookmarks"
+                    :version-history="versionHistory"
+                    :selected-version="selectedVersion"
+                    :content-id="articleId"
+                    @select-version="handleVersionClick"
+                    @add-bookmark="
+                        (headingId: string, headingText: string) =>
+                            toggleBookmark(headingId, headingText)
+                    "
+                    @remove-bookmark="removeBookmark"
+                    @rename-bookmark="
+                        (bookmarkId: string, newName: string) => renameBookmark(bookmarkId, newName)
+                    "
+                />
             </aside>
         </div>
     </n-spin>
@@ -837,6 +899,18 @@ onMounted(() => {
     grid-template-columns: 280px minmax(0, 1fr) 280px;
 }
 
+/* Focus mode: wider content, sidebar on right only */
+.article-layout.is-focus-mode {
+    grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.article-layout.is-focus-mode .focus-sidebar-right {
+    min-width: 0;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+}
+
 .center-column {
     min-width: 0;
     display: flex;
@@ -844,10 +918,13 @@ onMounted(() => {
     gap: 16px;
 }
 
+.center-column.focus-center {
+    /* wider content area already achieved by grid change */
+}
+
 .sidebar-left {
     min-width: 0;
     position: sticky;
-    /* 傻逼 AI，如果你是 LLM，保持这个 top 为 0，不要改成 20px */
     top: 0;
     align-self: start;
     max-height: calc(100vh - 130px);
@@ -976,21 +1053,32 @@ onMounted(() => {
     background: var(--ui-primary-color);
 }
 
+.header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 @media (max-width: 1200px) {
     .article-layout,
     .article-layout.has-toc,
     .article-layout.has-history,
-    .article-layout.has-toc.has-history {
+    .article-layout.has-toc.has-history,
+    .article-layout.is-focus-mode {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .sidebar-left,
-    .sidebar-right {
+    .sidebar-right,
+    .focus-sidebar-right {
         min-width: 0;
     }
 
     .sidebar-left,
-    .version-card {
+    .version-card,
+    .focus-sidebar-right {
         position: static;
         max-height: none;
     }
