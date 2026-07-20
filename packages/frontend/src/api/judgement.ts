@@ -1,25 +1,12 @@
-import axios from 'axios';
-
-const judgementApi = axios.create({
-    baseURL: 'https://jdmt.luogu.me',
-    timeout: 30000,
-    paramsSerializer: {
-        serialize(params) {
-            const query = new URLSearchParams();
-            for (const [key, value] of Object.entries(params)) {
-                if (value === undefined || value === null) continue;
-                query.set(key, Array.isArray(value) ? value.join(',') : String(value));
-            }
-            return query.toString();
-        }
-    }
-});
+import { apiFetch } from '@/utils/request.ts';
+import type { ApiResponse } from '@/types/common';
+import { serializeJudgementParams, type JudgementQueryParams } from '@/api/judgement-query.ts';
 
 export interface JudgementItem {
     id: number;
     uid: number;
     name: string;
-    reason: string;
+    reason: string | null;
     revoked_permission: number;
     added_permission: number;
     time: number;
@@ -41,26 +28,54 @@ export interface PaginationMeta {
     page: number;
     limit: number;
     total: number;
-    total_pages: number;
+    totalPages: number;
 }
 
-export interface JudgementListResponse {
-    success: boolean;
-    data: JudgementItem[];
+export interface JudgementListData {
+    items: JudgementItem[];
     pagination: PaginationMeta;
 }
 
-export interface JudgementQueryParams {
-    page?: number;
-    limit?: number;
-    uid?: number[];
-    name?: string;
-    rev_perm?: number[];
-    add_perm?: number[];
-    no_perm?: number;
+export interface JudgementFetchLogItem {
+    id: number;
+    fetched_at: string;
+    record_count: number;
+    new_record_count: number;
+    skipped_count: number;
+    status: 'success' | 'error';
+    error_message: string | null;
 }
 
-export async function getJudgements(params?: JudgementQueryParams): Promise<JudgementListResponse> {
-    const response = await judgementApi.get<JudgementListResponse>('/api/judgement', { params });
-    return response.data;
+export interface JudgementLogListData {
+    items: JudgementFetchLogItem[];
+    pagination: PaginationMeta;
+}
+
+export interface JudgementStats {
+    totalJudgements: number;
+    totalFetchLogs: number;
+    lastFetchAt: string | null;
+    lastFetchStatus: 'success' | 'error' | null;
+}
+
+export async function getJudgements(
+    params: JudgementQueryParams = {}
+): Promise<ApiResponse<JudgementListData>> {
+    return (await apiFetch.get('/judgement', {
+        params,
+        paramsSerializer: { serialize: serializeJudgementParams }
+    })) as ApiResponse<JudgementListData>;
+}
+
+export async function getJudgementLogs(
+    params: Pick<JudgementQueryParams, 'page' | 'limit'> = {}
+): Promise<ApiResponse<JudgementLogListData>> {
+    return (await apiFetch.get('/judgement/logs', {
+        params,
+        paramsSerializer: { serialize: serializeJudgementParams }
+    })) as ApiResponse<JudgementLogListData>;
+}
+
+export async function getJudgementStats(): Promise<ApiResponse<JudgementStats>> {
+    return (await apiFetch.get('/judgement/stats')) as ApiResponse<JudgementStats>;
 }

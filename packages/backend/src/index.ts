@@ -18,6 +18,7 @@ import http from 'http';
 import { socketJoinHandler } from '@/socket';
 import { ArticlePlazaDiscoveryScheduler } from '@/services/article-plaza-discovery-scheduler.service';
 import { DatabasePoolMonitor } from '@/services/database-pool-monitor.service';
+import { JudgementSyncScheduler } from '@/services/judgement-sync-scheduler.service';
 
 const app = new Koa({ proxy: true, proxyIpHeader: 'CF-Connecting-IP' });
 const server = http.createServer(app.callback());
@@ -35,6 +36,7 @@ AppDataSource.initialize().then(async () => {
     DatabasePoolMonitor.start(AppDataSource);
     await worker.bootstrap();
     ArticlePlazaDiscoveryScheduler.start();
+    JudgementSyncScheduler.start();
     server.listen(config.port, config.host, () => {
         logger.info({ host: config.host, port: config.port }, `Server started.`);
     });

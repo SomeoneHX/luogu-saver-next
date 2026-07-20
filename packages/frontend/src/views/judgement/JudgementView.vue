@@ -4,9 +4,11 @@ import { computed, h, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import {
     NButton,
+    NAlert,
     NCheckbox,
     NCheckboxGroup,
     NDataTable,
+    NEmpty,
     NIcon,
     NInput,
     NInputNumber,
@@ -36,6 +38,7 @@ type ExpandedPanel = 'permissions' | 'display' | null;
 
 const message = useMessage();
 const loading = ref(false);
+const errorMessage = ref<string | null>(null);
 const judgements = ref<JudgementItem[]>([]);
 const total = ref(0);
 const page = ref(1);
@@ -184,17 +187,21 @@ function getRequestErrorMessage(error: unknown): string {
 async function loadJudgements() {
     const requestId = ++latestRequestId;
     loading.value = true;
+    errorMessage.value = null;
     try {
         const response = await getJudgements(buildQueryParams());
         if (requestId !== latestRequestId) return;
-        if (!response.success) throw new Error('接口返回失败状态');
+        if (response.code !== 200) throw new Error(response.message || '接口返回失败状态');
 
-        judgements.value = response.data;
-        total.value = response.pagination.total;
+        judgements.value = response.data.items;
+        total.value = response.data.pagination.total;
     } catch (error) {
         if (requestId !== latestRequestId) return;
         console.error('[JudgementView] Failed to load judgements:', error);
-        message.error(`获取陶片放逐记录失败：${getRequestErrorMessage(error)}`);
+        errorMessage.value = getRequestErrorMessage(error);
+        judgements.value = [];
+        total.value = 0;
+        message.error(`获取陶片放逐记录失败：${errorMessage.value}`);
     } finally {
         if (requestId === latestRequestId) loading.value = false;
     }
@@ -292,15 +299,10 @@ onMounted(() => {
     <div class="judgement-page">
         <CardTitle title="陶片放逐" :icon="HammerOutline">
             洛谷社区用户权限变更记录
-            <a
-                class="detail-link"
-                href="https://jdmt.luogu.me"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                日志和API调用方法
+            <RouterLink class="detail-link" to="/judgement/logs">
+                同步日志与 API
                 <n-icon :component="OpenOutline" />
-            </a>
+            </RouterLink>
         </CardTitle>
 
         <Card class="filter-card">
@@ -396,6 +398,9 @@ onMounted(() => {
                     刷新
                 </n-button>
             </div>
+            <n-alert v-if="errorMessage" class="load-error" type="error" :show-icon="true">
+                获取记录失败：{{ errorMessage }}
+            </n-alert>
             <n-spin :show="loading">
                 <n-data-table
                     :columns="columns"
@@ -405,7 +410,11 @@ onMounted(() => {
                     :scroll-x="1200"
                     size="small"
                     :row-key="row => row.id"
-                />
+                >
+                    <template #empty>
+                        <n-empty :description="loading ? '正在加载' : '没有符合条件的记录'" />
+                    </template>
+                </n-data-table>
             </n-spin>
             <div v-if="paginationVisible" class="pagination-wrap">
                 <n-pagination
@@ -434,6 +443,7 @@ onMounted(() => {
     gap: 4px;
     margin-left: 8px;
     color: var(--ui-primary-color);
+    font-size: 13px;
     font-weight: 500;
     text-decoration: none;
 }
@@ -455,6 +465,9 @@ onMounted(() => {
     color: var(--ui-secondary-text-color);
     font-size: 13px;
     font-weight: 500;
+}
+.load-error {
+    margin-bottom: 12px;
 }
 .filter-actions,
 .table-toolbar,

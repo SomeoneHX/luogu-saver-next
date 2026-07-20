@@ -315,6 +315,7 @@ interface TaskHandler<T extends CommonTask> {
 | `save:paste`                       | PasteHandler                         | Fetch and save Luogu paste               |
 | `save:comments`                    | CommentsHandler                      | Fetch and replace Luogu article comments |
 | `save:profile`                     | ProfileHandler                       | Fetch and save Luogu user profile        |
+| `save:judgement`                   | JudgementHandler                     | Fetch and save Luogu judgement history   |
 | `llm:summary`                      | SummaryHandler                       | Generate article summary                 |
 | `llm:embedding`                    | EmbeddingHandler                     | Generate embeddings                      |
 | `llm:chat`                         | ChatHandler                          | Run chat scenario                        |
@@ -443,3 +444,4 @@ When no clients are subscribed to `stats:queues`, the server SHALL stop the peri
 - Task processor: `packages/backend/src/workers/task-processor.ts`
 - Article handler: `packages/backend/src/workers/handlers/task/article.handler.ts`
 - Paste handler: `packages/backend/src/workers/handlers/task/paste.handler.ts`
+- Judgement handler: `packages/backend/src/workers/handlers/task/judgement.handler.ts`
