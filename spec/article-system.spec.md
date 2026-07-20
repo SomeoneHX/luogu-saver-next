@@ -85,8 +85,10 @@ Retrieve a single article by ID.
 
 **Response:**
 
-- 200: Article object with rendered content
-- 403: If `deleted = true`, returns `deleteReason` as error message
+- 200: Article object with rendered content when `deleted = false`
+- 200: Article object with rendered content when `deleted = true` and `ctx.user.role = ROLE_ADMIN`
+- 403: If `deleted = true` and the requester is not an authenticated administrator, returns
+  `deleteReason` as error message
 - 404: Article not found
 - 500: Server error
 
@@ -94,7 +96,21 @@ Retrieve a single article by ID.
 
 - Tracks `VIEW_ARTICLE` event if tracking is enabled and `deleted = false`
 
-If `deleted = true`, the endpoint SHALL NOT render article content and SHALL NOT track `VIEW_ARTICLE`.
+If `deleted = true` and the requester is an authenticated administrator, the endpoint SHALL render
+the article content and SHALL NOT track `VIEW_ARTICLE`.
+
+If `deleted = true`, the frontend article detail view SHALL:
+
+1. Render the stored article title and content only when the backend returns code `200`.
+2. Render the title in `--ui-error-color`.
+3. Render one error tag with exact text `已删除` beside the title.
+4. Not request related articles or article history.
+5. Not render article comments.
+6. Not trigger automatic article updates.
+7. Hide update, knowledge-base, and deletion-request commands.
+
+The deleted-article administrator exception SHALL NOT apply to relevant-article, history, comment,
+or comment-refresh endpoints.
 
 ### 4.2 GET /article/relevant/:id
 

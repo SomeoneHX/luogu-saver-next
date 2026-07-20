@@ -305,10 +305,14 @@ const loadData = async () => {
         }
         article.value = res.data;
 
-        document.title = `${article.value.title} - 洛谷保存站`;
+        document.title = `${article.value.deleted ? '[已删除] ' : ''}${article.value.title} - 洛谷保存站`;
+        displayContent.value = article.value.renderedContent || '';
 
-        if (article.value?.renderedContent) {
-            displayContent.value = article.value.renderedContent;
+        if (article.value.deleted) {
+            recommended.value = [];
+            versionHistory.value = [];
+            selectedVersion.value = null;
+            return;
         }
 
         await Promise.all([loadRelevant(), loadHistory()]);
@@ -505,7 +509,21 @@ onMounted(() => {
                         </template>
 
                         <div v-if="article">
-                            <Card :title="displayTitle" :icon="NewspaperOutline">
+                            <Card
+                                :title="displayTitle"
+                                :icon="NewspaperOutline"
+                                :class="{ 'deleted-article-card': article.deleted }"
+                            >
+                                <template #title-extra>
+                                    <n-tag
+                                        v-if="article.deleted"
+                                        type="error"
+                                        size="small"
+                                        :bordered="false"
+                                    >
+                                        已删除
+                                    </n-tag>
+                                </template>
                                 <div class="meta-row">
                                     <n-tag :bordered="false" size="small">
                                         <template #icon>
@@ -572,13 +590,19 @@ onMounted(() => {
                                             </template>
                                             源码
                                         </n-button>
-                                        <n-button size="small" type="primary" @click="handleUpdate">
+                                        <n-button
+                                            v-if="!article.deleted"
+                                            size="small"
+                                            type="primary"
+                                            @click="handleUpdate"
+                                        >
                                             <template #icon>
                                                 <NIcon :component="SyncOutline" />
                                             </template>
                                             更新
                                         </n-button>
                                         <n-button
+                                            v-if="!article.deleted"
                                             size="small"
                                             secondary
                                             :type="isInKnowledgeBase ? 'warning' : 'info'"
@@ -590,6 +614,7 @@ onMounted(() => {
                                             {{ isInKnowledgeBase ? '移出知识库' : '加入知识库' }}
                                         </n-button>
                                         <n-button
+                                            v-if="!article.deleted"
                                             size="small"
                                             type="error"
                                             ghost
@@ -667,8 +692,8 @@ onMounted(() => {
                         </LoadingSkeleton>
                     </div>
 
-                    <!-- Only show recommended/comments in default mode -->
-                    <template v-if="!isFocus">
+                    <!-- Only show recommended/comments for active articles in default mode -->
+                    <template v-if="!isFocus && !article?.deleted">
                         <div style="margin-top: 20px">
                             <LoadingSkeleton :loading="recLoading">
                                 <template #skeleton>
@@ -816,7 +841,7 @@ onMounted(() => {
         </div>
     </n-spin>
 
-    <div v-if="hasUpdate" class="update-floater">
+    <div v-if="hasUpdate && !article?.deleted" class="update-floater">
         <n-button type="primary" circle size="large" class="shadow-button" @click="triggerRefresh">
             <template #icon>
                 <NIcon :component="SyncOutline" />
@@ -918,6 +943,10 @@ onMounted(() => {
 
 .main-content {
     min-width: 0;
+}
+
+.deleted-article-card :deep(.card-title) {
+    color: var(--ui-error-color) !important;
 }
 
 .version-card {

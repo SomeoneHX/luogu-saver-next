@@ -7,7 +7,7 @@ export interface Paste {
     deleted: boolean;
     createdAt: string;
     updatedAt: string;
-    deletedReason: string;
+    deleteReason: string;
     author?: User;
     renderedContent?: string;
 }

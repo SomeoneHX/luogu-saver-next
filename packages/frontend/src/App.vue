@@ -23,6 +23,7 @@
                         @expand="handleManualExpand"
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
+                        @transitionend="handleSiderTransitionEnd"
                     >
                         <div
                             class="brand-shell"
@@ -47,11 +48,13 @@
                         />
                     </n-layout-sider>
 
-                    <div
-                        v-if="mobileSiderOpen"
-                        class="mobile-sider-backdrop"
-                        @click="closeMobileSider"
-                    ></div>
+                    <Transition name="mobile-sider-backdrop">
+                        <div
+                            v-if="mobileSiderOpen"
+                            class="mobile-sider-backdrop"
+                            @click="closeMobileSider"
+                        ></div>
+                    </Transition>
 
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
@@ -291,7 +294,6 @@ const handleManualCollapse = () => {
 const handleManualExpand = () => {
     manualToggle.value = true;
     collapsed.value = false;
-    mobileSiderOpen.value = true;
 };
 
 const openMobileSider = () => {
@@ -303,6 +305,17 @@ const openMobileSider = () => {
 const closeMobileSider = () => {
     if (!isMobileViewport()) return;
     mobileSiderOpen.value = false;
+};
+
+const handleSiderTransitionEnd = (event: TransitionEvent) => {
+    if (
+        !isMobileViewport() ||
+        event.target !== event.currentTarget ||
+        event.propertyName !== 'transform' ||
+        mobileSiderOpen.value
+    ) {
+        return;
+    }
     collapsed.value = true;
 };
 
@@ -947,11 +960,19 @@ setInterval(() => {
     height: 100vh;
 }
 
+.app-shell {
+    position: relative;
+    padding-left: 64px;
+}
+
 .app-main {
     background: var(--ui-card-color);
 }
 
 .app-sider {
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    z-index: 1100;
     background: var(--ui-card-color) !important;
     border-right: 1px solid var(--ui-border-color) !important;
     backdrop-filter: none;
@@ -1062,14 +1083,15 @@ setInterval(() => {
 @media (max-width: 768px) {
     .app-shell {
         position: relative;
+        padding-left: 0;
     }
 
     .app-sider {
         position: fixed !important;
         inset: 0 auto 0 0;
         z-index: 1200;
-        width: 240px !important;
-        max-width: min(82vw, 240px);
+        width: min(82vw, 240px) !important;
+        max-width: min(82vw, 240px) !important;
         transform: translateX(-100%);
         transition: transform 0.24s ease;
     }
@@ -1079,7 +1101,12 @@ setInterval(() => {
         inset: 0;
         z-index: 1190;
         background: rgb(0 0 0 / 50%);
-        animation: mobile-backdrop-in 0.2s ease;
+        transition: opacity 0.2s ease;
+    }
+
+    .mobile-sider-backdrop-enter-from,
+    .mobile-sider-backdrop-leave-to {
+        opacity: 0;
     }
 
     .mobile-sider-open .app-sider {
@@ -1159,15 +1186,6 @@ setInterval(() => {
 
     .footer-link {
         justify-content: center;
-    }
-}
-
-@keyframes mobile-backdrop-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
     }
 }
 </style>
