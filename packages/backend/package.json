@@ -10,7 +10,8 @@
         "build": "tsc && tsc-alias",
         "start": "node dist/index.js",
         "test": "vitest run",
-        "import:judgement": "node scripts/import-judgement-sqlite.mjs"
+        "import:judgement": "node scripts/import-judgement-sqlite.mjs",
+        "backfill:deletion-markers": "node dist/scripts/backfill-search-deletion-markers.js"
     },
     "dependencies": {
         "@chroma-core/default-embed": "^0.1.9",

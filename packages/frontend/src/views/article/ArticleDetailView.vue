@@ -28,11 +28,13 @@ import {
     ListOutline,
     TimeOutline,
     LibraryOutline,
-    CloseOutline
+    CloseOutline,
+    RestoreOutline
 } from '@/components/icons/lucide.ts';
 
 import { useContentSaver } from '@/composables/useContentSaver';
 import { getArticleById, getRelevant, getArticleHistory, saveArticle } from '@/api/article';
+import { restoreArticle } from '@/api/admin';
 import type { Article, PlazaArticle, TocItem } from '@/types/article';
 import {
     getCategoryLabel,
@@ -59,7 +61,8 @@ import { useViewMode } from '@/composables/useViewMode';
 import { useBookmarks } from '@/composables/useBookmarks';
 import { useBookmarkIcons } from '@/composables/useBookmarkIcons';
 import { markStarPromptEligible } from '@/composables/useStarPrompt.ts';
-import { isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { currentRole, isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { ROLE_ADMIN } from '@/utils/permissions.ts';
 import { useKnowledgeBase } from '@/utils/knowledge-base.ts';
 import { useLuoguSource } from '@/utils/luogu-source.ts';
 
@@ -372,6 +375,8 @@ const handleUpdate = async () => {
 };
 
 const showDeletionModal = ref(false);
+const restoring = ref(false);
+const isAdmin = computed(() => currentRole.value === ROLE_ADMIN);
 
 const handleDelete = () => {
     if (!isAuthenticated.value) {
@@ -385,6 +390,30 @@ const handleDelete = () => {
         return;
     }
     showDeletionModal.value = true;
+};
+
+const handleRestore = () => {
+    dialog.warning({
+        title: '恢复文章',
+        content: `确认恢复文章「${article.value?.title || articleId}」？恢复后所有用户都可以重新搜索和查看该文章。`,
+        positiveText: '确认恢复',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+            restoring.value = true;
+            try {
+                const response = await restoreArticle(articleId);
+                if (response.code !== 200) {
+                    throw new Error(response.message || '恢复文章失败');
+                }
+                message.success(response.data.restored ? '文章已恢复' : '文章已经处于可见状态');
+                await loadData();
+            } catch (error) {
+                message.error(error instanceof Error ? error.message : '恢复文章失败');
+            } finally {
+                restoring.value = false;
+            }
+        }
+    });
 };
 
 const isInKnowledgeBase = computed(() => knowledgeBase.hasArticle(articleId));
@@ -624,6 +653,19 @@ onMounted(() => {
                                                 <NIcon :component="TrashOutline" />
                                             </template>
                                             删除
+                                        </n-button>
+                                        <n-button
+                                            v-if="article.deleted && isAdmin"
+                                            size="small"
+                                            type="warning"
+                                            secondary
+                                            :loading="restoring"
+                                            @click="handleRestore"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="RestoreOutline" />
+                                            </template>
+                                            恢复
                                         </n-button>
                                         <ViewModeSwitch
                                             :model-value="viewMode"

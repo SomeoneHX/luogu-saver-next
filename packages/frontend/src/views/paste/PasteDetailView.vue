@@ -19,12 +19,14 @@ import {
     ClipboardOutline,
     CopyOutline,
     OpenOutline,
+    RestoreOutline,
     SyncOutline,
     TrashOutline,
     CloseOutline
 } from '@/components/icons/lucide.ts';
 
 import { getPasteById, savePaste } from '@/api/paste';
+import { restorePaste } from '@/api/admin';
 import type { Paste } from '@/types/paste';
 import type { TocItem } from '@/types/article';
 import { generateTocAndProcessHtml } from '@/utils/article';
@@ -42,7 +44,8 @@ import ViewModeSwitch from '@/components/ViewModeSwitch.vue';
 import FocusSidebar from '@/components/FocusSidebar.vue';
 import { formatDate } from '@/utils/render';
 import { useLuoguSource } from '@/utils/luogu-source.ts';
-import { isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { currentRole, isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { ROLE_ADMIN } from '@/utils/permissions.ts';
 
 const route = useRoute();
 const router = useRouter();
@@ -189,6 +192,7 @@ const loadData = async () => {
 
         paste.value = res.data;
         displayContent.value = paste.value.renderedContent || '';
+        document.title = `${paste.value.deleted ? '[已删除] ' : ''}${title.value} - 洛谷保存站`;
     } catch (err: any) {
         message.error(err.message || '加载失败');
     } finally {
@@ -220,6 +224,8 @@ const handleUpdate = async () => {
 };
 
 const showDeletionModal = ref(false);
+const restoring = ref(false);
+const isAdmin = computed(() => currentRole.value === ROLE_ADMIN);
 
 const handleDelete = () => {
     if (!isAuthenticated.value) {
@@ -233,6 +239,30 @@ const handleDelete = () => {
         return;
     }
     showDeletionModal.value = true;
+};
+
+const handleRestore = () => {
+    dialog.warning({
+        title: '恢复剪贴板',
+        content: `确认恢复剪贴板 ${pasteId}？恢复后所有用户都可以重新查看该内容。`,
+        positiveText: '确认恢复',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+            restoring.value = true;
+            try {
+                const response = await restorePaste(pasteId);
+                if (response.code !== 200) {
+                    throw new Error(response.message || '恢复剪贴板失败');
+                }
+                message.success(response.data.restored ? '剪贴板已恢复' : '剪贴板已经处于可见状态');
+                await loadData();
+            } catch (error) {
+                message.error(error instanceof Error ? error.message : '恢复剪贴板失败');
+            } finally {
+                restoring.value = false;
+            }
+        }
+    });
 };
 </script>
 
@@ -272,7 +302,21 @@ const handleDelete = () => {
                         </template>
 
                         <div v-if="paste">
-                            <Card :title="title" :icon="ClipboardOutline">
+                            <Card
+                                :title="title"
+                                :icon="ClipboardOutline"
+                                :class="{ 'deleted-paste-card': paste.deleted }"
+                            >
+                                <template #title-extra>
+                                    <n-tag
+                                        v-if="paste.deleted"
+                                        type="error"
+                                        size="small"
+                                        :bordered="false"
+                                    >
+                                        已删除
+                                    </n-tag>
+                                </template>
                                 <div class="meta-row">
                                     <n-tag :bordered="false" size="small">
                                         <template #icon>
@@ -320,13 +364,19 @@ const handleDelete = () => {
                                             </template>
                                             源码
                                         </n-button>
-                                        <n-button size="small" type="primary" @click="handleUpdate">
+                                        <n-button
+                                            v-if="!paste.deleted"
+                                            size="small"
+                                            type="primary"
+                                            @click="handleUpdate"
+                                        >
                                             <template #icon>
                                                 <NIcon :component="SyncOutline" />
                                             </template>
                                             更新
                                         </n-button>
                                         <n-button
+                                            v-if="!paste.deleted"
                                             size="small"
                                             type="error"
                                             ghost
@@ -336,6 +386,19 @@ const handleDelete = () => {
                                                 <NIcon :component="TrashOutline" />
                                             </template>
                                             删除
+                                        </n-button>
+                                        <n-button
+                                            v-if="paste.deleted && isAdmin"
+                                            size="small"
+                                            type="warning"
+                                            secondary
+                                            :loading="restoring"
+                                            @click="handleRestore"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="RestoreOutline" />
+                                            </template>
+                                            恢复
                                         </n-button>
                                         <ViewModeSwitch
                                             :model-value="viewMode"
@@ -430,7 +493,7 @@ const handleDelete = () => {
         </div>
     </n-spin>
 
-    <div v-if="hasUpdate && !forbiddenReason" class="update-floater">
+    <div v-if="hasUpdate && !forbiddenReason && !paste?.deleted" class="update-floater">
         <n-button type="primary" circle size="large" class="shadow-button" @click="triggerRefresh">
             <template #icon>
                 <NIcon :component="SyncOutline" />
@@ -505,6 +568,10 @@ const handleDelete = () => {
 .sidebar-right,
 .main-content {
     min-width: 0;
+}
+
+.deleted-paste-card :deep(.card-title) {
+    color: var(--ui-error-color) !important;
 }
 
 .center-column {
