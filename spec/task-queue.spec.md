@@ -444,4 +444,4 @@ When no clients are subscribed to `stats:queues`, the server SHALL stop the peri
 - Task processor: `packages/backend/src/workers/task-processor.ts`
 - Article handler: `packages/backend/src/workers/handlers/task/article.handler.ts`
 - Paste handler: `packages/backend/src/workers/handlers/task/paste.handler.ts`
-- Judgement handler: `packages/backend/src/workers/handlers/task/judgement.handler.ts`
+- Judgement handler: `packages/backend/src/workers/handlers/task/save/judgement.handler.ts`

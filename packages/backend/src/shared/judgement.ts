@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
+const UINT32_MAX = 0xffff_ffff;
+
 export const LuoguJudgementUserSchema = z
     .object({
-        uid: z.number().int().positive(),
+        uid: z.number().int().positive().max(UINT32_MAX),
         name: z
             .string()
             .max(255)
@@ -15,9 +17,9 @@ export const LuoguJudgementRecordSchema = z
     .object({
         user: LuoguJudgementUserSchema,
         reason: z.string().nullable().optional(),
-        revokedPermission: z.number().int().nonnegative(),
-        addedPermission: z.number().int().nonnegative(),
-        time: z.number().int().positive()
+        revokedPermission: z.number().int().nonnegative().max(UINT32_MAX),
+        addedPermission: z.number().int().nonnegative().max(UINT32_MAX),
+        time: z.number().int().positive().max(UINT32_MAX)
     })
     .passthrough();
 

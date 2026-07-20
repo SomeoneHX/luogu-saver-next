@@ -343,6 +343,7 @@ async function main() {
             JudgementRecord.getRepository(),
             sourceUniqueRecords.map(record => record.dedupKey)
         );
+        const eventTimes = sourceRows.map(row => Number(row.time));
         const audit = {
             sourceFetchLogs: sourceLogs.length,
             sourceRecords: sourceRows.length,
@@ -351,12 +352,14 @@ async function main() {
             insertedFetchLogs: insertedLogs,
             insertedRecords,
             matchedTargetRecords: matchedRecords.length,
-            minEventTime: sourceRows.length
-                ? Math.min(...sourceRows.map(row => Number(row.time)))
-                : null,
-            maxEventTime: sourceRows.length
-                ? Math.max(...sourceRows.map(row => Number(row.time)))
-                : null,
+            minEventTime: eventTimes.reduce(
+                (minimum, time) => Math.min(minimum, time),
+                eventTimes[0] ?? null
+            ),
+            maxEventTime: eventTimes.reduce(
+                (maximum, time) => Math.max(maximum, time),
+                eventTimes[0] ?? null
+            ),
             sourceTimeZone: timeZone
         };
         console.log(JSON.stringify(audit, null, 2));

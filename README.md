@@ -181,7 +181,17 @@ judgement:
 Back up and stop the legacy `luogu-judgement-saver` scheduler, then import its untracked `data/judgements.db`. The offset must be the old server's local time zone:
 
 ```bash
+npm run build -w @luogu-saver-next/backend
 npm run import:judgement -w @luogu-saver-next/backend -- \
+  --db /secure/path/judgements.db \
+  --source-time-zone +08:00
+```
+
+The production deployment already contains the compiled backend and production dependencies. Run the importer there without rebuilding:
+
+```bash
+cd /opt/luogu-saver-backend
+npm run import:judgement -- \
   --db /secure/path/judgements.db \
   --source-time-zone +08:00
 ```

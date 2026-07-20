@@ -12,7 +12,7 @@ export interface JudgementItem {
     time: number;
     user: JudgementUser;
     full_record: Record<string, unknown>;
-    fetch_log_id: number | null;
+    fetch_log_id: number;
     log_fetched_at: string | null;
     created_at: string;
 }

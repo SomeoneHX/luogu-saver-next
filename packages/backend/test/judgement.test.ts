@@ -69,6 +69,30 @@ describe('judgement domain helpers', () => {
         expect(parsed.logs[0].extra).toBe('preserved');
     });
 
+    it('rejects upstream values that cannot fit unsigned database columns', () => {
+        const record = {
+            user: { uid: 1, name: 'user' },
+            revokedPermission: 0,
+            addedPermission: 0,
+            time: 1_700_000_000
+        };
+        expect(() =>
+            LuoguJudgementResponseSchema.parse({
+                logs: [{ ...record, user: { ...record.user, uid: 0x1_0000_0000 } }]
+            })
+        ).toThrow();
+        expect(() =>
+            LuoguJudgementResponseSchema.parse({
+                logs: [{ ...record, addedPermission: 0x1_0000_0000 }]
+            })
+        ).toThrow();
+        expect(() =>
+            LuoguJudgementResponseSchema.parse({
+                logs: [{ ...record, time: 0x1_0000_0000 }]
+            })
+        ).toThrow();
+    });
+
     it('keeps scheduled synchronization disabled by default', () => {
         expect(JudgementSchema.parse({})).toEqual({
             enabled: false,

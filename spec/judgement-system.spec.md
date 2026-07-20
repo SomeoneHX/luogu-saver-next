@@ -61,7 +61,7 @@ The adapter SHALL request `config.judgement.sourceUrl` with:
 7. Redirects disabled.
 8. A maximum response size of 10 MiB.
 
-Only HTTP 2xx responses SHALL be accepted. The response SHALL be JSON with a `logs` array. Every log SHALL contain a positive integer `user.uid`, non-empty `user.name`, non-negative integer permission fields, and a positive integer Unix timestamp. Additional upstream fields SHALL be preserved in the JSON snapshots.
+Only HTTP 2xx responses SHALL be accepted. The response SHALL be JSON with a `logs` array. Every log SHALL contain a positive integer `user.uid`, non-empty `user.name`, non-negative integer permission fields, and a positive integer Unix timestamp. The numeric fields stored in unsigned 32-bit columns (`user.uid`, permission fields, and timestamp) SHALL NOT exceed `4294967295`. Additional upstream fields SHALL be preserved in the JSON snapshots.
 
 Upstream failure reasons SHALL NOT contain response bodies, cookies, HTML pages, or judgement snapshots.
 
@@ -158,7 +158,7 @@ Before writing, it SHALL validate the required tables and columns, every JSON sn
 
 If multiple legacy rows map to one normalized duplicate key, the importer SHALL retain the earliest legacy row and count later rows as duplicates. Imported fetch-log new/skipped counts SHALL reflect those retained records.
 
-The importer SHALL print source counts, unique record count, inserted and matched target counts, duplicate count, and minimum/maximum event time. It SHALL exit non-zero when the target does not contain every source duplicate key after import.
+The importer SHALL print source counts, unique record count, inserted and matched target counts, duplicate count, and minimum/maximum event time. It SHALL exit non-zero when the target does not contain every source duplicate key after import. The deployed import command SHALL run against the already compiled backend and SHALL NOT require development dependencies.
 
 Scheduled synchronization SHALL remain disabled while importing. The legacy database file and credentials SHALL NOT be committed.
 
@@ -183,5 +183,5 @@ Automatic production deployment SHALL require repository variable `ENABLE_PRODUC
 - Service: `packages/backend/src/services/judgement.service.ts`
 - Scheduler: `packages/backend/src/services/judgement-sync-scheduler.service.ts`
 - Router: `packages/backend/src/routers/judgement.router.ts`
-- Queue handler: `packages/backend/src/workers/handlers/task/judgement.handler.ts`
+- Queue handler: `packages/backend/src/workers/handlers/task/save/judgement.handler.ts`
 - Legacy importer: `packages/backend/scripts/import-judgement-sqlite.mjs`

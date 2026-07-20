@@ -10,13 +10,13 @@
         "build": "tsc && tsc-alias",
         "start": "node dist/index.js",
         "test": "vitest run",
-        "import:judgement": "npm run build && node scripts/import-judgement-sqlite.mjs"
+        "import:judgement": "node scripts/import-judgement-sqlite.mjs"
     },
     "dependencies": {
         "@chroma-core/default-embed": "^0.1.9",
         "@koa/cors": "^5.0.0",
         "@luogu-saver-next/markdown-renderer": "^1.0.0",
-        "axios": "1.15.2",
+        "axios": "^1.18.1",
         "bullmq": "^5.65.1",
         "chromadb": "^3.1.6",
         "class-transformer": "^0.5.1",
