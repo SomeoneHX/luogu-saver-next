@@ -1005,7 +1005,7 @@ setInterval(() => {
 
 .footer-grid {
     /* Preserve the former paragraph spacing after moving each row into its own grid item. */
-    row-gap: 1em;
+    row-gap: 1em !important;
     padding-block: 1em;
 }
 
