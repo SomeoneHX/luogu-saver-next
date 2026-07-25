@@ -5,6 +5,7 @@ import {
     NButton,
     NDivider,
     NIcon,
+    NResult,
     NSkeleton,
     NSpace,
     NSpin,
@@ -13,17 +14,18 @@ import {
     useMessage
 } from 'naive-ui';
 import {
-    ArrowBackOutline,
-    CalendarOutline,
-    ClipboardOutline,
-    CopyOutline,
-    OpenOutline,
-    SyncOutline,
-    TrashOutline,
-    CloseOutline
-} from '@/components/icons/lucide.ts';
+    ArrowLeft,
+    CalendarDays,
+    Clipboard,
+    Copy,
+    ExternalLink,
+    RotateCcw,
+    RefreshCw,
+    Trash2
+} from 'lucide-vue-next';
 
 import { getPasteById, savePaste } from '@/api/paste';
+import { restorePaste } from '@/api/admin';
 import type { Paste } from '@/types/paste';
 import type { TocItem } from '@/types/article';
 import { generateTocAndProcessHtml } from '@/utils/article';
@@ -41,7 +43,8 @@ import ViewModeSwitch from '@/components/ViewModeSwitch.vue';
 import FocusSidebar from '@/components/FocusSidebar.vue';
 import { formatDate } from '@/utils/render';
 import { useLuoguSource } from '@/utils/luogu-source.ts';
-import { isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { currentRole, isAuthenticated, startCpOAuthLogin } from '@/utils/auth.ts';
+import { ROLE_ADMIN } from '@/utils/permissions.ts';
 
 const route = useRoute();
 const router = useRouter();
@@ -61,14 +64,14 @@ const pasteId = route.params.id as string;
 const paste = ref<Paste | null>(null);
 const loading = ref(true);
 const displayContent = ref('');
+const forbiddenReason = ref('');
 const { buildLuoguUrl } = useLuoguSource();
 let stopTaskListener: (() => void) | null = null;
 
 const title = computed(() => `剪贴板 ${pasteId}`);
 
 // View mode
-const { viewMode, isFocus, setViewMode, dismissHint, hintDismissed } = useViewMode();
-const showViewModeHint = ref(false);
+const { viewMode, isFocus, setViewMode } = useViewMode();
 
 // Bookmarks
 const { bookmarks, toggleBookmark, removeBookmark, renameBookmark } = useBookmarks(pasteId);
@@ -98,23 +101,9 @@ useBookmarkIcons(
     }
 );
 
-// Hint modal
-const hintShown = ref(false);
 onMounted(() => {
     loadData();
-
-    if (!hintDismissed.value && !hintShown.value) {
-        setTimeout(() => {
-            showViewModeHint.value = true;
-            hintShown.value = true;
-        }, 1500);
-    }
 });
-
-const handleDismissHint = () => {
-    showViewModeHint.value = false;
-    dismissHint();
-};
 
 const triggerRefresh = () => {
     handleRefresh(loadData);
@@ -166,15 +155,28 @@ const submitSavePaste = async () => {
 
 const loadData = async () => {
     loading.value = true;
+    forbiddenReason.value = '';
     try {
         const res = await getPasteById(pasteId);
         if (res.code === 404) {
             handle404(submitSavePaste);
             return;
         }
+        if (res.code === 403) {
+            paste.value = null;
+            displayContent.value = '';
+            forbiddenReason.value = res.message || '剪贴板已删除';
+            document.title = '剪贴板不可查看 - 洛谷保存站';
+            return;
+        }
+        if (res.code !== 200 || !res.data) {
+            message.error(res.message || '加载失败');
+            return;
+        }
 
         paste.value = res.data;
-        displayContent.value = paste.value?.renderedContent || '';
+        displayContent.value = paste.value.renderedContent || '';
+        document.title = `${paste.value.deleted ? '[已删除] ' : ''}${title.value} - 洛谷保存站`;
     } catch (err: any) {
         message.error(err.message || '加载失败');
     } finally {
@@ -206,6 +208,8 @@ const handleUpdate = async () => {
 };
 
 const showDeletionModal = ref(false);
+const restoring = ref(false);
+const isAdmin = computed(() => currentRole.value === ROLE_ADMIN);
 
 const handleDelete = () => {
     if (!isAuthenticated.value) {
@@ -219,6 +223,30 @@ const handleDelete = () => {
         return;
     }
     showDeletionModal.value = true;
+};
+
+const handleRestore = () => {
+    dialog.warning({
+        title: '恢复剪贴板',
+        content: `确认恢复剪贴板 ${pasteId}？恢复后所有用户都可以重新查看该内容。`,
+        positiveText: '确认恢复',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+            restoring.value = true;
+            try {
+                const response = await restorePaste(pasteId);
+                if (response.code !== 200) {
+                    throw new Error(response.message || '恢复剪贴板失败');
+                }
+                message.success(response.data.restored ? '剪贴板已恢复' : '剪贴板已经处于可见状态');
+                await loadData();
+            } catch (error) {
+                message.error(error instanceof Error ? error.message : '恢复剪贴板失败');
+            } finally {
+                restoring.value = false;
+            }
+        }
+    });
 };
 </script>
 
@@ -258,11 +286,25 @@ const handleDelete = () => {
                         </template>
 
                         <div v-if="paste">
-                            <Card :title="title" :icon="ClipboardOutline">
+                            <Card
+                                :title="title"
+                                :icon="Clipboard"
+                                :class="{ 'deleted-paste-card': paste.deleted }"
+                            >
+                                <template #title-extra>
+                                    <n-tag
+                                        v-if="paste.deleted"
+                                        type="error"
+                                        size="small"
+                                        :bordered="false"
+                                    >
+                                        已删除
+                                    </n-tag>
+                                </template>
                                 <div class="meta-row">
                                     <n-tag :bordered="false" size="small">
                                         <template #icon>
-                                            <NIcon :component="CalendarOutline" />
+                                            <NIcon :component="CalendarDays" />
                                         </template>
                                         更新于 {{ formatDate(paste.updatedAt) }}
                                     </n-tag>
@@ -284,7 +326,7 @@ const handleDelete = () => {
                                     <n-space>
                                         <n-button size="small" @click="router.go(-1)">
                                             <template #icon>
-                                                <NIcon :component="ArrowBackOutline" />
+                                                <NIcon :component="ArrowLeft" />
                                             </template>
                                             返回
                                         </n-button>
@@ -296,32 +338,51 @@ const handleDelete = () => {
                                             target="_blank"
                                         >
                                             <template #icon>
-                                                <NIcon :component="OpenOutline" />
+                                                <NIcon :component="ExternalLink" />
                                             </template>
                                             原站
                                         </n-button>
                                         <n-button size="small" secondary @click="handleCopy">
                                             <template #icon>
-                                                <NIcon :component="CopyOutline" />
+                                                <NIcon :component="Copy" />
                                             </template>
                                             源码
                                         </n-button>
-                                        <n-button size="small" type="primary" @click="handleUpdate">
+                                        <n-button
+                                            v-if="!paste.deleted"
+                                            size="small"
+                                            type="primary"
+                                            @click="handleUpdate"
+                                        >
                                             <template #icon>
-                                                <NIcon :component="SyncOutline" />
+                                                <NIcon :component="RefreshCw" />
                                             </template>
                                             更新
                                         </n-button>
                                         <n-button
+                                            v-if="!paste.deleted"
                                             size="small"
                                             type="error"
                                             ghost
                                             @click="handleDelete"
                                         >
                                             <template #icon>
-                                                <NIcon :component="TrashOutline" />
+                                                <NIcon :component="Trash2" />
                                             </template>
                                             删除
+                                        </n-button>
+                                        <n-button
+                                            v-if="paste.deleted && isAdmin"
+                                            size="small"
+                                            type="warning"
+                                            secondary
+                                            :loading="restoring"
+                                            @click="handleRestore"
+                                        >
+                                            <template #icon>
+                                                <NIcon :component="RotateCcw" />
+                                            </template>
+                                            恢复
                                         </n-button>
                                         <ViewModeSwitch
                                             :model-value="viewMode"
@@ -331,10 +392,31 @@ const handleDelete = () => {
                                 </div>
                             </Card>
                         </div>
+                        <Card v-else-if="forbiddenReason" title="剪贴板不可查看" :icon="Clipboard">
+                            <n-result
+                                status="403"
+                                title="剪贴板不可查看"
+                                :description="forbiddenReason"
+                            >
+                                <template #footer>
+                                    <n-space justify="center">
+                                        <n-button secondary @click="router.go(-1)">返回</n-button>
+                                        <n-button
+                                            secondary
+                                            tag="a"
+                                            :href="buildLuoguUrl(`/paste/${pasteId}`)"
+                                            target="_blank"
+                                        >
+                                            原站
+                                        </n-button>
+                                    </n-space>
+                                </template>
+                            </n-result>
+                        </Card>
                     </LoadingSkeleton>
                 </div>
 
-                <main class="main-content">
+                <main v-if="!forbiddenReason" class="main-content">
                     <div>
                         <LoadingSkeleton :loading="loading">
                             <template #skeleton>
@@ -391,41 +473,13 @@ const handleDelete = () => {
         </div>
     </n-spin>
 
-    <div v-if="hasUpdate" class="update-floater">
+    <div v-if="hasUpdate && !forbiddenReason && !paste?.deleted" class="update-floater">
         <n-button type="primary" circle size="large" class="shadow-button" @click="triggerRefresh">
             <template #icon>
-                <NIcon :component="SyncOutline" />
+                <NIcon :component="RefreshCw" />
             </template>
         </n-button>
     </div>
-
-    <!-- New view mode hint floating card -->
-    <Transition name="view-hint">
-        <aside v-if="showViewModeHint" class="view-hint-card" aria-label="聚焦视图新功能提示">
-            <div class="view-hint-body">
-                <div class="view-hint-icon">🎉</div>
-                <div class="view-hint-text">
-                    <strong>新功能：聚焦视图</strong>
-                    <span
-                        >内容更宽、支持段落收藏、目录更紧凑。点击工具栏右侧「综合 ·
-                        聚焦」切换。</span
-                    >
-                </div>
-                <n-button
-                    quaternary
-                    circle
-                    size="small"
-                    class="view-hint-dismiss"
-                    aria-label="不再显示"
-                    @click="handleDismissHint"
-                >
-                    <template #icon>
-                        <NIcon :component="CloseOutline" />
-                    </template>
-                </n-button>
-            </div>
-        </aside>
-    </Transition>
 
     <DeletionRequestModal
         v-model:show="showDeletionModal"
@@ -466,6 +520,10 @@ const handleDelete = () => {
 .sidebar-right,
 .main-content {
     min-width: 0;
+}
+
+.deleted-paste-card :deep(.card-title) {
+    color: var(--ui-error-color) !important;
 }
 
 .center-column {
@@ -571,116 +629,5 @@ const handleDelete = () => {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-}
-
-/* View mode hint floating card */
-.view-hint-card {
-    position: fixed;
-    right: 24px;
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-    z-index: 1100;
-    width: min(360px, calc(100vw - 48px));
-}
-
-.view-hint-body {
-    display: grid;
-    grid-template-columns: 38px minmax(0, 1fr) 28px;
-    gap: 10px;
-    align-items: start;
-    color: var(--ui-text-color);
-    background: var(--ui-translucent-card-color);
-    border: 1px solid var(--ui-border-color);
-    border-radius: var(--ui-card-radius);
-    box-shadow: var(--ui-elevated-shadow);
-    backdrop-filter: blur(14px);
-    padding: 14px;
-    position: relative;
-    overflow: hidden;
-}
-
-.view-hint-body::before {
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    content: '';
-    background: var(--ui-primary-color);
-}
-
-.view-hint-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
-    background: var(--ui-panel-color);
-    border: 1px solid var(--ui-border-color);
-    border-radius: var(--ui-card-radius);
-}
-
-.view-hint-text {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 3px;
-    padding-top: 1px;
-}
-
-.view-hint-text strong {
-    color: var(--ui-card-title-color);
-    font-size: 14px;
-    line-height: 1.4;
-    letter-spacing: 0;
-}
-
-.view-hint-text span {
-    color: var(--ui-muted-text-color);
-    font-size: 12px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-}
-
-.view-hint-dismiss {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    color: var(--ui-muted-text-color);
-}
-
-.view-hint-enter-active,
-.view-hint-leave-active {
-    transition:
-        opacity 0.22s ease,
-        transform 0.22s ease;
-}
-
-.view-hint-enter-from,
-.view-hint-leave-to {
-    opacity: 0;
-    transform: translateY(12px);
-}
-
-@media (max-width: 600px) {
-    .view-hint-card {
-        right: 12px;
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        left: 12px;
-        width: auto;
-    }
-
-    .view-hint-body {
-        grid-template-columns: minmax(0, 1fr) 28px;
-    }
-
-    .view-hint-icon {
-        display: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .view-hint-enter-active,
-    .view-hint-leave-active {
-        transition: none;
-    }
 }
 </style>

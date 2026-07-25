@@ -23,6 +23,7 @@
                         @expand="handleManualExpand"
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
+                        @transitionend="handleSiderTransitionEnd"
                     >
                         <div
                             class="brand-shell"
@@ -47,11 +48,13 @@
                         />
                     </n-layout-sider>
 
-                    <div
-                        v-if="mobileSiderOpen"
-                        class="mobile-sider-backdrop"
-                        @click="closeMobileSider"
-                    ></div>
+                    <Transition name="mobile-sider-backdrop">
+                        <div
+                            v-if="mobileSiderOpen"
+                            class="mobile-sider-backdrop"
+                            @click="closeMobileSider"
+                        ></div>
+                    </Transition>
 
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
@@ -64,7 +67,7 @@
                                         @click.stop="openMobileSider"
                                     >
                                         <template #icon>
-                                            <n-icon :component="MenuOutline" />
+                                            <n-icon :component="Menu" />
                                         </template>
                                     </n-button>
                                     <SiteNotificationCenter />
@@ -79,10 +82,6 @@
                                     <n-grid class="footer-grid" cols="1 s:2" responsive="screen">
                                         <n-gi>
                                             <p class="footer-element">
-                                                <Copyright :size="14" />
-                                                <span> 2025-2026 洛谷保存站 </span>
-                                            </p>
-                                            <p class="footer-element">
                                                 <a
                                                     href="https://github.com/laikit-dev/luogu-saver"
                                                     class="footer-link"
@@ -90,26 +89,10 @@
                                                     <Github :size="14" />
                                                     <span> GitHub </span>
                                                 </a>
-                                                <a href="https://help.luogu.me" class="footer-link">
-                                                    <Book :size="14" />
+                                                <a href="https://laikit.dev" class="footer-link">
+                                                    <BookOpen :size="14" />
                                                     <span> 帮助文档 </span>
                                                 </a>
-                                                <a
-                                                    href="https://help.luogu.me/docs/update"
-                                                    class="footer-link"
-                                                >
-                                                    <History :size="14" />
-                                                    <span> 更新日志 </span>
-                                                </a>
-                                            </p>
-                                            <p class="footer-element">
-                                                <Clock :size="14" />
-                                                <span>
-                                                    本网站已运行
-                                                    {{ timeSinceFound }} 秒
-                                                </span>
-                                            </p>
-                                            <p class="footer-element">
                                                 <a
                                                     href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
                                                     class="footer-link"
@@ -121,42 +104,28 @@
                                         </n-gi>
                                         <n-gi>
                                             <p class="footer-element right-aligned">
-                                                <Code :size="14" />
-                                                <span>
-                                                    开发者：Federico2903 & Murasame & quanac-lcx &
-                                                    <a
-                                                        href="https://github.com/laikit-dev/luogu-saver/graphs/contributors"
-                                                        target="_blank"
-                                                        >其他贡献者</a
-                                                    >
-                                                </span>
-                                            </p>
-                                            <p class="footer-element right-aligned">
                                                 <a
                                                     href="https://qm.qq.com/q/QVM9YFEb26"
                                                     target="_blank"
                                                     class="footer-link"
                                                 >
-                                                    <Qq :size="14" />
+                                                    <MessagesSquare :size="14" />
                                                     <span
                                                         >洛谷保存站用户群：1017248143（点击加入）</span
                                                     >
                                                 </a>
                                             </p>
-                                            <p class="footer-element right-aligned">
-                                                <router-link to="/privacy" class="footer-link">
-                                                    <UserShield :size="14" />
-                                                    <span>隐私协议</span>
-                                                </router-link>
-                                                <router-link to="/disclaimer" class="footer-link">
-                                                    <ExclamationCircle :size="14" />
-                                                    <span>免责声明</span>
-                                                </router-link>
-                                                <router-link to="/deletion" class="footer-link">
-                                                    <TrashAlt :size="14" />
-                                                    <span>数据移除政策</span>
-                                                </router-link>
+                                        </n-gi>
+                                        <n-gi>
+                                            <p class="footer-element">
+                                                <Clock3 :size="14" />
+                                                <span>
+                                                    本网站已运行
+                                                    {{ timeSinceFound }} 秒
+                                                </span>
                                             </p>
+                                        </n-gi>
+                                        <n-gi>
                                             <p class="footer-element right-aligned">
                                                 <a
                                                     href="https://www.rainyun.com/federico_?s=saver"
@@ -166,6 +135,28 @@
                                                     <Server :size="14" />
                                                     <span>本站由雨云提供支持</span>
                                                 </a>
+                                            </p>
+                                        </n-gi>
+                                        <n-gi class="footer-copyright">
+                                            <p class="footer-element">
+                                                <Copyright :size="14" />
+                                                <span> 2025-2026 洛谷保存站 </span>
+                                            </p>
+                                        </n-gi>
+                                        <n-gi class="footer-legal">
+                                            <p class="footer-element right-aligned">
+                                                <router-link to="/privacy" class="footer-link">
+                                                    <ShieldUser :size="14" />
+                                                    <span>隐私协议</span>
+                                                </router-link>
+                                                <router-link to="/disclaimer" class="footer-link">
+                                                    <CircleAlert :size="14" />
+                                                    <span>免责声明</span>
+                                                </router-link>
+                                                <router-link to="/deletion" class="footer-link">
+                                                    <Trash2 :size="14" />
+                                                    <span>数据移除政策</span>
+                                                </router-link>
                                             </p>
                                         </n-gi>
                                     </n-grid>
@@ -204,43 +195,40 @@ import {
 } from 'naive-ui';
 
 import {
-    HomeOutline,
-    AppsOutline,
-    SearchOutline,
-    StatsChartOutline,
-    GlobeOutline,
-    SettingsOutline,
-    ShieldCheckmarkOutline,
-    ChatbubbleEllipsesOutline,
-    CloudDownloadOutline,
-    MenuOutline,
-    HammerOutline
-} from '@/components/icons/lucide.ts';
-
-import {
+    BookOpen,
+    ChartNoAxesColumnIncreasing,
+    CircleAlert,
+    Clock3,
+    CloudDownload,
     Copyright,
-    Code,
-    UserShield,
-    ExclamationCircle,
-    TrashAlt,
-    Qq,
-    Server,
+    Globe2,
     Github,
-    Clock,
-    Book,
-    History,
+    Hammer,
+    House,
+    LayoutGrid,
+    Menu,
+    MessageCircleMore,
+    MessagesSquare,
+    Search,
+    Server,
+    Settings,
+    ShieldCheck,
+    ShieldUser,
+    Trash2,
     Users
-} from '@/components/icons/lucide.ts';
+} from 'lucide-vue-next';
 
 import { renderIcon } from '@/utils/render';
 
 import {
     uiThemeKey,
     uiThemeModeKey,
+    uiThemePresetKey,
     type UiThemeMode,
+    type UiThemePresetName,
     type UiThemeVars
 } from '@/styles/theme/themeKeys.ts';
-import { darkTheme, defaultTheme } from '@/styles/theme/default-theme.ts';
+import { presets } from '@/styles/theme/presets.ts';
 import TrackingConsent from '@/components/TrackingConsent.vue';
 import StarPrompt from '@/components/StarPrompt.vue';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
@@ -291,7 +279,6 @@ const handleManualCollapse = () => {
 const handleManualExpand = () => {
     manualToggle.value = true;
     collapsed.value = false;
-    mobileSiderOpen.value = true;
 };
 
 const openMobileSider = () => {
@@ -303,6 +290,17 @@ const openMobileSider = () => {
 const closeMobileSider = () => {
     if (!isMobileViewport()) return;
     mobileSiderOpen.value = false;
+};
+
+const handleSiderTransitionEnd = (event: TransitionEvent) => {
+    if (
+        !isMobileViewport() ||
+        event.target !== event.currentTarget ||
+        event.propertyName !== 'transform' ||
+        mobileSiderOpen.value
+    ) {
+        return;
+    }
     collapsed.value = true;
 };
 
@@ -322,34 +320,34 @@ const menuOptions = computed<MenuOption[]>(() => [
     {
         label: '主页',
         key: 'home',
-        icon: renderIcon(HomeOutline)
+        icon: renderIcon(House)
     },
     {
         label: '搜索',
         key: 'search',
-        icon: renderIcon(SearchOutline)
+        icon: renderIcon(Search)
     },
     {
         label: 'RAG 问答',
         key: 'rag',
-        icon: renderIcon(ChatbubbleEllipsesOutline)
+        icon: renderIcon(MessageCircleMore)
     },
     // {
     //     label: '题目',
     //     key: 'problem',
-    //     icon: renderIcon(ListOutline)
+    //     icon: renderIcon(List)
     // },
     {
         label: '文章广场',
         key: 'plaza',
-        icon: renderIcon(GlobeOutline)
+        icon: renderIcon(Globe2)
     },
     ...(canShowDiscoveryMenu.value
         ? [
               {
                   label: '用户文章爬取',
                   key: 'discovery/user-articles',
-                  icon: renderIcon(CloudDownloadOutline)
+                  icon: renderIcon(CloudDownload)
               }
           ]
         : []),
@@ -371,36 +369,36 @@ const menuOptions = computed<MenuOption[]>(() => [
     //         {
     //             label: '申请凭据',
     //             key: 'paintboard/token',
-    //             icon: renderIcon(KeyOutline)
+    //             icon: renderIcon(KeyRound)
     //         }
     //     ]
     // },
     {
         label: '陶片放逐',
         key: 'judgement',
-        icon: renderIcon(HammerOutline)
+        icon: renderIcon(Hammer)
     },
     {
         label: '统计数据',
         key: 'statistic',
-        icon: renderIcon(StatsChartOutline)
+        icon: renderIcon(ChartNoAxesColumnIncreasing)
     },
     {
         label: '关于',
         key: 'about',
-        icon: renderIcon(AppsOutline)
+        icon: renderIcon(LayoutGrid)
     },
     {
         label: '设置',
         key: 'settings',
-        icon: renderIcon(SettingsOutline)
+        icon: renderIcon(Settings)
     },
     ...(canShowAdminMenu.value
         ? [
               {
                   label: '后台',
                   key: 'admin',
-                  icon: renderIcon(ShieldCheckmarkOutline)
+                  icon: renderIcon(ShieldCheck)
               }
           ]
         : [])
@@ -408,61 +406,65 @@ const menuOptions = computed<MenuOption[]>(() => [
 
 import {
     THEME_MODE_STORAGE_KEY,
+    THEME_PRESET_STORAGE_KEY,
     THEME_STORAGE_KEY,
     SIDEBAR_LOGO_NAV_STORAGE_KEY
 } from '@/utils/constants.ts';
 import { useLocalStorage } from '@/composables/useLocalStorage.ts';
-import { MessagesSquare } from 'lucide-vue-next';
 
-const getInitialTheme = (): UiThemeVars => {
-    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-        return darkTheme;
-    }
-
-    return defaultTheme;
-};
-
-const themeStorage = useLocalStorage(THEME_STORAGE_KEY, getInitialTheme());
-const themeModeStorage = useLocalStorage<UiThemeMode>(THEME_MODE_STORAGE_KEY, 'auto');
 type StoredUiThemeVars = Partial<UiThemeVars> & { codeRenderFilter?: string };
 
-const normalizeThemeVars = (storedTheme: StoredUiThemeVars | null): UiThemeVars => {
-    const themeWithoutLegacyFilter = { ...(storedTheme ?? {}) };
-    delete themeWithoutLegacyFilter.codeRenderFilter;
-
-    return {
-        ...defaultTheme,
-        ...themeWithoutLegacyFilter,
-        codeTheme:
-            storedTheme?.codeTheme ??
-            (storedTheme?.codeRenderFilter && storedTheme.codeRenderFilter !== 'none'
-                ? 'dark'
-                : defaultTheme.codeTheme)
-    };
+const normalizeThemeMode = (storedMode: UiThemeMode | null): UiThemeMode => {
+    if (storedMode === 'auto' || storedMode === 'light' || storedMode === 'dark') {
+        return storedMode;
+    }
+    if (storedMode === 'manual') return 'light';
+    return 'auto';
 };
 
-const normalizeThemeMode = (storedMode: UiThemeMode | null): UiThemeMode =>
-    storedMode === 'manual' ? 'manual' : 'auto';
+const normalizePresetName = (storedPreset: UiThemePresetName | null): UiThemePresetName =>
+    storedPreset && presets[storedPreset] ? storedPreset : 'default';
 
-const getSystemTheme = (): UiThemeVars =>
-    window.matchMedia?.('(prefers-color-scheme: dark)').matches
-        ? { ...darkTheme }
-        : { ...defaultTheme };
+const resolveThemeBase = (presetName: UiThemePresetName, mode: UiThemeMode): UiThemeVars => {
+    const preset = presets[presetName];
+    if (mode === 'dark') return { ...preset.dark };
+    if (mode === 'light') return { ...preset.light };
+    const isDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    return isDark ? { ...preset.dark } : { ...preset.light };
+};
 
+const applyUserOverrides = (base: UiThemeVars, stored: StoredUiThemeVars | null): UiThemeVars => {
+    if (!stored) return base;
+    const cleaned = { ...stored };
+    delete (cleaned as any).codeRenderFilter;
+    return { ...base, ...cleaned };
+};
+
+const themePresetStorage = useLocalStorage<UiThemePresetName>(THEME_PRESET_STORAGE_KEY, 'default');
+const themeStorage = useLocalStorage<StoredUiThemeVars | null>(THEME_STORAGE_KEY, null);
+const themeModeStorage = useLocalStorage<UiThemeMode>(THEME_MODE_STORAGE_KEY, 'auto');
+
+if (themeStorage.value && Object.keys(themeStorage.value).length > 20) {
+    themeStorage.value = null;
+}
+
+const uiThemePreset = ref<UiThemePresetName>(normalizePresetName(themePresetStorage.value));
 const uiThemeMode = ref<UiThemeMode>(normalizeThemeMode(themeModeStorage.value));
 const uiThemeVars = ref<UiThemeVars>(
-    uiThemeMode.value === 'auto'
-        ? getSystemTheme()
-        : normalizeThemeVars(themeStorage.value as StoredUiThemeVars | null)
+    applyUserOverrides(
+        resolveThemeBase(uiThemePreset.value, uiThemeMode.value),
+        uiThemeMode.value !== 'auto' ? (themeStorage.value as StoredUiThemeVars | null) : null
+    )
 );
 
 provide(uiThemeKey, uiThemeVars);
 provide(uiThemeModeKey, uiThemeMode);
+provide(uiThemePresetKey, uiThemePreset);
 
 const systemThemeMedia = window.matchMedia?.('(prefers-color-scheme: dark)');
 const applySystemTheme = () => {
     if (uiThemeMode.value === 'auto') {
-        uiThemeVars.value = getSystemTheme();
+        uiThemeVars.value = resolveThemeBase(uiThemePreset.value, 'auto');
     }
 };
 
@@ -479,9 +481,20 @@ if (isAuthenticated.value) {
 watch(
     uiThemeVars,
     newVal => {
-        if (uiThemeMode.value !== 'manual') return;
-        themeStorage.value = newVal;
-        console.log('UI theme vars updated and saved to localStorage.');
+        if (uiThemeMode.value === 'auto') return;
+        const base = resolveThemeBase(uiThemePreset.value, uiThemeMode.value);
+        const diffs: Record<string, unknown> = {};
+        for (const key of Object.keys(newVal) as Array<keyof UiThemeVars>) {
+            if (newVal[key] !== base[key]) {
+                diffs[key] = newVal[key];
+            }
+        }
+        const keys = Object.keys(diffs);
+        if (keys.length === 0) {
+            themeStorage.value = null;
+        } else {
+            themeStorage.value = diffs as StoredUiThemeVars;
+        }
     },
     { deep: true }
 );
@@ -490,15 +503,19 @@ watch(
     uiThemeMode,
     newMode => {
         themeModeStorage.value = newMode;
-        if (newMode === 'auto') {
-            applySystemTheme();
-            return;
-        }
-
-        uiThemeVars.value = normalizeThemeVars(themeStorage.value as StoredUiThemeVars | null);
+        uiThemeVars.value = applyUserOverrides(
+            resolveThemeBase(uiThemePreset.value, newMode),
+            newMode !== 'auto' ? (themeStorage.value as StoredUiThemeVars | null) : null
+        );
     },
     { immediate: true }
 );
+
+watch(uiThemePreset, newPreset => {
+    themePresetStorage.value = newPreset;
+    themeStorage.value = null;
+    uiThemeVars.value = resolveThemeBase(newPreset, uiThemeMode.value);
+});
 
 const mixThemeColor = (color: string, colorRatio: number, base: string) => {
     return `color-mix(in srgb, ${color} ${colorRatio}%, ${base})`;
@@ -891,16 +908,16 @@ const themeCssVars = computed(() => {
         '--ui-card-radius': vars.cardRadius,
         '--ui-pill-radius': vars.pillRadius,
         '--ui-icon-color': vars.iconColor,
-        '--ui-user-red-color': defaultTheme.userRedColor,
-        '--ui-user-orange-color': defaultTheme.userOrangeColor,
-        '--ui-user-purple-color': defaultTheme.userPurpleColor,
-        '--ui-user-green-color': defaultTheme.userGreenColor,
-        '--ui-user-blue-color': defaultTheme.userBlueColor,
-        '--ui-user-gray-color': defaultTheme.userGrayColor,
-        '--ui-user-cheater-color': defaultTheme.userCheaterColor,
-        '--ui-prize-green-color': defaultTheme.prizeGreenColor,
-        '--ui-prize-blue-color': defaultTheme.prizeBlueColor,
-        '--ui-prize-gold-color': defaultTheme.prizeGoldColor,
+        '--ui-user-red-color': presets.default.light.userRedColor,
+        '--ui-user-orange-color': presets.default.light.userOrangeColor,
+        '--ui-user-purple-color': presets.default.light.userPurpleColor,
+        '--ui-user-green-color': presets.default.light.userGreenColor,
+        '--ui-user-blue-color': presets.default.light.userBlueColor,
+        '--ui-user-gray-color': presets.default.light.userGrayColor,
+        '--ui-user-cheater-color': presets.default.light.userCheaterColor,
+        '--ui-prize-green-color': presets.default.light.prizeGreenColor,
+        '--ui-prize-blue-color': presets.default.light.prizeBlueColor,
+        '--ui-prize-gold-color': presets.default.light.prizeGoldColor,
         '--ui-category-personal-color': vars.categoryPersonalColor,
         '--ui-category-solution-color': vars.categorySolutionColor,
         '--ui-category-tech-color': vars.categoryTechColor,
@@ -947,11 +964,19 @@ setInterval(() => {
     height: 100vh;
 }
 
+.app-shell {
+    position: relative;
+    padding-left: 64px;
+}
+
 .app-main {
     background: var(--ui-card-color);
 }
 
 .app-sider {
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    z-index: 1100;
     background: var(--ui-card-color) !important;
     border-right: 1px solid var(--ui-border-color) !important;
     backdrop-filter: none;
@@ -1000,11 +1025,18 @@ setInterval(() => {
     backdrop-filter: blur(16px);
 }
 
+.footer-grid {
+    /* Preserve the former paragraph spacing after moving each row into its own grid item. */
+    row-gap: 1em !important;
+    padding-block: 1em;
+}
+
 .footer-element {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     min-width: 0;
+    margin: 0;
 }
 .footer-element.right-aligned {
     justify-content: flex-end;
@@ -1062,14 +1094,15 @@ setInterval(() => {
 @media (max-width: 768px) {
     .app-shell {
         position: relative;
+        padding-left: 0;
     }
 
     .app-sider {
         position: fixed !important;
         inset: 0 auto 0 0;
         z-index: 1200;
-        width: 240px !important;
-        max-width: min(82vw, 240px);
+        width: min(82vw, 240px) !important;
+        max-width: min(82vw, 240px) !important;
         transform: translateX(-100%);
         transition: transform 0.24s ease;
     }
@@ -1079,7 +1112,12 @@ setInterval(() => {
         inset: 0;
         z-index: 1190;
         background: rgb(0 0 0 / 50%);
-        animation: mobile-backdrop-in 0.2s ease;
+        transition: opacity 0.2s ease;
+    }
+
+    .mobile-sider-backdrop-enter-from,
+    .mobile-sider-backdrop-leave-to {
+        opacity: 0;
     }
 
     .mobile-sider-open .app-sider {
@@ -1151,6 +1189,14 @@ setInterval(() => {
 }
 
 @media (max-width: 639px) {
+    .footer-legal {
+        order: 5;
+    }
+
+    .footer-copyright {
+        order: 6;
+    }
+
     .footer-element,
     .footer-element.right-aligned {
         justify-content: center;
@@ -1159,15 +1205,6 @@ setInterval(() => {
 
     .footer-link {
         justify-content: center;
-    }
-}
-
-@keyframes mobile-backdrop-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
     }
 }
 </style>

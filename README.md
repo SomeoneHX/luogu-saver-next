@@ -1,5 +1,5 @@
 <div align="center">
-    <h1>Luogu Saver Next (LGS-NG)</h1>
+    <h1>Luogu Saver (LGS)</h1>
     <p>A web application for saving user-generated content (UGC) from www.luogu.com.cn.</p>
     <p>
         <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" alt="Node Version"/>
@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/github/actions/workflow/status/SomeoneHX/luogu-saver-next/deploy-gh-pages.yml" alt="Build Status">
         <img src="https://img.shields.io/github/license/SomeoneHX/luogu-saver-next" alt="License"/>
     </p>
-    <p><a href="README.cn.md">简体中文</a> | English</p>
+    <p>English | <a href="README.zh-Hans.md">简体中文</a></p>
 </div>
 
 > **ℹ️ This fork (`deploy` branch) is adapted for GitHub Pages deployment.**
@@ -16,9 +16,7 @@
 
 ## Description
 
-**Luogu Saver Next (LGS-NG)** is a web application designed to help users save and manage user-generated content from [Luogu](https://www.luogu.com.cn/), a popular Chinese competitive programming platform. This tool allows users to archive articles, pastes, and other content types, ensuring that valuable information is preserved and remains easily accessible.
-
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/laikit-dev/luogu-saver)
+**Luogu Saver (LGS)** is a web application designed to help users save and manage user-generated content from [Luogu](https://www.luogu.com.cn/), a popular Chinese competitive programming platform. This tool allows users to archive articles, pastes, and other content types, ensuring that valuable information is preserved and remains easily accessible.
 
 ## Features
 
@@ -28,6 +26,7 @@
 - **High Performance:** Utilizes client-side rendering for a smooth user experience.
 - **Responsive Design:** Optimized for use on desktops, tablets, and mobile devices.
 - **Intelligent Recommendations:** Suggests related content based on user activity.
+- **Judgement Archive:** Stores and filters Luogu community permission-change history without a separate website or API service.
 
 ## Architecture
 
@@ -36,6 +35,7 @@ This project is a **Monorepo** managed by npm workspaces:
 - **Root:** Manages shared dev-dependencies (Prettier, TypeScript, etc.) and orchestration.
 - **`packages/frontend`:** Vue 3 + Vite application (Naive UI).
 - **`packages/backend`:** Koa + TypeScript API service.
+- **Judgement module:** The backend owns scheduled Luogu fetching, MariaDB persistence, read-only APIs, and the legacy SQLite import adapter; the Vue page uses the same-origin `/api/judgement` endpoint.
 - **Infrastructure:** External services (Database, etc.) managed via Docker Compose.
 
 ## Prerequisites
@@ -88,8 +88,8 @@ Or build them individually using npm workspaces:
 
 ```bash
 # Optional: Set environment variables inline
-# VITE_API_URL=[https://api.example.com](https://api.example.com) npm run build -w @luogu-saver-next/frontend
-npm run build -w @luogu-saver-next/frontend
+# VITE_API_URL=https://api.example.com npm run build -w @luogu-saver/frontend
+npm run build -w @luogu-saver/frontend
 ```
 
 _The compiled static files will be located in `packages/frontend/dist`._
@@ -97,7 +97,7 @@ _The compiled static files will be located in `packages/frontend/dist`._
 **Backend Only:**
 
 ```bash
-npm run build -w @luogu-saver-next/backend
+npm run build -w @luogu-saver/backend
 ```
 
 _The compiled backend files will be located in `packages/backend/dist`._
@@ -182,7 +182,7 @@ This fork includes a GitHub Actions workflow (`.github/workflows/deploy-gh-pages
 
 ## Contributing
 
-Contributions are welcome! To contribute to Luogu Saver Next:
+Contributions are welcome! To contribute to Luogu Saver:
 
 1. **Fork** the repository on GitHub.
 2. **Create** a new branch for your feature or bug fix.

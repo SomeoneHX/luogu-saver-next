@@ -27,11 +27,17 @@ jobs:
             - name: Install Dependencies
               run: npm ci
 
+            - name: Audit Production Dependencies
+              run: npm audit --omit=dev
+
+            - name: Run Tests
+              run: npm test
+
             - name: Build Markdown Renderer
-              run: npm run build -w @luogu-saver-next/markdown-renderer
+              run: npm run build -w @luogu-saver/markdown-renderer
 
             - name: Build Backend
-              run: npm run build -w @luogu-saver-next/backend
+              run: npm run build -w @luogu-saver/backend
 
             - name: Build Frontend
-              run: npm run build -w @luogu-saver-next/frontend
+              run: npm run build -w @luogu-saver/frontend

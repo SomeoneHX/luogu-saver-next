@@ -1,5 +1,5 @@
 <div align="center">
-    <h1>Luogu Saver Next (LGS-NG)</h1>
+    <h1>Luogu Saver (LGS)</h1>
     <p>一个用于保存来自 www.luogu.com.cn 的用户生成内容 (UGC) 的 Web 应用程序。</p>
     <p>
         <img src="https://img.shields.io/badge/node-v22.18.0-brightgreen" alt="Node 版本"/>
@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/github/actions/workflow/status/SomeoneHX/luogu-saver-next/deploy-gh-pages.yml" alt="构建状态">
         <img src="https://img.shields.io/github/license/SomeoneHX/luogu-saver-next" alt="许可证"/>
     </p>
-    <p>简体中文 | <a href="README.md">English</a></p>
+    <p><a href="README.md">English</a> | 简体中文</p>
 </div>
 
 > **ℹ️ 本分支 (`deploy`) 已适配 GitHub Pages 部署。**
@@ -16,9 +16,7 @@
 
 ## 项目描述
 
-**Luogu Saver Next (LGS-NG)** 是一个 Web 应用程序，旨在帮助用户保存和管理来自 [洛谷](https://www.luogu.com.cn/)（一个流行的中文算法竞赛平台）的用户生成内容。该工具允许用户存档文章、剪贴板内容和其他类型的内容，确保有价值的信息得以保存并易于访问。
-
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/laikit-dev/luogu-saver)
+**Luogu Saver (LGS)** 是一个 Web 应用程序，旨在帮助用户保存和管理来自 [洛谷](https://www.luogu.com.cn/)（一个流行的中文算法竞赛平台）的用户生成内容。该工具允许用户存档文章、剪贴板内容和其他类型的内容，确保有价值的信息得以保存并易于访问。
 
 ## 功能特性
 
@@ -28,6 +26,7 @@
 - **高性能：** 利用客户端渲染提供流畅的用户体验。
 - **响应式设计：** 针对桌面、平板和移动设备进行优化。
 - **智能推荐：** 根据用户活动推荐相关内容。
+- **陶片放逐存档：** 无需单独的网站或 API 服务，即可保存和筛选洛谷社区用户权限变更记录。
 
 ## 架构
 
@@ -36,6 +35,7 @@
 - **根目录：** 管理共享的开发依赖（Prettier、TypeScript 等）和编排。
 - **`packages/frontend`：** Vue 3 + Vite 应用程序（Naive UI）。
 - **`packages/backend`：** Koa + TypeScript API 服务。
+- **陶片放逐模块：** 后端统一负责定时抓取、MariaDB 存储、只读 API 和旧 SQLite 导入；Vue 页面只访问同源 `/api/judgement`。
 - **基础设施：** 外部服务（数据库等）通过 Docker Compose 管理。
 
 ## 前置要求
@@ -47,9 +47,9 @@
 
 ## 基础设施设置
 
-在构建或运行应用程序之前，需要初始化底层基础设施（例如数据库）。根目录中提供了一个 `docker-compose.yml` 文件来启动这些外部服务。
+在本地构建或运行应用程序之前，需要初始化底层基础设施。根目录 `docker-compose.yml` 是开发和单机测试配置，所有服务端口仅绑定到 `127.0.0.1`。
 
-> **注意：** 此 Compose 文件 **仅** 管理外部基础设施。Node.js 应用程序本身在主机上单独运行。
+> **注意：** 此 Compose 文件 **仅** 管理外部基础设施，Node.js 应用程序在主机上单独运行。生产环境不得直接使用这份 Compose 配置。
 
 在后台启动基础设施：
 
@@ -88,8 +88,8 @@ npm run build
 
 ```bash
 # 可选：内联设置环境变量
-# VITE_API_URL=https://api.example.com npm run build -w @luogu-saver-next/frontend
-npm run build -w @luogu-saver-next/frontend
+# VITE_API_URL=https://api.example.com npm run build -w @luogu-saver/frontend
+npm run build -w @luogu-saver/frontend
 ```
 
 _编译后的静态文件将位于 `packages/frontend/dist` 目录中。_
@@ -97,7 +97,7 @@ _编译后的静态文件将位于 `packages/frontend/dist` 目录中。_
 **仅构建后端：**
 
 ```bash
-npm run build -w @luogu-saver-next/backend
+npm run build -w @luogu-saver/backend
 ```
 
 _编译后的后端文件将位于 `packages/backend/dist` 目录中。_
@@ -132,11 +132,7 @@ npm run dev
 
 ### 1. 准备基础设施
 
-在生产服务器上，启动所需的外部服务：
-
-```bash
-docker compose up -d
-```
+使用托管服务、生产专用 Compose 或 Kubernetes 部署 MariaDB、Redis、Chroma 和 Meilisearch。不要把仓库根目录的 `docker-compose.yml` 当作生产方案。依赖服务必须只允许后端主机或私有网络访问，并在启动后端前更换所有默认凭据。
 
 ### 2. 运行后端服务器
 
@@ -179,7 +175,7 @@ node dist/index.js
 
 ## 贡献
 
-欢迎贡献！要为 Luogu Saver Next 做出贡献：
+欢迎贡献！要为 Luogu Saver 做出贡献：
 
 1. **Fork** GitHub 上的仓库。
 2. **创建** 一个新的分支用于你的功能或错误修复。

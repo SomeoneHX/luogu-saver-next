@@ -10,6 +10,17 @@ export interface Bookmark {
     createdAt: number;
 }
 
+export function getNextBookmarkCounter(contentId: string, bookmarks: Bookmark[]): number {
+    const idPrefix = `bm-${contentId}-`;
+    return bookmarks.reduce((maximum, bookmark) => {
+        if (!bookmark.id.startsWith(idPrefix)) return maximum;
+        const suffix = bookmark.id.slice(idPrefix.length);
+        if (!/^[1-9]\d*$/.test(suffix)) return maximum;
+        const counter = Number(suffix);
+        return Number.isSafeInteger(counter) && counter > maximum ? counter : maximum;
+    }, 0);
+}
+
 export function useBookmarks(contentId: string) {
     const key = `${CONTENT_BOOKMARK_STORAGE_PREFIX}${contentId}`;
     const stored = useLocalStorage<Bookmark[]>(key, []);
@@ -23,7 +34,7 @@ export function useBookmarks(contentId: string) {
         { deep: true }
     );
 
-    let idCounter = bookmarks.value.length;
+    let idCounter = getNextBookmarkCounter(contentId, bookmarks.value);
 
     const addBookmark = (headingId: string, headingText: string): Bookmark | null => {
         // Prevent duplicate bookmarks for the same heading

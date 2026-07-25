@@ -13,14 +13,19 @@ import { TaskService } from '@/services/task.service';
 import { TaskType, SaveTarget } from '@/shared/task';
 import { logger } from '@/lib/logger';
 import type { Article } from '@/entities/article';
+import { ROLE_ADMIN } from '@/shared/permission';
 
-async function getViewableArticle(ctx: Context, articleId: string): Promise<Article | null> {
+async function getViewableArticle(
+    ctx: Context,
+    articleId: string,
+    allowDeletedForAdmin: boolean = false
+): Promise<Article | null> {
     const article = await ArticleService.getArticleByIdWithAuthorWithoutCache(articleId);
     if (!article) {
         ctx.fail(404, 'Article not found');
         return null;
     }
-    if (article.deleted) {
+    if (article.deleted && !(allowDeletedForAdmin && ctx.user?.role === ROLE_ADMIN)) {
         ctx.fail(403, article.deleteReason || 'Article has been deleted');
         return null;
     }
@@ -45,11 +50,11 @@ async function dispatchCommentsRefresh(lid: string): Promise<string | null> {
 router.get('/query/:id', async (ctx: Context) => {
     try {
         const articleId = ctx.params.id;
-        const article = await getViewableArticle(ctx, articleId);
+        const article = await getViewableArticle(ctx, articleId, true);
         if (!article) return;
 
         await article.renderContent();
-        if (ctx.track) ctx.track(TrackingEvent.VIEW_ARTICLE, articleId);
+        if (!article.deleted && ctx.track) ctx.track(TrackingEvent.VIEW_ARTICLE, articleId);
         ctx.success(article);
     } catch {
         ctx.fail(500, 'Failed to retrieve article');

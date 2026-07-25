@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NIcon, NTooltip, useMessage } from 'naive-ui';
-import { AppsOutline, StarOutline } from '@/components/icons/lucide.ts';
-import type { ViewMode } from '@/composables/useViewMode';
+import { LayoutGrid, Star } from 'lucide-vue-next';
+import { canUseFocusView, type ViewMode } from '@/composables/useViewMode';
 
 defineProps<{
     modelValue: ViewMode;
@@ -14,7 +14,7 @@ const emit = defineEmits<{
 const message = useMessage();
 
 const handleSwitch = (mode: ViewMode) => {
-    if (window.innerWidth <= 1200) {
+    if (mode === 'focus' && !canUseFocusView(window.innerWidth)) {
         message.warning('屏幕尺寸过小');
         return;
     }
@@ -34,7 +34,7 @@ const handleSwitch = (mode: ViewMode) => {
                     @click="handleSwitch('default')"
                 >
                     <template #icon>
-                        <NIcon :component="AppsOutline" />
+                        <NIcon :component="LayoutGrid" />
                     </template>
                     综合
                 </n-button>
@@ -51,7 +51,7 @@ const handleSwitch = (mode: ViewMode) => {
                     @click="handleSwitch('focus')"
                 >
                     <template #icon>
-                        <NIcon :component="StarOutline" />
+                        <NIcon :component="Star" />
                     </template>
                     聚焦
                 </n-button>
