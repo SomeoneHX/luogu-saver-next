@@ -36,7 +36,7 @@ jobs:
             - run: npm install
 
             - name: Build for GitHub Pages
-              run: npm run build -w @luogu-saver-next/frontend
+              run: npm run build -w @luogu-saver/frontend
               env:
                   VITE_GITHUB_PAGES: 'true'
                   VITE_API_URL: ${{ secrets.BACKEND_API_URL }}
