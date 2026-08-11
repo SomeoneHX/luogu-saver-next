@@ -16,8 +16,8 @@
                         bordered
                         show-trigger="bar"
                         :collapsed="collapsed"
-                        :width="240"
-                        :collapsed-width="64"
+                        :width="280"
+                        :collapsed-width="88"
                         collapse-mode="width"
                         @collapse="handleManualCollapse"
                         @expand="handleManualExpand"
@@ -37,7 +37,7 @@
                         <n-menu
                             v-model:value="activeKey"
                             :collapsed="collapsed"
-                            :collapsed-width="64"
+                            :collapsed-width="88"
                             :collapsed-icon-size="24"
                             :icon-size="24"
                             :indent="20"
@@ -504,7 +504,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
 
     return {
         common: {
-            fontFamily: "'Lato', sans-serif",
+            fontFamily: "'Roboto', 'Noto Sans SC', 'Microsoft YaHei', sans-serif",
             fontFamilyMono: "'Fira Code', monospace",
             borderRadius: vars.cardRadius,
             bodyColor: vars.bodyColor,
@@ -541,12 +541,12 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
             siderColor: uiThemeVars.value.cardColor
         },
         Menu: {
-            itemTextColorActive: uiThemeVars.value.primaryColor,
-            itemIconColorActive: uiThemeVars.value.primaryColor,
+            itemTextColorActive: uiThemeVars.value.controlTagTextColor,
+            itemIconColorActive: uiThemeVars.value.controlTagTextColor,
             itemColorActive: uiThemeVars.value.panelColor,
             itemColorActiveHover: uiThemeVars.value.panelColor,
             itemColorHover: uiThemeVars.value.panelColor,
-            borderRadius: uiThemeVars.value.cardRadius
+            borderRadius: uiThemeVars.value.pillRadius
         },
         Input: {
             color: uiThemeVars.value.controlColor,
@@ -694,11 +694,11 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
             colorSuccess: vars.alertSuccessBackgroundColor,
             colorWarning: vars.alertWarningBackgroundColor,
             colorError: vars.alertErrorBackgroundColor,
-            border: `1px solid ${uiThemeVars.value.borderColor}`,
-            borderInfo: `1px solid ${uiThemeVars.value.infoColor}`,
-            borderSuccess: `1px solid ${uiThemeVars.value.successColor}`,
-            borderWarning: `1px solid ${uiThemeVars.value.warningColor}`,
-            borderError: `1px solid ${uiThemeVars.value.errorColor}`,
+            border: '0 solid transparent',
+            borderInfo: '0 solid transparent',
+            borderSuccess: '0 solid transparent',
+            borderWarning: '0 solid transparent',
+            borderError: '0 solid transparent',
             titleTextColor: uiThemeVars.value.cardTitleColor,
             contentTextColor: uiThemeVars.value.textColor,
             iconColor: uiThemeVars.value.primaryColor,
@@ -726,18 +726,18 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
             itemColor: uiThemeVars.value.controlColor,
             itemColorHover: uiThemeVars.value.controlColorFocus,
             itemColorPressed: uiThemeVars.value.panelColor,
-            itemColorActive: uiThemeVars.value.primaryColor,
-            itemColorActiveHover: uiThemeVars.value.primaryColorHover,
+            itemColorActive: uiThemeVars.value.panelColor,
+            itemColorActiveHover: uiThemeVars.value.panelColor,
             itemColorDisabled: uiThemeVars.value.controlColorDisabled,
             itemTextColor: uiThemeVars.value.controlTextColor,
             itemTextColorHover: uiThemeVars.value.primaryColorHover,
             itemTextColorPressed: uiThemeVars.value.primaryColorPressed,
-            itemTextColorActive: '#ffffff',
+            itemTextColorActive: uiThemeVars.value.controlTagTextColor,
             itemTextColorDisabled: uiThemeVars.value.mutedTextColor,
             itemBorder: `1px solid ${uiThemeVars.value.controlBorderColor}`,
             itemBorderHover: `1px solid ${uiThemeVars.value.controlBorderHoverColor}`,
             itemBorderPressed: `1px solid ${uiThemeVars.value.controlBorderFocusColor}`,
-            itemBorderActive: `1px solid ${uiThemeVars.value.primaryColor}`,
+            itemBorderActive: '1px solid transparent',
             itemBorderDisabled: `1px solid ${uiThemeVars.value.borderColor}`,
             buttonColorHover: uiThemeVars.value.controlColorFocus,
             buttonColorPressed: uiThemeVars.value.panelColor,
@@ -944,11 +944,12 @@ setInterval(() => {
 
 .app-shell {
     position: relative;
-    padding-left: 64px;
+    padding-left: 88px;
+    background: var(--ui-body-color);
 }
 
 .app-main {
-    background: var(--ui-card-color);
+    background: var(--ui-body-color);
 }
 
 .app-sider {
@@ -956,38 +957,71 @@ setInterval(() => {
     inset: 0 auto 0 0;
     z-index: 1100;
     background: var(--ui-card-color) !important;
-    border-right: 1px solid var(--ui-border-color) !important;
+    border-right: 0 !important;
     backdrop-filter: none;
-    box-shadow: var(--ui-card-shadow);
+    box-shadow: none;
 }
 
 .brand-shell {
-    height: 72px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: var(--ui-control-gap);
-    padding: 0 16px;
+    gap: var(--ui-space-3);
+    padding: 0 24px;
     overflow: hidden;
     box-sizing: border-box;
-    border-bottom: 1px solid var(--ui-border-color);
+    border-bottom: 0;
     background: var(--ui-card-color);
 }
 
 .brand-logo {
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
     color: var(--ui-icon-color);
-    font-size: 32px;
+    font-size: 40px;
 }
 
 .brand-text {
     color: var(--ui-card-title-color);
     font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 500;
     white-space: nowrap;
+}
+
+.app-sider :deep(.n-menu) {
+    padding: 0 var(--ui-space-2) var(--ui-space-4);
+}
+
+.app-sider :deep(.n-menu-item-content) {
+    min-height: 48px;
+    margin-block: 2px;
+    border-radius: var(--ui-pill-radius) !important;
+    transition:
+        background-color 200ms var(--md-sys-motion-standard),
+        color 200ms var(--md-sys-motion-standard);
+}
+
+.app-sider :deep(.n-menu-item-content::before) {
+    border-radius: var(--ui-pill-radius) !important;
+}
+
+.app-sider.is-collapsed :deep(.n-menu-item-content) {
+    width: 56px;
+    margin-inline: auto;
+    padding-inline: 16px !important;
+}
+
+.app-sider :deep(.n-layout-toggle-bar) {
+    width: 24px;
+    height: 48px;
+    right: -12px;
+    border: 0;
+    border-radius: var(--ui-pill-radius);
+    color: var(--ui-control-tag-text-color);
+    background: var(--ui-panel-color);
+    box-shadow: var(--ui-card-shadow);
 }
 
 .app-sider:not(.is-collapsed) :deep(.n-menu-item-content__icon) {
@@ -997,10 +1031,11 @@ setInterval(() => {
 .app-footer {
     margin: var(--ui-page-padding) calc(-1 * var(--ui-page-padding))
         calc(-1 * var(--ui-page-padding));
-    padding: var(--ui-space-4) var(--ui-space-10);
-    background: var(--ui-translucent-card-color);
+    padding: var(--ui-space-6) var(--ui-space-10);
+    background: var(--ui-card-color);
     color: var(--ui-footer-text-color);
-    backdrop-filter: blur(16px);
+    border-top: 0 !important;
+    border-radius: var(--md-sys-shape-large) var(--md-sys-shape-large) 0 0;
 }
 
 .footer-grid {
@@ -1044,13 +1079,13 @@ setInterval(() => {
 }
 .footer-link:hover,
 .footer-element a:hover {
-    color: var(--ui-footer-text-color) !important;
+    color: var(--ui-link-hover-color) !important;
 }
 .footer-link:not(:first-child) {
     margin-left: var(--ui-space-4);
 }
 .router-view {
-    max-width: min(1680px, 100%);
+    max-width: min(1440px, 100%);
     margin: 0 auto;
     min-height: calc(100vh - var(--ui-page-padding) - var(--ui-page-padding));
 }
@@ -1079,17 +1114,19 @@ setInterval(() => {
         position: fixed !important;
         inset: 0 auto 0 0;
         z-index: 1200;
-        width: min(82vw, 240px) !important;
-        max-width: min(82vw, 240px) !important;
+        width: min(88vw, 280px) !important;
+        max-width: min(88vw, 280px) !important;
         transform: translateX(-100%);
-        transition: transform 0.24s ease;
+        border-radius: 0 var(--md-sys-shape-extra-large) var(--md-sys-shape-extra-large) 0;
+        box-shadow: var(--ui-elevated-shadow);
+        transition: transform 0.24s var(--md-sys-motion-emphasized);
     }
 
     .mobile-sider-backdrop {
         position: fixed;
         inset: 0;
         z-index: 1190;
-        background: rgb(0 0 0 / 50%);
+        background: rgb(0 0 0 / 38%);
         transition: opacity 0.2s ease;
     }
 
@@ -1116,8 +1153,8 @@ setInterval(() => {
 
     :deep(.n-layout-toggle-bar) {
         pointer-events: none;
-        border-color: var(--ui-border-color) !important;
-        background: transparent !important;
+        border-color: transparent !important;
+        background: var(--ui-panel-color) !important;
         color: var(--ui-muted-text-color);
         box-shadow: none !important;
     }
@@ -1131,6 +1168,7 @@ setInterval(() => {
         padding: var(--ui-space-3) var(--ui-space-4);
         margin: var(--ui-page-padding-mobile) calc(-1 * var(--ui-page-padding-mobile))
             calc(-1 * var(--ui-page-padding-mobile));
+        border-radius: var(--md-sys-shape-large) var(--md-sys-shape-large) 0 0;
     }
 
     .mobile-sider-button {

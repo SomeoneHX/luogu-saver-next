@@ -31,10 +31,7 @@ withDefaults(
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     gap: var(--ui-space-5);
-    padding: var(--ui-space-5);
-    background: var(--ui-card-color);
-    border: 1px solid var(--ui-border-color);
-    border-radius: var(--ui-card-radius);
+    padding: var(--ui-space-4) 0 var(--ui-space-2);
 }
 
 .hero-copy {
@@ -45,10 +42,10 @@ withDefaults(
     display: flex;
     align-items: center;
     justify-content: center;
-    align-self: stretch;
-    min-width: 46px;
-    padding-right: var(--ui-space-5);
-    border-right: 1px solid var(--ui-border-color);
+    width: 56px;
+    height: 56px;
+    border-radius: var(--md-sys-shape-large);
+    background: var(--ui-panel-color);
 }
 
 .hero-icon {
@@ -59,9 +56,9 @@ withDefaults(
 .hero-title {
     margin: 0;
     color: var(--ui-card-title-color);
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.25;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.2;
     letter-spacing: 0;
 }
 
@@ -77,7 +74,7 @@ withDefaults(
     .page-hero {
         grid-template-columns: auto minmax(0, 1fr);
         gap: var(--ui-space-3);
-        padding: var(--ui-space-4);
+        padding: var(--ui-space-3) 0 0;
     }
 
     .hero-title {
@@ -85,8 +82,8 @@ withDefaults(
     }
 
     .hero-symbol {
-        min-width: 38px;
-        padding-right: var(--ui-space-3);
+        width: 48px;
+        height: 48px;
     }
 
     .hero-icon {

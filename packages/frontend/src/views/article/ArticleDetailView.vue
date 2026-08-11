@@ -950,10 +950,10 @@ onMounted(() => {
 }
 
 .info-item {
-    background: linear-gradient(180deg, var(--ui-panel-color), var(--ui-body-gradient-end));
+    background: var(--ui-panel-color);
     padding: 10px 12px;
     border-radius: var(--ui-card-radius);
-    border: 1px solid var(--ui-border-color);
+    border: 0;
     display: flex;
     flex-direction: column;
     gap: 4px;

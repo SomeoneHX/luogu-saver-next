@@ -84,10 +84,9 @@ const handleReject = () => {
 
 .consent-card {
     box-shadow: var(--ui-elevated-shadow);
-    border-radius: var(--ui-card-radius);
-    background-color: var(--ui-translucent-card-color);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--ui-border-color);
+    border-radius: var(--md-sys-shape-extra-large);
+    background-color: var(--ui-card-color);
+    border: 0;
 }
 
 .content-wrapper {

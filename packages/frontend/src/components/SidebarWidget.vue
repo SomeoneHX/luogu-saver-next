@@ -31,10 +31,9 @@ const radius = computed(() => themeVars.value.cardRadius);
 .sidebar-widget {
     margin-bottom: 24px;
     padding: 16px;
-    background: var(--ui-translucent-card-color);
-    border: 1px solid var(--ui-border-color);
+    background: var(--ui-card-color);
+    border: 0;
     box-shadow: var(--ui-card-shadow);
-    backdrop-filter: blur(14px);
 }
 
 .widget-header {
@@ -52,8 +51,7 @@ const radius = computed(() => themeVars.value.cardRadius);
 
 .widget-title {
     font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-weight: 500;
 }
 
 .widget-content {

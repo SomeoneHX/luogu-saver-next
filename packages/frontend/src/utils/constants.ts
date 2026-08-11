@@ -32,8 +32,8 @@ export const UNKNOWN_CATEGORY = {
     color: 'var(--ui-category-unknown-color)'
 };
 
-export const THEME_STORAGE_KEY = 'ui_theme';
-export const THEME_MODE_STORAGE_KEY = 'ui_theme_mode';
+export const THEME_STORAGE_KEY = 'ui_theme_v3';
+export const THEME_MODE_STORAGE_KEY = 'ui_theme_mode_v3';
 export const CACHE_STORAGE_KEY = 'save_cache_';
 export const CONTENT_BOOKMARK_STORAGE_PREFIX = 'content_bookmarks_';
 export const JUDGEMENT_DISPLAY_OPTIONS_STORAGE_KEY = 'judgement-display-options';

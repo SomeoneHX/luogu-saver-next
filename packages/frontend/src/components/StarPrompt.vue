@@ -147,11 +147,10 @@ onUnmounted(() => {
     position: relative;
     overflow: hidden;
     color: var(--ui-text-color);
-    background: var(--ui-translucent-card-color);
-    border: 1px solid var(--ui-border-color);
-    border-radius: var(--ui-card-radius);
+    background: var(--ui-card-color);
+    border: 0;
+    border-radius: var(--md-sys-shape-extra-large);
     box-shadow: var(--ui-elevated-shadow);
-    backdrop-filter: blur(14px);
 }
 
 .star-prompt-card::before {
@@ -177,8 +176,8 @@ onUnmounted(() => {
     height: 38px;
     color: var(--ui-primary-color);
     background: var(--ui-panel-color);
-    border: 1px solid var(--ui-border-color);
-    border-radius: var(--ui-card-radius);
+    border: 0;
+    border-radius: var(--ui-pill-radius);
 }
 
 .github-icon .n-icon {

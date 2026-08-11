@@ -201,9 +201,9 @@ function handleSearch() {
 .home-container {
     display: flex;
     flex-direction: column;
-    gap: var(--ui-space-10);
+    gap: var(--ui-space-8);
     width: 100%;
-    max-width: 1120px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -211,8 +211,8 @@ function handleSearch() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--ui-space-6);
-    padding: var(--ui-space-12) var(--ui-space-6) 0;
+    gap: var(--ui-space-8);
+    padding: 64px var(--ui-space-6) var(--ui-space-8);
 }
 
 .home-brand {
@@ -232,7 +232,7 @@ function handleSearch() {
 .home-slogan {
     margin: 0;
     color: var(--ui-muted-text-color);
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.5;
     letter-spacing: 0;
 }
@@ -241,9 +241,9 @@ function handleSearch() {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
 }
 
 .brand-mark :deep(svg) {
@@ -257,7 +257,7 @@ function handleSearch() {
     margin: 0;
     color: var(--ui-card-title-color);
     font-size: 48px;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1;
     letter-spacing: 0;
 }
@@ -266,14 +266,21 @@ function handleSearch() {
     width: min(100%, 720px);
     overflow: hidden;
     border-radius: var(--ui-pill-radius);
-    background: transparent;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+    background: var(--ui-card-color);
+    box-shadow: var(--ui-card-shadow);
 }
 
 .home-search :deep(.n-input-wrapper) {
-    min-height: 54px;
-    padding-left: var(--ui-space-5);
-    padding-right: var(--ui-space-4);
+    min-height: 64px;
+    padding-left: var(--ui-space-6);
+    padding-right: var(--ui-space-3);
+    border-radius: var(--ui-pill-radius) !important;
+}
+
+.home-search :deep(.n-input__border),
+.home-search :deep(.n-input__state-border) {
+    border: 0 !important;
+    border-radius: var(--ui-pill-radius) !important;
 }
 
 .home-search :deep(.n-input__input) {
@@ -286,8 +293,8 @@ function handleSearch() {
 }
 
 .home-search-button {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
 }
 
 .home-information {
@@ -298,7 +305,7 @@ function handleSearch() {
 }
 
 .announcement-card {
-    min-height: 248px;
+    min-height: 272px;
 }
 
 .announcement-card.is-empty :deep(.card-content) {
@@ -333,6 +340,14 @@ function handleSearch() {
     gap: var(--ui-space-4);
 }
 
+.stats-section .stat-card:first-child :deep(.saver-card) {
+    background: var(--ui-panel-color) !important;
+}
+
+.stats-section .stat-card:last-child :deep(.saver-card) {
+    background: color-mix(in srgb, var(--ui-info-color) 14%, var(--ui-card-color)) !important;
+}
+
 .stat-card {
     min-width: 0;
 }
@@ -357,8 +372,8 @@ function handleSearch() {
     width: 40px;
     height: 40px;
     flex: 0 0 40px;
-    border-radius: var(--ui-card-radius);
-    background: var(--ui-panel-color);
+    border-radius: var(--ui-pill-radius);
+    background: color-mix(in srgb, var(--ui-card-color) 70%, transparent);
 }
 
 .stat-card :deep(.n-statistic-value__content) {

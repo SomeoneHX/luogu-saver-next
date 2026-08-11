@@ -102,19 +102,22 @@ const showHeader = computed(() => {
 <style scoped>
 .saver-card {
     padding: var(--ui-card-padding);
-    border: 1px solid var(--ui-border-color);
+    overflow: hidden;
+    border: 0;
     transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease,
-        border-color 0.3s ease;
+        background-color 200ms var(--md-sys-motion-standard),
+        box-shadow 200ms var(--md-sys-motion-standard),
+        transform 120ms var(--md-sys-motion-standard);
     display: flex;
     flex-direction: column;
 }
 
 .saver-card.is-hoverable:hover {
-    transform: translateY(-2px);
-    border-color: var(--ui-primary-color-suppl);
-    box-shadow: var(--ui-card-shadow) !important;
+    box-shadow: var(--ui-elevated-shadow) !important;
+}
+
+.saver-card.is-hoverable:active {
+    transform: scale(0.995);
 }
 
 .card-header {
@@ -131,19 +134,19 @@ const showHeader = computed(() => {
 }
 
 .card-title-wrapper > .n-icon {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--ui-card-radius);
+    border-radius: var(--ui-pill-radius);
     background: var(--ui-mark-background-color);
 }
 
 .card-title {
-    font-weight: bold;
-    font-size: 18px;
-    line-height: 1.25;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 1.3;
 }
 
 .card-content {
@@ -152,7 +155,7 @@ const showHeader = computed(() => {
 
 :deep(mark) {
     padding: 0 2px;
-    border-radius: 3px;
+    border-radius: var(--md-sys-shape-extra-small);
     background: var(--ui-panel-color);
     color: inherit;
 }

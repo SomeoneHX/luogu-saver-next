@@ -359,7 +359,7 @@ function getProgressDetail(taskName: string, data?: any) {
     flex-direction: column;
     gap: 8px;
     padding: 10px 12px;
-    border: 1px solid var(--ui-border-color);
+    border: 0;
     border-radius: var(--ui-card-radius);
     background: var(--ui-panel-color);
 }
@@ -372,9 +372,9 @@ function getProgressDetail(taskName: string, data?: any) {
 .progress-panel {
     margin-bottom: 14px;
     padding: 12px;
-    border: 1px solid var(--ui-border-color);
+    border: 0;
     border-radius: var(--ui-card-radius);
-    background: linear-gradient(180deg, var(--ui-panel-color), var(--ui-body-gradient-end));
+    background: var(--ui-panel-color);
 }
 
 .progress-head {
@@ -401,9 +401,9 @@ function getProgressDetail(taskName: string, data?: any) {
     gap: 10px;
     min-width: 0;
     padding: 10px;
-    border: 1px solid var(--ui-border-color);
+    border: 0;
     border-radius: var(--ui-card-radius);
-    background: var(--ui-translucent-card-color);
+    background: var(--ui-card-color);
 }
 
 .step-dot {
