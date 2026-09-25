@@ -1,0 +1,26 @@
+Liquid glass navigation for the luogu-saver frontend
+Copyright 2026 SomeoneHX
+
+The files under `packages/frontend/src/liquid-glass/` are copied from
+Web Liquid Glass — a Web port (Vue 3 + TypeScript + Vite) of
+AndroidLiquidGlass, a customizable Liquid Glass effect library for
+Compose Multiplatform.
+
+  Web Liquid Glass    Copyright 2026 SomeoneHX
+                      https://github.com/SomeoneHX/WebLiquidGlass
+  AndroidLiquidGlass  Copyright 2025 Kyant
+                      https://github.com/Kyant0/AndroidLiquidGlass
+
+Both are licensed under the Apache License, Version 2.0. A copy of that
+license is in LICENSE in this directory, and the files under this
+directory are distributed under it. Apache-2.0 is compatible with the
+AGPL-3.0-or-later that covers the rest of this repository (see the
+repository LICENSE).
+
+Changes made to the copy in this repository:
+
+  - imports rewritten from `@/core/*` and `@/composables/*` to
+    `@/liquid-glass/*`;
+  - non-null assertions added on array indices, which this repository's
+    `noUncheckedIndexedAccess` requires and the original does not;
+  - the bottom tabs capsule blur reduced from 8px to 4px.
