@@ -8,6 +8,7 @@ import {
     saveServiceEntity
 } from '@/services/helpers/repository.helper';
 import { saveHashedContent } from '@/services/helpers/hashed-content.helper';
+import { backfillPublishTime, normalizePublishTime } from '@/services/helpers/publish-time.helper';
 import type { Paste as LuoguPaste } from '@/types/luogu-api';
 import { retryOnTransactionConflict } from '@/utils/db-errors';
 
@@ -42,6 +43,7 @@ export class PasteService {
         data: LuoguPaste,
         forceUpdate: boolean = false
     ): Promise<{ skipped: boolean; content: string }> {
+        const publishTime = normalizePublishTime(data.time);
         return retryOnTransactionConflict(() =>
             Paste.transaction(async manager => {
                 const saveResult = await saveHashedContent<Paste>({
@@ -51,7 +53,10 @@ export class PasteService {
                     content: data.data,
                     forceUpdate,
                     incomingData: {
-                        authorId: data.user.uid
+                        authorId: data.user.uid,
+                        // Omitted rather than written as null: an unusable `time` must not
+                        // erase a publish time an earlier payload already delivered.
+                        ...(publishTime === null ? {} : { publishTime })
                     },
                     defaults: {
                         deleted: false
@@ -59,6 +64,7 @@ export class PasteService {
                 });
 
                 if (saveResult.skipped || !saveResult.entity) {
+                    await backfillPublishTime(manager, Paste, data.id, data.time);
                     return { skipped: true, content: '' };
                 }
 

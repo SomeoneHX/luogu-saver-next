@@ -96,6 +96,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             },
+            /*
             {
                 name: 'censor',
                 fathers: ['save'],
@@ -108,6 +109,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             },
+             */
             {
                 name: 'embedding',
                 fathers: ['save', 'summary'],
@@ -143,6 +145,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             },
+            /*
             {
                 name: 'update-censor',
                 fathers: ['censor'],
@@ -157,6 +160,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             },
+             */
             {
                 name: 'update-search-index',
                 fathers: ['update-summary'],
@@ -181,6 +185,8 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
             throw new Error('targetId is required for paste-save-pipeline');
         }
 
+        const forceUpdate = params?.forceUpdate === true;
+
         const tasks: TaskDefinition[] = [
             {
                 name: 'save',
@@ -191,10 +197,11 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     payload: {
                         target: 'paste',
                         targetId: targetId,
-                        metadata: {}
+                        metadata: { forceUpdate }
                     }
                 }
-            },
+            }
+            /*
             {
                 name: 'censor',
                 fathers: ['save'],
@@ -221,6 +228,7 @@ export const WORKFLOW_TEMPLATES: Record<string, WorkflowTemplateBuilder> = {
                     }
                 }
             }
+             */
         ];
 
         return { tasks };

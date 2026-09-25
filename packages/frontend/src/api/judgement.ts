@@ -11,10 +11,10 @@ export interface JudgementItem {
     added_permission: number;
     time: number;
     user: JudgementUser;
-    full_record: Record<string, unknown>;
     fetch_log_id: number;
     log_fetched_at: string | null;
     created_at: string;
+    hidden: boolean;
 }
 
 export interface JudgementUser {

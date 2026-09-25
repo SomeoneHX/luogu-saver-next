@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-This specification defines Markdown rendering behavior provided by `@luogu-saver/markdown-renderer` and consumed by the backend through `packages/backend/src/lib/markdown.ts`.
+This specification defines Markdown rendering behavior provided by `@luogu-saver/markdown-renderer` and consumed by the frontend through `packages/frontend/src/workers/markdown.worker.ts`. The backend SHALL NOT import the renderer or expose a Markdown rendering endpoint.
 
 ## 2. Admonition Directive Containers
 
@@ -91,8 +91,11 @@ If math content contains LaTeX-incompatible Unicode text, rendering SHALL NOT wr
 If a supported directive title contains Markdown math syntax, the title SHALL render that math using the same KaTeX pipeline as normal Markdown content.
 
 For input `::::success[$$\\displaystyle\\sum_{i = 1}^n i$$]`, the rendered title SHALL contain KaTeX HTML and SHALL NOT render the raw TeX text as plain text.
+Before invoking KaTeX, the renderer SHALL assign an empty `properties` object to each HAST element
+that does not have one. A missing `properties` object SHALL NOT cause rendering to return a failure
+paragraph.
 
-## 6.1 Unclosed Display Math Fences
+### 6.1 Unclosed Display Math Fences
 
 A standalone display math fence is unclosed if `remark-math` parses a line containing only an opening sequence of two or more dollar signs and optional whitespace as a `math` node, and the node does not end with a valid closing display math fence.
 
@@ -109,7 +112,7 @@ Given input lines `normal text`, an empty line, `$$`, `inline math: $$ a = b $$`
 
 A display math fence with a valid closing fence SHALL retain normal display-math behavior. Dollar-sign sequences inside indented code or fenced code blocks SHALL retain normal code behavior.
 
-## 6.2 Multiline Display Math With Attached Content
+### 6.2 Multiline Display Math With Attached Content
 
 A display math region in normal Markdown text is an attached-content multiline region if all of these conditions hold:
 
@@ -140,7 +143,7 @@ $$\begin{aligned}a&=\begin{vmatrix}
 
 Dollar-sign sequences inside indented code blocks or fenced code blocks SHALL retain normal code behavior.
 
-## 6.3 Single-Line Display Math
+### 6.3 Single-Line Display Math
 
 A line in normal Markdown text is a single-line display math region if all of these conditions hold:
 
@@ -163,13 +166,11 @@ The frontend SHALL NOT center a paragraph solely because its only element child 
 
 Dollar-sign sequences inside indented code blocks or fenced code blocks SHALL retain normal code behavior.
 
-## 6.4 GFM Task Lists
+### 6.4 Global Macros
 
-For GFM task list input `- [ ] item` or `- [x] item`, the renderer SHALL preserve checkbox inputs in the output HTML.
+A macro defined via `\gdef\<name>{<body>}` in any math block SHALL be available to all subsequent math blocks within the same document.
 
-The checked state SHALL match the Markdown marker.
-
-The checkbox inputs SHALL be disabled.
+The `macros` object SHALL be created once per rendering pass and SHALL NOT be shared across separate requests.
 
 ## 7. Unsupported Directives
 
@@ -281,10 +282,19 @@ The rendered HTML for a matched image SHALL NOT contain an `img` element or the 
 A Markdown image whose URL does not contain that substring SHALL retain normal image rendering,
 except for the Bilibili conversion defined in Section 12.
 
-## 13. Backend Endpoint
+## 13. Frontend Rendering Boundary
 
-`POST /markdown/render` SHALL accept request body `{ "markdown": string }`.
+1. The frontend SHALL send raw Markdown to one module Web Worker.
+2. The Worker SHALL invoke the shared renderer and return one sanitized HTML string.
+3. The frontend SHALL insert only the returned renderer output into `v-html`.
+4. The backend SHALL return raw Markdown and SHALL NOT render, cache, persist, or return derived
+   Markdown HTML.
+5. The backend SHALL NOT expose `POST /markdown/render` or any equivalent rendering endpoint.
 
-The endpoint SHALL render `markdown` with the shared renderer and return `{ html }`.
+## 14. GFM Task Lists
 
-If `markdown` is absent, the endpoint SHALL render the empty string.
+For GFM task list input `- [ ] item` or `- [x] item`, the renderer SHALL preserve checkbox inputs in the output HTML.
+
+The checked state SHALL match the Markdown marker.
+
+The checkbox inputs SHALL be disabled.

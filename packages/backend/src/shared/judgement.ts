@@ -37,6 +37,9 @@ export interface JudgementQuery {
     limit: number;
     uids: number[];
     name?: string;
+    reason?: string;
+    startTime?: number;
+    endTime?: number;
     revokedPermissions: number[];
     addedPermissions: number[];
     noPermission: boolean;
@@ -45,6 +48,85 @@ export interface JudgementQuery {
 export interface JudgementPaginationQuery {
     page: number;
     limit: number;
+}
+
+export function parseJudgementVisibilityUids(value: unknown): number[] {
+    if (typeof value !== 'string') {
+        throw new JudgementQueryError('uids must be a string');
+    }
+
+    const values = value
+        .split(/[\r\n,]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
+    if (!values.length) {
+        throw new JudgementQueryError('At least one Luogu UID is required');
+    }
+
+    const uids: number[] = [];
+    const seen = new Set<number>();
+    for (const rawUid of values) {
+        if (!/^[1-9]\d*$/.test(rawUid)) {
+            throw new JudgementQueryError('uids must contain positive Luogu UIDs');
+        }
+        const uid = Number(rawUid);
+        if (!Number.isSafeInteger(uid) || uid > UINT32_MAX) {
+            throw new JudgementQueryError('uids is out of range');
+        }
+        if (!seen.has(uid)) {
+            seen.add(uid);
+            uids.push(uid);
+        }
+    }
+    return uids;
+}
+
+interface JudgementListRecord {
+    id: number;
+    uid: number;
+    name: string;
+    reason: string | null;
+    revokedPermission: number;
+    addedPermission: number;
+    time: number;
+    userSnapshot: Record<string, unknown>;
+    fetchLogId: number;
+    fetchLog?: { fetchedAt: Date } | null;
+    createdAt: Date;
+}
+
+export function toJudgementListItem(record: JudgementListRecord, hidden = false) {
+    if (hidden) {
+        return {
+            id: record.id,
+            uid: record.uid,
+            hidden: true as const,
+            name: record.name,
+            reason: '此记录已被账号所有者要求隐藏',
+            revoked_permission: 0,
+            added_permission: 0,
+            time: record.time,
+            user: record.userSnapshot,
+            fetch_log_id: record.fetchLogId,
+            log_fetched_at: record.fetchLog?.fetchedAt ?? null,
+            created_at: record.createdAt
+        };
+    }
+
+    return {
+        id: record.id,
+        uid: record.uid,
+        hidden: false as const,
+        name: record.name,
+        reason: record.reason,
+        revoked_permission: record.revokedPermission,
+        added_permission: record.addedPermission,
+        time: record.time,
+        user: record.userSnapshot,
+        fetch_log_id: record.fetchLogId,
+        log_fetched_at: record.fetchLog?.fetchedAt ?? null,
+        created_at: record.createdAt
+    };
 }
 
 export class JudgementQueryError extends Error {
@@ -109,6 +191,12 @@ function parseIntegerList(value: unknown, field: string): number[] {
     return [...new Set(values)];
 }
 
+function parseOptionalInteger(value: unknown, field: string, maximum: number): number | undefined {
+    const raw = singleQueryValue(value, field);
+    if (raw === undefined) return undefined;
+    return parseInteger(raw, field, 1, maximum);
+}
+
 export function parseJudgementPagination(query: Record<string, unknown>): JudgementPaginationQuery {
     return {
         page: parseInteger(query.page, 'page', 1),
@@ -121,6 +209,16 @@ export function parseJudgementQuery(query: Record<string, unknown>): JudgementQu
     const name = rawName?.trim();
     if (name && name.length > 100) throw new JudgementQueryError('name is too long');
 
+    const rawReason = singleQueryValue(query.reason, 'reason');
+    const reason = rawReason?.trim();
+    if (reason && reason.length > 200) throw new JudgementQueryError('reason is too long');
+
+    const startTime = parseOptionalInteger(query.start_time, 'start_time', UINT32_MAX);
+    const endTime = parseOptionalInteger(query.end_time, 'end_time', UINT32_MAX);
+    if (startTime !== undefined && endTime !== undefined && startTime > endTime) {
+        throw new JudgementQueryError('start_time must not exceed end_time');
+    }
+
     const rawNoPermission = singleQueryValue(query.no_perm, 'no_perm');
     if (rawNoPermission !== undefined && rawNoPermission !== '1') {
         throw new JudgementQueryError('no_perm must equal 1');
@@ -130,6 +228,9 @@ export function parseJudgementQuery(query: Record<string, unknown>): JudgementQu
         ...parseJudgementPagination(query),
         uids: parseIntegerList(query.uid, 'uid'),
         name: name || undefined,
+        reason: reason || undefined,
+        startTime,
+        endTime,
         revokedPermissions: parseIntegerList(query.rev_perm, 'rev_perm'),
         addedPermissions: parseIntegerList(query.add_perm, 'add_perm'),
         noPermission: rawNoPermission === '1'

@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-The judgement system integrates the Luogu judgement history into the main Luogu Saver backend and frontend. It owns persistence, scheduled synchronization, read-only APIs, and one-time import of the legacy SQLite database.
+The judgement system integrates the Luogu judgement history into the main Luogu Saver backend and frontend. It owns persistence, fixed-interval synchronization, public read APIs, administrator-controlled history hiding, and one-time import of the legacy SQLite database.
 
 The legacy Express server, legacy static pages, the legacy SQLite runtime, and browser requests to `jdmt.luogu.me` are outside the integrated runtime.
 
@@ -48,9 +48,22 @@ Table name: `judgement_fetch_log`.
 
 Every persisted judgement record SHALL reference an existing fetch log.
 
+### 2.3 Judgement Visibility Request
+
+Table name: `judgement_visibility_request`.
+
+| Column         | Type         | Constraints | Description                                       |
+| -------------- | ------------ | ----------- | ------------------------------------------------- |
+| `uid`          | INT UNSIGNED | PRIMARY KEY | Luogu UID whose history an administrator hid      |
+| `hidden_until` | INT UNSIGNED | NOT NULL    | Inclusive Luogu event-time cutoff in Unix seconds |
+| `created_at`   | DATETIME     | NOT NULL    | First request persistence time                    |
+| `updated_at`   | DATETIME     | NOT NULL    | Most recent request persistence time              |
+
+The table SHALL contain at most one row for one Luogu UID. It SHALL retain the request independently of the judgement records; neither a visibility request nor a hide operation SHALL delete or modify `judgement_record`, its snapshots, or its fetch-log association.
+
 ## 3. Worker Handler Upstream Fetch
 
-The `JudgementHandler` module SHALL request `config.judgement.sourceUrl` itself with:
+The `JudgementHandler` module SHALL request the fixed URL `https://www.luogu.com.cn/judgement` itself with:
 
 1. Method `GET`.
 2. Header `X-Requested-With: XMLHttpRequest`.
@@ -73,13 +86,15 @@ The method SHALL:
 
 1. In one database transaction, create a successful fetch log and insert each non-duplicate judgement record.
 2. Store the successful raw JSON response in the fetch log for forensic recovery.
-3. Return `fetchLogId`, `fetchedCount`, `newRecordCount`, and `skippedCount`.
+3. Set `newRecordCount` to the number of judgement records whose `fetch_log_id` equals the new fetch log ID after the duplicate-safe insert.
+4. Set `skippedCount` to the upstream log count minus `newRecordCount`.
+5. Return `fetchLogId`, `fetchedCount`, `newRecordCount`, and `skippedCount`.
 
 `JudgementService.recordFetchFailure(reason)` SHALL persist one error fetch log with zero counts, no raw response, and the supplied normalized reason. This method SHALL execute outside any failed successful-fetch transaction.
 
 The persistence service SHALL not perform upstream HTTP requests or response validation. Runtime logs SHALL contain counts and identifiers but SHALL NOT contain raw responses or snapshots.
 
-## 5. Read-only HTTP API
+## 5. HTTP API
 
 ### 5.1 Common Pagination and Validation
 
@@ -89,17 +104,22 @@ The persistence service SHALL not perform upstream HTTP requests or response val
 
 The endpoint SHALL accept these optional filters:
 
-| Query      | Meaning                                                       |
-| ---------- | ------------------------------------------------------------- |
-| `uid`      | Comma-separated unique positive user IDs                      |
-| `name`     | Trimmed literal substring, maximum 100 characters             |
-| `rev_perm` | Comma-separated positive bit masks, all of which must be set  |
-| `add_perm` | Comma-separated positive bit masks, all of which must be set  |
-| `no_perm`  | Exact value `1` requires both permission fields to equal zero |
+| Query        | Meaning                                                               |
+| ------------ | --------------------------------------------------------------------- |
+| `uid`        | Comma-separated unique positive user IDs                              |
+| `name`       | Trimmed literal substring, maximum 100 characters                     |
+| `reason`     | Trimmed literal substring, maximum 200 characters                     |
+| `start_time` | Positive Unix second; record time must be greater than or equal to it |
+| `end_time`   | Positive Unix second; record time must be less than or equal to it    |
+| `rev_perm`   | Comma-separated positive bit masks, all of which must be set          |
+| `add_perm`   | Comma-separated positive bit masks, all of which must be set          |
+| `no_perm`    | Exact value `1` requires both permission fields to equal zero         |
 
-All supplied filters SHALL be combined with AND. `%`, `_`, and the SQL escape character in `name` SHALL be treated literally. Results SHALL be ordered by `time DESC, id DESC`.
+All supplied filters SHALL be combined with AND. `%`, `_`, and the SQL escape character in `name` and `reason` SHALL be treated literally. An omitted time boundary SHALL leave that side of the interval unbounded. If both time boundaries are supplied, `start_time` SHALL NOT exceed `end_time`. Each supplied time boundary SHALL NOT exceed `4294967295`. Results SHALL be ordered by `time DESC, id DESC`.
 
-The endpoint SHALL call `ctx.success` with:
+For a record whose `time` is less than or equal to `hidden_until` in the matching visibility-request row, the endpoint SHALL retain its UID, name, user snapshot, event time, fetch-log metadata, and creation time; return `hidden: true`; return `reason: "此记录已被账号所有者要求隐藏"`; and return both permission fields as `0`. It SHALL NOT return `full_record`.
+
+For every other record, the endpoint SHALL return `hidden: false` and its persisted display fields. The endpoint SHALL call `ctx.success` with list-item fields:
 
 ```typescript
 {
@@ -112,10 +132,10 @@ The endpoint SHALL call `ctx.success` with:
         added_permission: number;
         time: number;
         user: Record<string, unknown>;
-        full_record: Record<string, unknown>;
         fetch_log_id: number;
         log_fetched_at: Date | null;
         created_at: Date;
+        hidden: boolean;
     }>;
     pagination: {
         page: number;
@@ -126,11 +146,27 @@ The endpoint SHALL call `ctx.success` with:
 }
 ```
 
-### 5.3 GET /judgement/logs
+The endpoint SHALL NOT return `full_record`. The `full_record` database column SHALL remain the complete immutable upstream snapshot for persistence and forensic recovery. The list query SHALL NOT select the `full_record` column from the database.
+
+### 5.3 POST /admin/judgements/hide
+
+The endpoint SHALL require `Permission.MANAGE_CONTENT`. The request body SHALL be `{ uids: string }`.
+
+`uids` SHALL contain one or more decimal positive Luogu UIDs, separated by commas, CRLF, or LF. Whitespace surrounding a UID is ignored. Empty segments caused by consecutive separators are ignored. Every UID SHALL be an integer from `1` through `4294967295`. Duplicate UIDs SHALL be processed once in first-occurrence order. Any invalid non-empty segment, an empty result, or a non-string body field SHALL produce application error code `400`.
+
+On each request, the service SHALL set every submitted UID's `hidden_until` to the current Unix second, creating a visibility-request row when absent. An update SHALL retain the greater of the stored cutoff and the current Unix second. The response SHALL be `{ items: Array<{ uid: number; hiddenUntil: number }> }`, in normalized input order.
+
+The operation applies to every current and later-read record for each submitted UID with an event time not later than its `hiddenUntil`; it SHALL not support selecting individual records. A record with an event time after the cutoff, including a record first fetched after this request, SHALL remain visible unless a later administrator request advances the cutoff.
+
+The public judgement page SHALL NOT expose an account-owner deletion or hiding action. The administrator console SHALL expose a `MANAGE_CONTENT`-guarded control that accepts comma- or newline-separated UIDs and invokes this endpoint.
+
+For a returned item with `hidden: true`, the judgement list SHALL preserve the UID, avatar, username, and time; render `—` for permission changes; and render the API-supplied placeholder reason. The user-profile judgement timeline SHALL preserve its time and other record layout, omit permission-change tags, and render the API-supplied placeholder reason.
+
+### 5.4 GET /judgement/logs
 
 This endpoint SHALL use common pagination, order by `id DESC`, and return fetch-log metadata without `raw_response`.
 
-### 5.4 GET /judgement/stats
+### 5.5 GET /judgement/stats
 
 This endpoint SHALL return `totalJudgements`, `totalFetchLogs`, `lastFetchAt`, and `lastFetchStatus`.
 
@@ -140,20 +176,15 @@ This endpoint SHALL return `totalJudgements`, `totalFetchLogs`, `lastFetchAt`, a
 
 If the upstream request, response validation, or persistence fails, the handler SHALL normalize the failure reason, call `JudgementService.recordFetchFailure()` once, and rethrow the normalized error. Failure-log persistence errors SHALL be logged without replacing the original task failure.
 
-The scheduler SHALL be disabled by default. When enabled it SHALL optionally dispatch once during startup and then dispatch every configured interval. It SHALL create and dispatch a save task with target `judgement` and target ID `latest`.
+The scheduler SHALL dispatch once during backend startup and then dispatch every 1200000 milliseconds. It SHALL create and dispatch a save task with target `judgement` and target ID `latest`.
 
-Before dispatch, the scheduler SHALL acquire a Redis lock with `SET NX PX` so multiple backend processes do not enqueue the same scheduled run. The lock TTL SHALL equal the interval. If task creation or dispatch fails, the scheduler SHALL release only the lock value it owns. Its timer SHALL call `unref()`.
+Before dispatch, the scheduler SHALL acquire a Redis lock with `SET NX PX` so multiple backend processes do not enqueue the same scheduled run. The lock TTL SHALL equal 1200000 milliseconds. If task creation or dispatch fails, the scheduler SHALL release only the lock value it owns. Its timer SHALL call `unref()`.
 
-## 7. Configuration
+The judgement source URL, scheduling enablement, startup run, and interval SHALL NOT be read from `config.yml`.
 
-The optional top-level `judgement` section SHALL have:
+## 7. Frontend Refresh
 
-| Field          | Type    | Default                              | Validation              |
-| -------------- | ------- | ------------------------------------ | ----------------------- |
-| `enabled`      | boolean | false                                | none                    |
-| `intervalMs`   | number  | 1200000                              | integer, at least 60000 |
-| `runOnStartup` | boolean | true                                 | none                    |
-| `sourceUrl`    | string  | `https://www.luogu.com.cn/judgement` | absolute URL            |
+The judgement list view SHALL request `GET /judgement` when mounted. While the view remains mounted, it SHALL repeat the same request every 60000 milliseconds using the current pagination and filter values. It SHALL stop the timer when unmounted.
 
 ## 8. Legacy SQLite Import
 
@@ -165,22 +196,9 @@ If multiple legacy rows map to one normalized duplicate key, the importer SHALL 
 
 The importer SHALL print source counts, unique record count, inserted and matched target counts, duplicate count, and minimum/maximum event time. It SHALL exit non-zero when the target does not contain every source duplicate key after import. The deployed import command SHALL run against the already compiled backend and SHALL NOT require development dependencies.
 
-Scheduled synchronization SHALL remain disabled while importing. The legacy database file and credentials SHALL NOT be committed.
+The importer SHALL run as a standalone process that initializes the database but does not start the judgement scheduler. It SHALL NOT require a judgement scheduling section in `config.yml`. The backend process SHALL be stopped while the importer writes to the target database. The legacy database file and credentials SHALL NOT be committed.
 
-## 9. Production Cutover
-
-Production migration SHALL happen in this order:
-
-1. Back up the legacy SQLite file and stop the legacy scheduler.
-2. Deploy the integrated backend with judgement scheduling disabled.
-3. Run the importer and verify its audit output.
-4. Enable scheduling and observe at least one successful fetch.
-5. Deploy the same-origin frontend.
-6. Keep the legacy service read-only during a rollback window, then retire it.
-
-Automatic production deployment SHALL require repository variable `ENABLE_PRODUCTION_DEPLOYMENT` to equal `true`, serialize deployment runs, deploy the backend first, and verify `GET /judgement?page=1&limit=1`. The frontend job SHALL additionally require `JUDGEMENT_MIGRATION_READY=true` and SHALL build with `VITE_API_URL=/api` so the first frontend cutover cannot precede the audited historical import.
-
-## 10. File Locations
+## 9. File Locations
 
 - Entities: `packages/backend/src/entities/judgement-record.ts`, `packages/backend/src/entities/judgement-fetch-log.ts`
 - Domain helpers: `packages/backend/src/shared/judgement.ts`
@@ -188,4 +206,5 @@ Automatic production deployment SHALL require repository variable `ENABLE_PRODUC
 - Router: `packages/backend/src/routers/judgement.router.ts`
 - Queue handler: `packages/backend/src/workers/handlers/task/save/judgement.handler.ts`
 - Scheduler: `packages/backend/src/services/judgement-sync-scheduler.service.ts`
+- Frontend list view: `packages/frontend/src/views/judgement/JudgementView.vue`
 - Legacy importer: `packages/backend/scripts/import-judgement-sqlite.mjs`

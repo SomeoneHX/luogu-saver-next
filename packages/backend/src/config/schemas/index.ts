@@ -3,8 +3,6 @@ import { ServerSchema } from './server';
 import { DbSchema, RedisSchema, ChromaSchema, MeilisearchSchema } from './infrastructure';
 import {
     ApiRateLimitSchema,
-    DiscoverySchema,
-    JudgementSchema,
     RecommendationSchema,
     QueueSchema,
     WorkflowMaintenanceSchema
@@ -32,8 +30,6 @@ export const AppConfigSchema = ServerSchema.extend({
     ),
     recommendation: RecommendationSchema,
     queue: z.preprocess(value => value ?? {}, QueueSchema),
-    discovery: z.preprocess(value => value ?? {}, DiscoverySchema),
-    judgement: z.preprocess(value => value ?? {}, JudgementSchema),
     apiRateLimit: z.preprocess(value => value ?? {}, ApiRateLimitSchema),
     workflow: z.preprocess(value => value ?? {}, WorkflowMaintenanceSchema),
     llm: LLMConfigSchema,

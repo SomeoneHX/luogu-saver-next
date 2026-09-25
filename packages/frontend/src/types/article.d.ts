@@ -16,9 +16,9 @@ export interface Article {
     updatedAt: string;
     deleteReason?: string | null;
     contentHash?: string;
+    publishTime?: number | null;
     viewCount: number;
     author?: User;
-    renderedContent?: string;
 }
 
 export interface PlazaArticle {

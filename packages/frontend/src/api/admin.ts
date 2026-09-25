@@ -53,6 +53,11 @@ export interface AdminAdvertisement {
     updatedAt?: string;
 }
 
+export interface AdminJudgementVisibilityItem {
+    uid: number;
+    hiddenUntil: number;
+}
+
 interface CreateWorkflowTemplateResponse {
     workflowId: string;
     taskIds: Record<string, string>;
@@ -104,6 +109,13 @@ export async function restorePaste(id: string) {
     })) as ApiResponse<{ id: string; restored: boolean }>;
 }
 
+export async function hideAdminJudgementHistories(uids: string) {
+    return (await apiFetch('/admin/judgements/hide', {
+        method: 'POST',
+        data: { uids }
+    })) as ApiResponse<{ items: AdminJudgementVisibilityItem[] }>;
+}
+
 export async function getAdminAnnouncement() {
     return (await apiFetch('/admin/announcement')) as ApiResponse<Announcement>;
 }
@@ -143,17 +155,6 @@ export async function updateAdminAdvertisements(advertisements: AdminAdvertiseme
         method: 'PUT',
         data: { advertisements }
     })) as ApiResponse<{ advertisements: AdminAdvertisement[] }>;
-}
-
-export async function startArticlePlazaDiscovery(data: {
-    maxPages: number;
-    forceUpdate: boolean;
-    includeCategories: boolean;
-}) {
-    return (await apiFetch('/discover/article-plaza/start', {
-        method: 'POST',
-        data
-    })) as ApiResponse<{ runId: string; taskIds: string[]; run: DiscoveryRun }>;
 }
 
 export async function getDiscoveryRuns(limit: number = 20) {

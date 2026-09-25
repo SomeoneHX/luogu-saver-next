@@ -1,10 +1,12 @@
 import { AppDataSource } from '@/data-source';
 import { JudgementFetchLog } from '@/entities/judgement-fetch-log';
 import { JudgementRecord } from '@/entities/judgement-record';
+import { JudgementVisibilityRequest } from '@/entities/judgement-visibility-request';
 import { logger } from '@/lib/logger';
 import {
     createJudgementDedupKey,
     escapeLikeLiteral,
+    toJudgementListItem,
     type JudgementPaginationQuery,
     type JudgementQuery,
     type LuoguJudgementRecord,
@@ -81,7 +83,6 @@ export class JudgementService {
                 : [];
             const existingKeys = new Set(existingRecords.map(record => record.dedupKey));
             const pendingValues = values.filter(record => !existingKeys.has(record.dedupKey));
-            let newRecordCount = 0;
             if (pendingValues.length) {
                 await recordRepository
                     .createQueryBuilder()
@@ -89,9 +90,8 @@ export class JudgementService {
                     .values(pendingValues as any)
                     .orIgnore()
                     .execute();
-                const [rowCount] = await manager.query('SELECT ROW_COUNT() AS affectedRows');
-                newRecordCount = Number(rowCount?.affectedRows ?? 0);
             }
+            const newRecordCount = await recordRepository.countBy({ fetchLogId: fetchLog.id });
             const skippedCount = upstream.data.logs.length - newRecordCount;
 
             await logRepository.update(fetchLog.id, { newRecordCount, skippedCount });
@@ -121,6 +121,18 @@ export class JudgementService {
     static async list(query: JudgementQuery) {
         const builder = JudgementRecord.getRepository()
             .createQueryBuilder('record')
+            .select([
+                'record.id',
+                'record.uid',
+                'record.name',
+                'record.reason',
+                'record.revokedPermission',
+                'record.addedPermission',
+                'record.time',
+                'record.userSnapshot',
+                'record.fetchLogId',
+                'record.createdAt'
+            ])
             .leftJoinAndSelect('record.fetchLog', 'fetchLog')
             .orderBy('record.time', 'DESC')
             .addOrderBy('record.id', 'DESC')
@@ -132,6 +144,17 @@ export class JudgementService {
             builder.andWhere("record.name LIKE :name ESCAPE '!'", {
                 name: `%${escapeLikeLiteral(query.name)}%`
             });
+        }
+        if (query.reason) {
+            builder.andWhere("record.reason LIKE :reason ESCAPE '!'", {
+                reason: `%${escapeLikeLiteral(query.reason)}%`
+            });
+        }
+        if (query.startTime !== undefined) {
+            builder.andWhere('record.time >= :startTime', { startTime: query.startTime });
+        }
+        if (query.endTime !== undefined) {
+            builder.andWhere('record.time <= :endTime', { endTime: query.endTime });
         }
         if (query.noPermission) {
             builder.andWhere('record.revoked_permission = 0');
@@ -151,21 +174,18 @@ export class JudgementService {
         });
 
         const [records, total] = await builder.getManyAndCount();
+        const visibilityRequests = records.length
+            ? await JudgementVisibilityRequest.getRepository().findBy({
+                  uid: In([...new Set(records.map(record => record.uid))])
+              })
+            : [];
+        const hiddenUntilByUid = new Map(
+            visibilityRequests.map(request => [request.uid, request.hiddenUntil])
+        );
         return {
-            items: records.map(record => ({
-                id: record.id,
-                uid: record.uid,
-                name: record.name,
-                reason: record.reason,
-                revoked_permission: record.revokedPermission,
-                added_permission: record.addedPermission,
-                time: record.time,
-                user: record.userSnapshot,
-                full_record: record.fullRecord,
-                fetch_log_id: record.fetchLogId,
-                log_fetched_at: record.fetchLog?.fetchedAt ?? null,
-                created_at: record.createdAt
-            })),
+            items: records.map(record =>
+                toJudgementListItem(record, record.time <= (hiddenUntilByUid.get(record.uid) ?? 0))
+            ),
             pagination: {
                 page: query.page,
                 limit: query.limit,
@@ -173,6 +193,29 @@ export class JudgementService {
                 totalPages: Math.ceil(total / query.limit)
             }
         };
+    }
+
+    static async hideHistories(uids: number[]) {
+        const hiddenUntil = Math.floor(Date.now() / 1000);
+        return AppDataSource.transaction(async manager => {
+            for (const uid of uids) {
+                await manager.query(
+                    `INSERT INTO judgement_visibility_request (uid, hidden_until)
+                     VALUES (?, ?)
+                     ON DUPLICATE KEY UPDATE
+                         hidden_until = GREATEST(hidden_until, VALUES(hidden_until)),
+                         updated_at = CURRENT_TIMESTAMP`,
+                    [uid, hiddenUntil]
+                );
+            }
+            const requests = await manager.getRepository(JudgementVisibilityRequest).findBy({
+                uid: In(uids)
+            });
+            const hiddenUntilByUid = new Map(
+                requests.map(request => [request.uid, request.hiddenUntil])
+            );
+            return uids.map(uid => ({ uid, hiddenUntil: hiddenUntilByUid.get(uid)! }));
+        });
     }
 
     static async listLogs(query: JudgementPaginationQuery) {

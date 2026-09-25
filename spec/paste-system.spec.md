@@ -10,16 +10,17 @@ The paste system manages code/text pastes archived from Luogu. It provides stora
 
 Table name: `paste`
 
-| Column          | Type         | Constraints             | Description               |
-| --------------- | ------------ | ----------------------- | ------------------------- |
-| `id`            | VARCHAR(8)   | PRIMARY KEY             | Paste ID (from Luogu)     |
-| `content`       | MEDIUMTEXT   | NOT NULL                | Paste content             |
-| `author_id`     | INT UNSIGNED | NOT NULL, FK -> user.id | Author user ID            |
-| `deleted`       | TINYINT      | DEFAULT 0               | Soft delete flag          |
-| `created_at`    | DATETIME     | NOT NULL                | Record creation timestamp |
-| `updated_at`    | DATETIME     | NOT NULL                | Record update timestamp   |
-| `delete_reason` | VARCHAR      | DEFAULT '管理员删除'    | Reason for deletion       |
-| `content_hash`  | VARCHAR      | NULLABLE                | SHA-256 hash of content   |
+| Column          | Type         | Constraints             | Description                        |
+| --------------- | ------------ | ----------------------- | ---------------------------------- |
+| `id`            | VARCHAR(8)   | PRIMARY KEY             | Paste ID (from Luogu)              |
+| `content`       | MEDIUMTEXT   | NOT NULL                | Paste content                      |
+| `author_id`     | INT UNSIGNED | NOT NULL, FK -> user.id | Author user ID                     |
+| `deleted`       | TINYINT      | DEFAULT 0               | Soft delete flag                   |
+| `publish_time`  | INT UNSIGNED | NULLABLE                | Luogu publish time in Unix seconds |
+| `created_at`    | DATETIME     | NOT NULL                | Local persistence time             |
+| `updated_at`    | DATETIME     | NOT NULL                | Local update time                  |
+| `delete_reason` | VARCHAR      | DEFAULT '管理员删除'    | Reason for deletion                |
+| `content_hash`  | VARCHAR      | NULLABLE                | SHA-256 hash of content            |
 
 ### 2.2 Indexes
 
@@ -42,15 +43,15 @@ Retrieve a single paste by ID.
 
 **Response:**
 
-- 200: Paste object with rendered content when `deleted = false`
-- 200: Paste object with rendered content when `deleted = true` and `ctx.user.role = ROLE_ADMIN`
+- 200: Paste object with raw `content` and no `renderedContent` field when `deleted = false`
+- 200: Paste object with raw `content` and no `renderedContent` field when `deleted = true` and `ctx.user.role = ROLE_ADMIN`
 - 403: If `deleted = true` and the requester is not an authenticated administrator, returns
   `deleteReason` as error message
 - 404: Paste not found
 - 500: Server error
 
-If `deleted = true` and the requester is an authenticated administrator, the endpoint SHALL render
-and return the stored paste content.
+If `deleted = true` and the requester is an authenticated administrator, the endpoint SHALL return
+the stored raw paste content.
 
 When the frontend paste detail request returns code `403`, the frontend SHALL:
 
@@ -117,11 +118,12 @@ Postconditions:
 
 ### 4.1 PasteService
 
-| Method             | Cache TTL | Cache Key Pattern | Eviction                     |
-| ------------------ | --------- | ----------------- | ---------------------------- |
-| `getPasteById(id)` | 600s      | `paste:${id}`     | -                            |
-| `getPasteCount()`  | 600s      | `paste:count`     | -                            |
-| `savePaste(paste)` | evicts    | -                 | `paste:${id}`, `paste:count` |
+| Method                              | Cache TTL | Cache Key Pattern | Eviction                          |
+| ----------------------------------- | --------- | ----------------- | --------------------------------- |
+| `getPasteById(id)`                  | 600s      | `paste:${id}`     | -                                 |
+| `getPasteCount()`                   | 600s      | `paste:count`     | -                                 |
+| `savePaste(paste)`                  | evicts    | -                 | `paste:${id}`, `paste:count`      |
+| `saveLuoguPaste(data, forceUpdate)` | evicts    | -                 | `paste:${data.id}`, `paste:count` |
 
 Each PasteService read/write method that accepts an optional `manager` argument SHALL use that `EntityManager` for database access when it is provided.
 When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
@@ -152,20 +154,30 @@ When a cached read method receives a manager argument, it SHALL bypass Redis cac
 
 #### saveLuoguPaste(data: LuoguPaste, forceUpdate = false): Promise<{ skipped: boolean; content: string }>
 
+Let `t = normalizePublishTime(data.time)`, defined in section 7.1 of the article system
+specification: `t` equals `data.time` when that value is an integer satisfying
+`1 <= data.time <= 4294967295`, and is `null` otherwise.
+
 1. Compute `SHA-256(data.data)`.
-2. If a paste with `id=data.id` exists, `forceUpdate=false`, and `content_hash` equals the computed hash, return `{ skipped: true, content: "" }` without updating the database.
-3. Otherwise upsert a paste row with `id=data.id`, `content=data.data`, `author_id=data.user.uid`, `content_hash` equal to the computed hash, and `deleted=false` for newly inserted rows.
+2. If a paste with `id=data.id` exists, `forceUpdate=false`, and `content_hash` equals the computed hash, run the backfill of step 7 and return `{ skipped: true, content: "" }` without otherwise updating the database.
+3. Otherwise upsert a paste row with `id=data.id`, `content=data.data`, `author_id=data.user.uid`, `publish_time=t`, `content_hash` equal to the computed hash, and `deleted=false` for newly inserted rows. If `t` is `null`, `publish_time` SHALL be absent from the upsert payload, so that a malformed `time` neither inserts nor overwrites a value.
 4. Return `{ skipped: false, content }` where `content` equals the saved paste content.
 5. A missing paste row SHALL be inserted before any pessimistic row lock is requested.
 6. MariaDB deadlock and lock-wait timeout errors SHALL retry the complete paste transaction at most three times.
+7. When step 2 skips and `t` is not `null`, execute exactly one additional statement inside the same transaction: `UPDATE paste SET publish_time = :t WHERE id = :id AND publish_time IS NULL`. It SHALL leave `updated_at` unchanged and SHALL affect zero rows once `publish_time` is set.
+8. After the method returns successfully, evict Redis keys `paste:${data.id}` and `paste:count`,
+   including when the result has `skipped=true`.
 
-## 5. Content Rendering
+## 5. Raw Markdown Delivery
 
-The `paste.renderContent()` method:
+For each response with code `200` from `GET /paste/query/:id`, the endpoint SHALL:
 
-1. If `content` is non-empty, render Markdown to HTML using the `renderMarkdown` library.
-2. Store the result in `paste.renderedContent`.
-3. The paste renderer SHALL NOT generate a table of contents for the response.
+1. Return the stored `paste.content` string without modification.
+2. Not add a `renderedContent` field.
+3. Not invoke `@luogu-saver/markdown-renderer`, `RendererService`, or any equivalent renderer.
+4. Not generate a table of contents for the response.
+
+The frontend SHALL render the returned `paste.content` value.
 
 ### 5.1 Save Task Behavior
 
@@ -201,6 +213,14 @@ The default value for `delete_reason` is `'管理员删除'` (Administrator dele
 2. Non-deleted pastes (`deleted = false`) are counted in `getPasteCount()`.
 3. Deleted pastes remain queryable. Their detail endpoint returns 200 for an authenticated
    administrator and 403 for every other requester.
+4. `publish_time` and `created_at` denote different instants and SHALL NOT be substituted for one
+   another. `publish_time` is the instant Luogu reports for the paste itself; `created_at` is the
+   instant this system first persisted the row.
+5. `publish_time` is `NULL` if and only if no save has yet observed a Luogu `time` that
+   `normalizePublishTime` accepts for that paste. It is never `0` and never derived from
+   `created_at`.
+6. Writing `publish_time` into a row that stored `NULL` is not an update of the archived paste and
+   SHALL NOT advance `updated_at`.
 
 ## 8. File Locations
 

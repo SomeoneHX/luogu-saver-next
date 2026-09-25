@@ -23,8 +23,9 @@ Table name: `article`
 | `priority`            | INT          | DEFAULT 0               | Display priority                   |
 | `deleted`             | TINYINT      | DEFAULT 0               | Soft delete flag                   |
 | `tags`                | JSON         | NOT NULL                | Array of tag strings               |
-| `created_at`          | DATETIME     | NOT NULL                | Record creation timestamp          |
-| `updated_at`          | DATETIME     | NOT NULL                | Record update timestamp            |
+| `publish_time`        | INT UNSIGNED | NULLABLE                | Luogu publish time in Unix seconds |
+| `created_at`          | DATETIME     | NOT NULL                | Local persistence time             |
+| `updated_at`          | DATETIME     | NOT NULL                | Local update time                  |
 | `delete_reason`       | VARCHAR      | NULLABLE                | Reason for deletion                |
 | `content_hash`        | VARCHAR      | NULLABLE                | SHA-256 hash of content            |
 | `view_count`          | INT          | DEFAULT 0               | View count                         |
@@ -85,8 +86,8 @@ Retrieve a single article by ID.
 
 **Response:**
 
-- 200: Article object with rendered content when `deleted = false`
-- 200: Article object with rendered content when `deleted = true` and `ctx.user.role = ROLE_ADMIN`
+- 200: Article object with raw `content` and no `renderedContent` field when `deleted = false`
+- 200: Article object with raw `content` and no `renderedContent` field when `deleted = true` and `ctx.user.role = ROLE_ADMIN`
 - 403: If `deleted = true` and the requester is not an authenticated administrator, returns
   `deleteReason` as error message
 - 404: Article not found
@@ -96,8 +97,8 @@ Retrieve a single article by ID.
 
 - Tracks `VIEW_ARTICLE` event if tracking is enabled and `deleted = false`
 
-If `deleted = true` and the requester is an authenticated administrator, the endpoint SHALL render
-the article content and SHALL NOT track `VIEW_ARTICLE`.
+If `deleted = true` and the requester is an authenticated administrator, the endpoint SHALL return
+the stored raw article content and SHALL NOT track `VIEW_ARTICLE`.
 
 If `deleted = true`, the frontend article detail view SHALL:
 
@@ -176,12 +177,13 @@ Get total count of non-deleted articles.
 
 ### 5.1 ArticleService
 
-| Method                            | Cache TTL | Cache Key Pattern                             |
-| --------------------------------- | --------- | --------------------------------------------- |
-| `getArticleById(id)`              | 600s      | `article:${id}`                               |
-| `getRecentArticles(count, after)` | 600s      | `article:recent:${count}:${after?.getTime()}` |
-| `getArticleCount()`               | 600s      | `article:count`                               |
-| `saveArticle(article)`            | evicts    | `article:${id}`, `article:count`              |
+| Method                                | Cache TTL | Cache Key Pattern                             |
+| ------------------------------------- | --------- | --------------------------------------------- |
+| `getArticleById(id)`                  | 600s      | `article:${id}`                               |
+| `getRecentArticles(count, after)`     | 600s      | `article:recent:${count}:${after?.getTime()}` |
+| `getArticleCount()`                   | 600s      | `article:count`                               |
+| `saveArticle(article)`                | evicts    | `article:${id}`, `article:count`              |
+| `saveLuoguArticle(data, forceUpdate)` | evicts    | `article:${data.lid}`, `article:count`        |
 
 Each ArticleService read/write method that accepts an optional `manager` argument SHALL use that `EntityManager` for database access when it is provided.
 When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
@@ -206,14 +208,25 @@ When `pushNewVersion` is called:
 If ArticleHistoryService receives an optional `manager` argument, it SHALL use that `EntityManager` for database access.
 When a cached read method receives a manager argument, it SHALL bypass Redis cache reads and writes.
 
-## 6. Content Rendering
+## 6. Raw Markdown Delivery
 
-The `article.renderContent()` method:
+### 6.1 Single Article Query
 
-1. If `content` is non-empty, render Markdown to HTML using the `renderMarkdown` library.
-2. Store the result in `article.renderedContent`.
-3. Math rendering SHALL ignore HAST element nodes that do not have a `properties` object.
-4. A HAST element without `properties` SHALL NOT cause `article.renderContent()` to return a failure paragraph.
+After `GET /article/query/:id` obtains a viewable article, the endpoint SHALL:
+
+1. Return the stored `article.content` string without modification.
+2. Not add a `renderedContent` field.
+3. Not invoke `@luogu-saver/markdown-renderer`, `RendererService`, or any equivalent renderer.
+
+### 6.2 Recent Article Query
+
+For each article selected by `GET /article/recent`, the endpoint SHALL:
+
+1. Not invoke a Markdown renderer.
+2. Apply `truncated_count` only to the response `content` field.
+3. Not add a `renderedContent` field.
+
+The frontend SHALL render every article `content` value that it displays.
 
 ## 7. Content Hashing
 
@@ -226,11 +239,38 @@ When saving an article:
 5. For an existing or concurrently inserted row, acquire a pessimistic row lock before updating.
 6. Retry the complete database transaction at most three times for MariaDB deadlock or lock-wait timeout errors.
 7. Otherwise, save the new content and update `contentHash`.
-8. After a successful update, delete Redis keys `article:{id}` and `article:count` before returning.
+8. After `saveLuoguArticle` returns successfully, delete Redis keys `article:${data.lid}` and `article:count` before returning, including when the result has `skipped=true`.
 
 Article candidate methods used by recommendation SHALL select article IDs only. They SHALL NOT
 select `content`, `summary`, or author relations. Full article rows SHALL be loaded only for the
 final selected recommendation IDs.
+
+### 7.1 Publish Time Persistence
+
+Let `t = normalizePublishTime(data.time)`, where `normalizePublishTime(v)` returns `v` if `v` is an
+integer satisfying `1 <= v <= 4294967295`, and `null` otherwise. The upper bound is the maximum of
+the `INT UNSIGNED` column; the lower bound rejects `0`, which Luogu uses for no value.
+
+`saveLuoguArticle(data, forceUpdate)` SHALL write `t` into `publish_time` on the insert of step 4 and
+on the update of step 7. If `t` is `null`, `publish_time` SHALL be absent from both write payloads,
+so that a malformed `time` neither inserts nor overwrites a value.
+
+Step 3 returns without writing, so a row whose stored `contentHash` and `title` both match the
+incoming values keeps whatever `publish_time` it already had, including `NULL` for a row inserted
+before this column existed. When step 3 skips and `t` is not `null`, `saveLuoguArticle` SHALL
+therefore execute exactly one additional statement, inside the transaction that already holds the
+pessimistic lock of step 5:
+
+```sql
+UPDATE article SET publish_time = :t WHERE id = :id AND publish_time IS NULL
+```
+
+That statement SHALL leave `updated_at` unchanged, SHALL NOT create an `article_history` version,
+and SHALL affect zero rows once `publish_time` is set. It is therefore idempotent, and repeating a
+skipped save does not move the article in any ordering by `updated_at`.
+
+`publish_time` SHALL NOT be written from any source other than the `time` field of the Luogu article
+payload.
 
 ## 8. Invariants
 
@@ -238,6 +278,16 @@ final selected recommendation IDs.
 2. Non-deleted articles (`deleted = false`) are returned in queries unless explicitly filtered.
 3. All article queries include the `author` relation.
 4. Content truncation preserves UTF-8 character boundaries.
+5. `publish_time` and `created_at` denote different instants and SHALL NOT be substituted for one
+   another. `publish_time` is the instant Luogu reports for the article itself; `created_at` is the
+   instant this system first persisted the row. For an article archived long after publication the
+   two differ without bound.
+6. `publish_time` is `NULL` if and only if no save has yet observed a Luogu `time` that
+   `normalizePublishTime` accepts for that article. It is never `0` and never derived from
+   `created_at`.
+7. Writing `publish_time` into a row that stored `NULL` is not an update of the archived article.
+   It SHALL NOT advance `updated_at`, because `updated_at` orders `GET /article/recent` of section
+   4.4 and is read by clients as the instant the archived content last changed.
 
 ## 9. Summary Rebuild Workflow
 
