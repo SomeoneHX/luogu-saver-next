@@ -19,6 +19,8 @@
     --ui-floating-control-size: 44px;
     --ui-floating-control-inset: var(--ui-space-6);
     --ui-floating-control-gap: var(--ui-space-3);
+    /* 64px glass bar + 8px bottom gutter + 16px clearance above it. */
+    --ui-mobile-tab-bar-height: calc(88px + env(safe-area-inset-bottom));
     --ui-body-color: #f6f9fd;
     --ui-body-gradient-start: #f7fbff;
     --ui-body-gradient-end: #eef6ff;
@@ -139,11 +141,7 @@
 
 @media (max-width: 768px) {
     .back-top-action {
-        bottom: calc(
-            var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
-                var(--ui-floating-control-size) + var(--ui-floating-control-gap) +
-                var(--ui-floating-control-gap)
-        ) !important;
+        bottom: calc(var(--ui-mobile-tab-bar-height) + var(--ui-floating-control-gap)) !important;
     }
 }
 

@@ -5,7 +5,6 @@
             <n-space vertical>
                 <n-layout
                     class="app-shell"
-                    :class="{ 'mobile-sider-open': mobileSiderOpen }"
                     has-sider
                     :style="themeCssVars"
                     :data-ui-code-theme="uiThemeVars.codeTheme"
@@ -23,7 +22,6 @@
                         @expand="handleManualExpand"
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
-                        @transitionend="handleSiderTransitionEnd"
                     >
                         <div
                             class="brand-shell"
@@ -48,28 +46,10 @@
                         />
                     </n-layout-sider>
 
-                    <Transition name="mobile-sider-backdrop">
-                        <div
-                            v-if="mobileSiderOpen"
-                            class="mobile-sider-backdrop"
-                            @click="closeMobileSider"
-                        ></div>
-                    </Transition>
-
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
                             <n-layout-content content-style="padding: var(--ui-page-padding);">
                                 <div class="router-view">
-                                    <n-button
-                                        v-if="!mobileSiderOpen"
-                                        class="mobile-sider-button"
-                                        aria-label="打开侧边栏"
-                                        @click.stop="openMobileSider"
-                                    >
-                                        <template #icon>
-                                            <n-icon :component="Menu" />
-                                        </template>
-                                    </n-button>
                                     <SiteNotificationCenter />
                                     <UserNotificationCenter />
                                     <n-back-top
@@ -164,6 +144,7 @@
                             </n-layout-content>
                         </n-layout>
                     </n-dialog-provider>
+                    <MobileLiquidTabBar v-if="showMobileTabBar" />
                     <StarPrompt :blocked="trackingConsentBlocking" />
                     <TrackingConsent @update:blocking="trackingConsentBlocking = $event" />
                 </n-layout>
@@ -190,7 +171,6 @@ import {
     NMessageProvider,
     NBackTop,
     NDialogProvider,
-    NButton,
     NIcon
 } from 'naive-ui';
 
@@ -206,7 +186,6 @@ import {
     Hammer,
     House,
     LayoutGrid,
-    Menu,
     MessageCircleMore,
     MessagesSquare,
     Search,
@@ -231,6 +210,7 @@ import {
 import { presets } from '@/styles/theme/presets.ts';
 import TrackingConsent from '@/components/TrackingConsent.vue';
 import StarPrompt from '@/components/StarPrompt.vue';
+import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';
 import UserNotificationCenter from '@/components/UserNotificationCenter.vue';
@@ -250,12 +230,18 @@ const activeKey = computed(
 );
 const collapsed = ref(true);
 const manualToggle = ref(false);
-const mobileSiderOpen = ref(false);
 const trackingConsentBlocking = ref(true);
 const sidebarLogoNavEnabled = useLocalStorage(SIDEBAR_LOGO_NAV_STORAGE_KEY, true);
 provide('sidebarLogoNavEnabled', sidebarLogoNavEnabled);
 
 const isMobileViewport = () => window.innerWidth <= 768;
+
+const mobileViewportMedia = window.matchMedia('(max-width: 768px)');
+const showMobileTabBar = ref(mobileViewportMedia.matches);
+
+mobileViewportMedia.addEventListener('change', event => {
+    showMobileTabBar.value = event.matches;
+});
 
 const handleMouseEnter = () => {
     if (isMobileViewport()) return;
@@ -279,29 +265,6 @@ const handleManualCollapse = () => {
 const handleManualExpand = () => {
     manualToggle.value = true;
     collapsed.value = false;
-};
-
-const openMobileSider = () => {
-    if (!isMobileViewport()) return;
-    mobileSiderOpen.value = true;
-    collapsed.value = false;
-};
-
-const closeMobileSider = () => {
-    if (!isMobileViewport()) return;
-    mobileSiderOpen.value = false;
-};
-
-const handleSiderTransitionEnd = (event: TransitionEvent) => {
-    if (
-        !isMobileViewport() ||
-        event.target !== event.currentTarget ||
-        event.propertyName !== 'transform' ||
-        mobileSiderOpen.value
-    ) {
-        return;
-    }
-    collapsed.value = true;
 };
 
 const canShowAdminMenu = computed(() =>
@@ -948,7 +911,6 @@ watch(
 );
 
 const handleMenuSelect = (key: string) => {
-    closeMobileSider();
     if (key === 'home') {
         router.push('/');
     } else if (key === 'benben') {
@@ -1093,41 +1055,15 @@ setInterval(() => {
     background: var(--ui-back-top-color) !important;
 }
 
-.mobile-sider-button {
-    display: none;
-}
-
 @media (max-width: 768px) {
     .app-shell {
         position: relative;
         padding-left: 0;
     }
 
+    /* Mobile navigation is the liquid glass tab bar; the sider is desktop-only. */
     .app-sider {
-        position: fixed !important;
-        inset: 0 auto 0 0;
-        z-index: 1200;
-        width: min(82vw, 240px) !important;
-        max-width: min(82vw, 240px) !important;
-        transform: translateX(-100%);
-        transition: transform 0.24s ease;
-    }
-
-    .mobile-sider-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 1190;
-        background: rgb(0 0 0 / 50%);
-        transition: opacity 0.2s ease;
-    }
-
-    .mobile-sider-backdrop-enter-from,
-    .mobile-sider-backdrop-leave-to {
-        opacity: 0;
-    }
-
-    .mobile-sider-open .app-sider {
-        transform: translateX(0);
+        display: none;
     }
 
     .app-main {
@@ -1136,6 +1072,9 @@ setInterval(() => {
 
     .app-main :deep(.n-layout-scroll-container) {
         padding: var(--ui-page-padding-mobile) !important;
+        padding-bottom: calc(
+            var(--ui-page-padding-mobile) + var(--ui-mobile-tab-bar-height)
+        ) !important;
     }
 
     :deep(.n-layout-content) {
@@ -1159,38 +1098,6 @@ setInterval(() => {
         padding: var(--ui-space-3) var(--ui-space-4);
         margin: var(--ui-page-padding-mobile) calc(-1 * var(--ui-page-padding-mobile))
             calc(-1 * var(--ui-page-padding-mobile));
-    }
-
-    .mobile-sider-button {
-        position: fixed;
-        right: var(--ui-floating-control-inset);
-        bottom: calc(
-            var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
-                var(--ui-floating-control-gap)
-        );
-        z-index: 1000;
-        display: flex;
-        width: var(--ui-floating-control-size);
-        height: var(--ui-floating-control-size);
-        min-width: var(--ui-floating-control-size);
-        padding: 0;
-        color: var(--ui-back-top-icon-color) !important;
-        background: var(--ui-back-top-color) !important;
-        border: 0 !important;
-        border-radius: var(--ui-pill-radius) !important;
-        box-shadow: var(--ui-elevated-shadow) !important;
-    }
-
-    .mobile-sider-button:hover,
-    .mobile-sider-button:focus {
-        color: var(--ui-back-top-icon-hover-color) !important;
-        background: var(--ui-back-top-hover-color) !important;
-        box-shadow: var(--ui-elevated-shadow) !important;
-    }
-
-    .mobile-sider-button :deep(.n-button__border),
-    .mobile-sider-button :deep(.n-button__state-border) {
-        border: 0 !important;
     }
 }
 
