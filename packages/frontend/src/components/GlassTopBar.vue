@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
  * Mobile top bar for the destinations the bottom bar does not cover: a back button plus the route
- * title, on a glass that blurs whatever slides underneath it.
+ * title, on a glass that blurs whatever slides underneath and fades the blur out at its lower edge.
  */
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeft } from 'lucide-vue-next';
 
@@ -12,15 +12,28 @@ import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { dp } from '@/liquid-glass/core/geometry';
 import { Rectangle } from '@/liquid-glass/core/shapes';
+import { uiThemeKey } from '@/styles/theme/themeKeys.ts';
+import { isLightColor } from '@/utils/ui-theme.ts';
 
 const route = useRoute();
 const router = useRouter();
 
+const uiThemeVars = inject(uiThemeKey);
+const isLightTheme = computed(() => isLightColor(uiThemeVars?.value.bodyColor ?? '#ffffff'));
+
 const title = computed(() => (route.meta.title as string | undefined) ?? '');
+
+/** Painted behind the blur, under the same ramp as the mask (see `GlassSurface`). */
+const tintColor = computed(() => (isLightTheme.value ? '#ffffff' : '#808080'));
 
 const effects = (scope: BackdropEffectScope): void => {
     scope.vibrancy();
     scope.blur(dp(8));
+    // Recorded as `AlphaMask`; `GlassSurface` turns it into the mask ramp plus the tint below.
+    scope.runtimeShaderEffect('AlphaMask', undefined, 'content', uniforms => {
+        uniforms.setColorUniform('tint', tintColor.value);
+        uniforms.setFloatUniform('tintIntensity', 0.72);
+    });
 };
 
 /** Back to the previous entry, or home when this page was opened directly. */
@@ -56,6 +69,9 @@ function goBack(): void {
     right: 0;
     left: 0;
     z-index: 1050;
+    /* Room below the bar for the ramp to fade out in. */
+    --glass-top-bar-fade: 40px;
+
     /* Only the button takes pointers; the bar itself must not block the page. */
     pointer-events: none;
 }
@@ -63,7 +79,7 @@ function goBack(): void {
 .glass-top-bar__surface {
     display: block;
     width: 100%;
-    height: var(--ui-mobile-top-bar-height);
+    height: calc(var(--ui-mobile-top-bar-height) + var(--glass-top-bar-fade));
 }
 
 /* The content layer is rendered inside GlassSurface, so it needs `:deep()` to be reachable here. */
@@ -71,7 +87,7 @@ function goBack(): void {
     display: flex;
     align-items: center;
     gap: var(--ui-space-2);
-    height: 100%;
+    height: var(--ui-mobile-top-bar-height);
     padding: 0 var(--ui-space-3);
     padding-top: env(safe-area-inset-top);
     color: var(--ui-text-color);
