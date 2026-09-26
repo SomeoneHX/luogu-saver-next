@@ -108,16 +108,15 @@
     --article-tag-color: var(--ui-muted-text-color);
 }
 
+/* 悬浮控件的外观由 LiquidButton 的玻璃面提供，这里只管尺寸、图标配色与定位。 */
 .app-floating-control {
     width: var(--ui-floating-control-size) !important;
     height: var(--ui-floating-control-size) !important;
     min-width: var(--ui-floating-control-size) !important;
     padding: 0 !important;
     color: var(--ui-back-top-icon-color) !important;
-    background: var(--ui-back-top-color) !important;
     border: 0 !important;
     border-radius: var(--ui-pill-radius) !important;
-    box-shadow: var(--ui-elevated-shadow) !important;
 }
 
 /*
@@ -134,7 +133,6 @@
 .app-floating-control:hover,
 .app-floating-control:focus {
     color: var(--ui-back-top-icon-hover-color) !important;
-    background: var(--ui-back-top-hover-color) !important;
 }
 
 .app-floating-control .n-button__border,
@@ -142,17 +140,23 @@
     border: 0 !important;
 }
 
+/* n-back-top 的根元素只负责定位与显隐，它的白底和阴影由里面的玻璃按钮取代。 */
 .back-top-action {
     right: var(--ui-floating-control-inset) !important;
     bottom: calc(
         var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
             var(--ui-floating-control-gap)
     ) !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 @media (max-width: 768px) {
     .back-top-action {
-        bottom: calc(var(--ui-mobile-tab-bar-height) + var(--ui-floating-control-gap)) !important;
+        bottom: calc(
+            var(--ui-mobile-tab-bar-height) + var(--ui-floating-control-gap) +
+                var(--ui-floating-control-size) + var(--ui-floating-control-gap)
+        ) !important;
     }
 }
 

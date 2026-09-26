@@ -55,7 +55,11 @@
                                     <n-back-top
                                         class="app-floating-control back-top-action"
                                         aria-label="返回顶部"
-                                    />
+                                    >
+                                        <LiquidButton :backdrop="RootBackdrop">
+                                            <ArrowUp :size="22" aria-hidden="true" />
+                                        </LiquidButton>
+                                    </n-back-top>
                                     <router-view />
                                 </div>
                                 <n-layout-footer bordered class="app-footer">
@@ -175,6 +179,7 @@ import {
 } from 'naive-ui';
 
 import {
+    ArrowUp,
     BookOpen,
     ChartNoAxesColumnIncreasing,
     CircleAlert,
@@ -211,6 +216,8 @@ import { presets } from '@/styles/theme/presets.ts';
 import TrackingConsent from '@/components/TrackingConsent.vue';
 import StarPrompt from '@/components/StarPrompt.vue';
 import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
+import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';
 import UserNotificationCenter from '@/components/UserNotificationCenter.vue';
