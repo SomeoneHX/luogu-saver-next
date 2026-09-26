@@ -14,6 +14,7 @@ import LiquidBottomTab from '@/liquid-glass/components/LiquidBottomTab.vue';
 import LiquidBottomTabs from '@/liquid-glass/components/LiquidBottomTabs.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { uiThemeKey } from '@/styles/theme/themeKeys.ts';
+import { isLightColor } from '@/utils/ui-theme.ts';
 
 const tabs = [
     { key: 'home', label: '主页', path: '/', icon: House },
@@ -56,32 +57,6 @@ function selectTab(index: number): void {
 function tabColor(index: number): string {
     if (index === selectedIndex.value) return accentColor.value;
     return isLightTheme.value ? '#000' : '#fff';
-}
-
-/** `#rgb` / `#rrggbb` / `rgb(r, g, b)` → channels; `null` when the syntax is unknown. */
-function parseRgb(color: string): [number, number, number] | null {
-    const value = color.trim();
-    if (value.startsWith('#')) {
-        const hex = value.slice(1);
-        const full = hex.length === 3 ? hex.replace(/./g, char => char + char) : hex;
-        if (!/^[0-9a-f]{6}$/i.test(full)) return null;
-        return [0, 2, 4].map(offset => parseInt(full.slice(offset, offset + 2), 16)) as [
-            number,
-            number,
-            number
-        ];
-    }
-    const channels = value.match(/\d+/g);
-    return channels && channels.length >= 3
-        ? [Number(channels[0]), Number(channels[1]), Number(channels[2])]
-        : null;
-}
-
-/** Perceived brightness of the resolved body colour — the presets only use near-black or near-white. */
-function isLightColor(color: string): boolean {
-    const rgb = parseRgb(color);
-    if (!rgb) return true;
-    return (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 > 128;
 }
 </script>
 
@@ -126,16 +101,6 @@ function isLightColor(color: string): boolean {
 
 .liquid-tab-bar :deep(.liquid-bottom-tabs) {
     pointer-events: auto;
-}
-
-/*
- * Overrides the upstream `plus-lighter` on the additive layer. That blend makes `.glass-surface`
- * an isolated group, and the lens sibling's `backdrop-filter: url(#…)` then samples the group
- * instead of the page — the refraction graph gets an empty `SourceGraphic`, which leaves the
- * capsule flat and turns the indicator's dispersion branches into a solid grey pill.
- */
-.liquid-tab-bar :deep(.glass-surface__additive) {
-    mix-blend-mode: normal;
 }
 
 .liquid-tab-bar__icon {

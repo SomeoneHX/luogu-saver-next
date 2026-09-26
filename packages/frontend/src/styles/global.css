@@ -120,6 +120,17 @@
     box-shadow: var(--ui-elevated-shadow) !important;
 }
 
+/*
+ * The liquid glass library's additive layer blends with `plus-lighter`, which makes its parent
+ * `.glass-surface` an isolated group; the lens sibling's `backdrop-filter: url(#…)` then samples
+ * that group instead of the page, so the SVG refraction graph receives an empty `SourceGraphic`
+ * and the lens never bends anything. Compositing the layer normally costs the additive highlight
+ * and restores the refraction.
+ */
+.glass-surface__additive {
+    mix-blend-mode: normal !important;
+}
+
 .app-floating-control:hover,
 .app-floating-control:focus {
     color: var(--ui-back-top-icon-hover-color) !important;

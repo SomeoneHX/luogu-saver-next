@@ -9,12 +9,12 @@ import {
     NInput,
     NSpace,
     NSpin,
-    NSwitch,
     NTag,
     useMessage
 } from 'naive-ui';
 import { Plus, ArrowDown, ArrowUp, Save, Trash2 } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
+import GlassSwitch from '@/components/GlassSwitch.vue';
 import HtmlCodeEditor from '@/components/HtmlCodeEditor.vue';
 import {
     getAdminAnnouncement,
@@ -311,7 +311,7 @@ onMounted(async () => {
                             :show-feedback="false"
                             class="announcement-enabled-field"
                         >
-                            <n-switch v-model:value="announcementForm.enabled" />
+                            <GlassSwitch v-model:value="announcementForm.enabled" />
                         </n-form-item>
                     </n-space>
 
@@ -374,7 +374,7 @@ onMounted(async () => {
                                         :show-feedback="false"
                                         class="announcement-enabled-field"
                                     >
-                                        <n-switch v-model:value="item.enabled" />
+                                        <GlassSwitch v-model:value="item.enabled" />
                                     </n-form-item>
                                     <n-form-item
                                         label="仅登录可见"
@@ -382,7 +382,7 @@ onMounted(async () => {
                                         :show-feedback="false"
                                         class="announcement-enabled-field"
                                     >
-                                        <n-switch v-model:value="item.loginOnly" />
+                                        <GlassSwitch v-model:value="item.loginOnly" />
                                     </n-form-item>
                                 </n-space>
                                 <n-space>
@@ -457,7 +457,7 @@ onMounted(async () => {
                                         :show-feedback="false"
                                         class="announcement-enabled-field"
                                     >
-                                        <n-switch v-model:value="item.enabled" />
+                                        <GlassSwitch v-model:value="item.enabled" />
                                     </n-form-item>
                                     <n-form-item
                                         label="仅登录可见"
@@ -465,7 +465,7 @@ onMounted(async () => {
                                         :show-feedback="false"
                                         class="announcement-enabled-field"
                                     >
-                                        <n-switch v-model:value="item.loginOnly" />
+                                        <GlassSwitch v-model:value="item.loginOnly" />
                                     </n-form-item>
                                 </n-space>
                                 <n-space>
@@ -556,7 +556,7 @@ onMounted(async () => {
                                     :show-feedback="false"
                                     class="announcement-enabled-field"
                                 >
-                                    <n-switch v-model:value="item.enabled" />
+                                    <GlassSwitch v-model:value="item.enabled" />
                                 </n-form-item>
                             </n-space>
                             <n-space size="small">

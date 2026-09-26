@@ -1,16 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, type Ref } from 'vue';
-import {
-    NAlert,
-    NButton,
-    NIcon,
-    NSelect,
-    NSpace,
-    NSpin,
-    NSwitch,
-    NTag,
-    useMessage
-} from 'naive-ui';
+import { NAlert, NButton, NIcon, NSelect, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
 import {
     ChartNoAxesCombined,
     Cloud,
@@ -23,6 +13,7 @@ import {
 } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
+import GlassSwitch from '@/components/GlassSwitch.vue';
 import {
     clearAuthToken,
     isAuthenticated,
@@ -236,7 +227,7 @@ onMounted(loadCurrentUser);
                                 开启后用于匿名推荐；关闭后后续请求不会发送设备 ID。
                             </div>
                         </div>
-                        <n-switch v-model:value="trackingEnabled" />
+                        <GlassSwitch v-model:value="trackingEnabled" />
                     </div>
 
                     <div class="detail-list">
@@ -371,7 +362,7 @@ onMounted(loadCurrentUser);
                             <div class="setting-title">侧边栏 Logo 点击导航</div>
                             <div class="setting-desc">启用后点击侧边栏 Logo 会跳转到首页</div>
                         </div>
-                        <n-switch v-model:value="logoNavEnabled" />
+                        <GlassSwitch v-model:value="logoNavEnabled" />
                     </div>
                 </n-space>
             </Card>

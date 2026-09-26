@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NAlert, NButton, NInputNumber, NSpace, NSwitch, useMessage } from 'naive-ui';
+import { NAlert, NButton, NInputNumber, NSpace, useMessage } from 'naive-ui';
 import { CloudDownload } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
+import GlassSwitch from '@/components/GlassSwitch.vue';
 import { startUserArticleDiscovery } from '@/api/discovery.ts';
 
 const message = useMessage();
@@ -63,7 +64,7 @@ async function handleStart() {
                         class="page-input"
                     />
                     <span class="muted">强制更新</span>
-                    <n-switch v-model:value="forceUpdate" />
+                    <GlassSwitch v-model:value="forceUpdate" />
                     <n-button
                         type="primary"
                         :loading="starting"
