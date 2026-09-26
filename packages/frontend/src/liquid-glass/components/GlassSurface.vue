@@ -337,13 +337,7 @@ function setStyle(el: HTMLElement, property: string, value: string): void {
     else el.style.removeProperty(property);
 }
 
-/**
- * `clip-path` for the lens, derived from the shape's corner radii. A curved `path()` outline
- * suppresses the backdrop capture on a small surface — the lens then paints nothing at all,
- * measured on a 40x24 toggle thumb (`invert(1)` changed no pixel; the same value under
- * `inset(0 round 12px)` inverts it). Straight `path()` outlines and `inset()` are unaffected.
- * Shapes with four different radii keep the path.
- */
+/** `Shape.clipPath` builds a path string; the result only depends on the shape and the box. */
 let clipShape: Shape | null = null;
 let clipKey = '';
 let clipValue = '';
@@ -352,13 +346,7 @@ function clipPathFor(shape: Shape, width: number, height: number): string {
     if (clipShape !== shape || clipKey !== key) {
         clipShape = shape;
         clipKey = key;
-        const [tl, tr, br, bl] = shape.cornerRadii(width, height);
-        clipValue =
-            tl === tr && tr === br && br === bl
-                ? tl > 0
-                    ? `inset(0 round ${tl}px)`
-                    : 'inset(0)'
-                : shape.clipPath(width, height);
+        clipValue = shape.clipPath(width, height);
     }
     return clipValue;
 }

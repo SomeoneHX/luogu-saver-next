@@ -424,6 +424,11 @@ onMounted(loadCurrentUser);
     overflow: hidden;
 }
 
+/* 圆角裁切的祖先会让 Chromium 不渲染 backdrop-filter 的 url() 滤镜，含玻璃开关的卡片不裁切。 */
+.settings-card:has(.glass-switch) {
+    overflow: visible;
+}
+
 .compact-card {
     flex-basis: 100%;
 }

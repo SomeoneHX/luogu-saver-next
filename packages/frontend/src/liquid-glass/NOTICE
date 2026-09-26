@@ -23,9 +23,4 @@ Changes made to the copy in this repository:
     `@/liquid-glass/*`;
   - non-null assertions added on array indices, which this repository's
     `noUncheckedIndexedAccess` requires and the original does not;
-  - the lens `clip-path` is derived as `inset(0 round R)` instead of the
-    shape's `path()` outline when the four corner radii are equal: a curved
-    path outline suppresses the backdrop capture on a small surface, which
-    left the lens painting nothing (the bottom tabs indicator and the toggle
-    thumb);
   - the bottom tabs capsule blur reduced from 8px to 4px.
