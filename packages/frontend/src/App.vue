@@ -53,13 +53,16 @@
                                 <div class="router-view">
                                     <SiteNotificationCenter />
                                     <UserNotificationCenter />
-                                    <n-back-top
-                                        class="app-floating-control back-top-action"
-                                        aria-label="返回顶部"
-                                    >
-                                        <LiquidButton :backdrop="RootBackdrop">
-                                            <ArrowUp :size="22" aria-hidden="true" />
-                                        </LiquidButton>
+                                    <n-back-top class="back-top-action" aria-label="返回顶部">
+                                        <RippleSurface
+                                            class="app-floating-control"
+                                            color="currentColor"
+                                            :alpha="0.18"
+                                        >
+                                            <LiquidButton :backdrop="RootBackdrop">
+                                                <ArrowUp :size="22" aria-hidden="true" />
+                                            </LiquidButton>
+                                        </RippleSurface>
                                     </n-back-top>
                                     <router-view />
                                 </div>
@@ -220,6 +223,7 @@ import StarPrompt from '@/components/StarPrompt.vue';
 import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
 import GlassTopBar from '@/components/GlassTopBar.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import RippleSurface from '@/liquid-glass/components/RippleSurface.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';

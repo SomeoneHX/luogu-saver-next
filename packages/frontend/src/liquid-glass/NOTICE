@@ -23,4 +23,9 @@ Changes made to the copy in this repository:
     `@/liquid-glass/*`;
   - non-null assertions added on array indices, which this repository's
     `noUncheckedIndexedAccess` requires and the original does not;
-  - the bottom tabs capsule blur reduced from 8px to 4px.
+  - the bottom tabs capsule blur reduced from 8px to 4px;
+  - `RippleSurface`'s host dropped its `overflow: hidden`. The host takes
+    the control's `border-radius`, and a rounded clipped ancestor makes
+    Chromium skip the SVG-filter half of a nested surface's
+    `backdrop-filter`; the ripple is clipped by `.ripple-host__clip`
+    instead, which is a sibling of the glass rather than an ancestor.

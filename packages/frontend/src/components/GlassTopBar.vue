@@ -9,6 +9,7 @@ import { ChevronLeft } from 'lucide-vue-next';
 
 import GlassSurface from '@/liquid-glass/components/GlassSurface.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import RippleSurface from '@/liquid-glass/components/RippleSurface.vue';
 import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { dp } from '@/liquid-glass/core/geometry';
@@ -71,9 +72,15 @@ function onBackKeydown(event: KeyboardEvent): void {
                 @click="goBack"
                 @keydown="onBackKeydown"
             >
-                <LiquidButton :backdrop="RootBackdrop">
-                    <ChevronLeft :size="20" aria-hidden="true" />
-                </LiquidButton>
+                <RippleSurface
+                    class="glass-top-bar__back-ripple"
+                    color="currentColor"
+                    :alpha="0.18"
+                >
+                    <LiquidButton :backdrop="RootBackdrop">
+                        <ChevronLeft :size="20" aria-hidden="true" />
+                    </LiquidButton>
+                </RippleSurface>
             </div>
             <span class="glass-top-bar__title">{{ title }}</span>
         </div>
@@ -133,10 +140,22 @@ function onBackKeydown(event: KeyboardEvent): void {
     box-shadow: var(--ui-focus-ring-shadow);
 }
 
-/* `LiquidButton` brings its own 48px height and 16px of content padding; this is a 36px disc. */
+/* The ripple host is the 36px disc; `LiquidButton` brings its own 48px height and 16px of
+   content padding and is stretched into it. */
+.glass-top-bar__back-ripple {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--ui-pill-radius);
+}
+
+.glass-top-bar__back-ripple :deep(.ripple-host__content) {
+    width: 100%;
+    height: 100%;
+}
+
 .glass-top-bar__back :deep(.liquid-button) {
-    width: 36px !important;
-    height: 36px !important;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .glass-top-bar__back :deep(.liquid-button__content) {

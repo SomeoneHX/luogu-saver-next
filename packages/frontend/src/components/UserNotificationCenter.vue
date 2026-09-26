@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NBadge, NButton, NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from 'naive-ui';
 import { Bell } from 'lucide-vue-next';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import RippleSurface from '@/liquid-glass/components/RippleSurface.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import {
     getUnreadNotificationCount,
@@ -125,14 +126,19 @@ onBeforeUnmount(() => {
     <template v-if="isAuthenticated">
         <div class="notification-bell-shell">
             <n-badge :value="unreadCount" :max="99" :show="unreadCount > 0">
-                <LiquidButton
-                    :backdrop="RootBackdrop"
+                <RippleSurface
                     class="app-floating-control notification-bell"
-                    aria-label="站内通知"
-                    @click="openDrawer"
+                    color="currentColor"
+                    :alpha="0.18"
                 >
-                    <Bell :size="20" aria-hidden="true" />
-                </LiquidButton>
+                    <LiquidButton
+                        :backdrop="RootBackdrop"
+                        aria-label="站内通知"
+                        @click="openDrawer"
+                    >
+                        <Bell :size="20" aria-hidden="true" />
+                    </LiquidButton>
+                </RippleSurface>
             </n-badge>
         </div>
 
