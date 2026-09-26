@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeft } from 'lucide-vue-next';
 
 import GlassSurface from '@/liquid-glass/components/GlassSurface.vue';
+import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
 import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { dp } from '@/liquid-glass/core/geometry';
@@ -41,24 +42,41 @@ function goBack(): void {
     if (window.history.state?.back) router.back();
     else void router.push('/');
 }
+
+/** The glass button is a div, so it takes the keys a button would. */
+function onBackKeydown(event: KeyboardEvent): void {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    event.preventDefault();
+    goBack();
+}
 </script>
 
 <template>
     <div class="glass-top-bar" role="banner">
         <GlassSurface
             class="glass-top-bar__surface"
-            content-class="glass-top-bar__content"
             :backdrop="RootBackdrop"
             :shape="Rectangle"
             :effects="effects"
             :highlight="() => null"
             :shadow="() => null"
-        >
-            <button class="glass-top-bar__back" type="button" aria-label="返回" @click="goBack">
-                <ChevronLeft :size="22" aria-hidden="true" />
-            </button>
+        />
+
+        <div class="glass-top-bar__row">
+            <div
+                class="glass-top-bar__back"
+                role="button"
+                aria-label="返回"
+                tabindex="0"
+                @click="goBack"
+                @keydown="onBackKeydown"
+            >
+                <LiquidButton :backdrop="RootBackdrop">
+                    <ChevronLeft :size="20" aria-hidden="true" />
+                </LiquidButton>
+            </div>
             <span class="glass-top-bar__title">{{ title }}</span>
-        </GlassSurface>
+        </div>
     </div>
 </template>
 
@@ -77,42 +95,60 @@ function goBack(): void {
 }
 
 .glass-top-bar__surface {
-    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: calc(var(--ui-mobile-top-bar-height) + var(--glass-top-bar-fade));
 }
 
-/* The content layer is rendered inside GlassSurface, so it needs `:deep()` to be reachable here. */
-.glass-top-bar__surface :deep(.glass-top-bar__content) {
-    display: flex;
+/* Laid over the surface instead of inside it: a clipped ancestor stops a nested glass from
+   sampling the page, which is why the bottom-tabs indicator is a sibling too. */
+.glass-top-bar__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 36px 1fr 36px;
     align-items: center;
-    gap: var(--ui-space-2);
     height: var(--ui-mobile-top-bar-height);
-    padding: 0 var(--ui-space-3);
+    padding: 0 var(--ui-space-2);
     padding-top: env(safe-area-inset-top);
     color: var(--ui-text-color);
 }
 
 .glass-top-bar__back {
     display: flex;
-    flex: none;
+    grid-column: 1;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
-    padding: 0;
-    color: inherit;
-    background: none;
-    border: 0;
-    border-radius: 50%;
     cursor: pointer;
+    outline: none;
     pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.glass-top-bar__back:focus-visible {
+    border-radius: var(--ui-pill-radius);
+    box-shadow: var(--ui-focus-ring-shadow);
+}
+
+/* `LiquidButton` brings its own 48px height and 16px of content padding; this is a 36px disc. */
+.glass-top-bar__back :deep(.liquid-button) {
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.glass-top-bar__back :deep(.liquid-button__content) {
+    padding: 0 !important;
 }
 
 .glass-top-bar__title {
+    grid-column: 2;
     overflow: hidden;
     font-size: 16px;
     font-weight: 600;
+    text-align: center;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
