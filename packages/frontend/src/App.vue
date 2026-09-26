@@ -5,6 +5,7 @@
             <n-space vertical>
                 <n-layout
                     class="app-shell"
+                    :class="{ 'has-mobile-top-bar': showMobileTopBar }"
                     has-sider
                     :style="themeCssVars"
                     :data-ui-code-theme="uiThemeVars.codeTheme"
@@ -149,6 +150,7 @@
                         </n-layout>
                     </n-dialog-provider>
                     <MobileLiquidTabBar v-if="showMobileTabBar" />
+                    <GlassTopBar v-if="showMobileTopBar" />
                     <StarPrompt :blocked="trackingConsentBlocking" />
                     <TrackingConsent @update:blocking="trackingConsentBlocking = $event" />
                 </n-layout>
@@ -216,6 +218,7 @@ import { presets } from '@/styles/theme/presets.ts';
 import TrackingConsent from '@/components/TrackingConsent.vue';
 import StarPrompt from '@/components/StarPrompt.vue';
 import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
+import GlassTopBar from '@/components/GlassTopBar.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
@@ -249,6 +252,11 @@ const showMobileTabBar = ref(mobileViewportMedia.matches);
 mobileViewportMedia.addEventListener('change', event => {
     showMobileTabBar.value = event.matches;
 });
+
+/** 顶栏只出现在底栏覆盖不到的路由上。 */
+const showMobileTopBar = computed(
+    () => showMobileTabBar.value && !MOBILE_TAB_KEYS.includes(String(route.meta.activeMenu ?? ''))
+);
 
 const handleMouseEnter = () => {
     if (isMobileViewport()) return;
@@ -378,7 +386,8 @@ import {
     THEME_MODE_STORAGE_KEY,
     THEME_PRESET_STORAGE_KEY,
     THEME_STORAGE_KEY,
-    SIDEBAR_LOGO_NAV_STORAGE_KEY
+    SIDEBAR_LOGO_NAV_STORAGE_KEY,
+    MOBILE_TAB_KEYS
 } from '@/utils/constants.ts';
 import { useLocalStorage } from '@/composables/useLocalStorage.ts';
 
@@ -1081,6 +1090,12 @@ setInterval(() => {
         padding: var(--ui-page-padding-mobile) !important;
         padding-bottom: calc(
             var(--ui-page-padding-mobile) + var(--ui-mobile-tab-bar-height)
+        ) !important;
+    }
+
+    .has-mobile-top-bar .app-main :deep(.n-layout-scroll-container) {
+        padding-top: calc(
+            var(--ui-page-padding-mobile) + var(--ui-mobile-top-bar-height)
         ) !important;
     }
 

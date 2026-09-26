@@ -46,3 +46,6 @@ export const RAG_KNOWLEDGE_BASE_STORAGE_KEY = 'rag_knowledge_base_articles';
 export const LUOGU_SOURCE_STORAGE_KEY = 'luogu_source_host';
 export const NOTIFICATION_READ_STORAGE_KEY = 'site_notification_read_state';
 export const SIDEBAR_LOGO_NAV_STORAGE_KEY = 'sidebar_logo_nav_enabled';
+
+/** 移动端底栏覆盖的目的地键；不在此列的路由由玻璃顶栏给出返回入口。 */
+export const MOBILE_TAB_KEYS = ['home', 'search', 'rag', 'plaza', 'settings'];
