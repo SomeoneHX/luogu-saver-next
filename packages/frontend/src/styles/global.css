@@ -19,6 +19,10 @@
     --ui-floating-control-size: 44px;
     --ui-floating-control-inset: var(--ui-space-6);
     --ui-floating-control-gap: var(--ui-space-3);
+    /* 侧边栏玻璃板离视口边缘的留白，以及收起 / 展开两档宽度。 */
+    --ui-sidebar-inset: var(--ui-space-4);
+    --ui-sidebar-width-collapsed: 64px;
+    --ui-sidebar-width: 240px;
     /* 64px glass bar + 8px bottom gutter + 16px clearance above it. */
     --ui-mobile-tab-bar-height: calc(88px + env(safe-area-inset-bottom));
     --ui-mobile-top-bar-height: calc(56px + env(safe-area-inset-top));

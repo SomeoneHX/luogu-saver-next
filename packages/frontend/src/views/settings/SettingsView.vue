@@ -48,6 +48,13 @@ const logoNavEnabled = computed({
         sidebarLogoNavEnabled.value = val;
     }
 });
+const sidebarExpandAnimation = inject('sidebarExpandAnimation') as Ref<boolean | null>;
+const expandAnimationEnabled = computed({
+    get: () => sidebarExpandAnimation.value ?? false,
+    set: val => {
+        sidebarExpandAnimation.value = val;
+    }
+});
 const knowledgeBase = useKnowledgeBase();
 const kbArticles = computed(() => knowledgeBase.getArticles());
 const { selectedSource, sourceBaseUrl, sourceOptions } = useLuoguSource();
@@ -363,6 +370,16 @@ onMounted(loadCurrentUser);
                             <div class="setting-desc">启用后点击侧边栏 Logo 会跳转到首页</div>
                         </div>
                         <GlassSwitch v-model:value="logoNavEnabled" />
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-title">侧边栏展开动画</div>
+                            <div class="setting-desc">
+                                关闭时悬停立即展开；开启后侧边栏宽度做过渡，玻璃的折射滤镜会随之反复重建
+                            </div>
+                        </div>
+                        <GlassSwitch v-model:value="expandAnimationEnabled" />
                     </div>
                 </n-space>
             </Card>

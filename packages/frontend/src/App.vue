@@ -6,46 +6,54 @@
                 <n-layout
                     class="app-shell"
                     :class="{ 'has-mobile-top-bar': showMobileTopBar }"
-                    has-sider
                     :style="themeCssVars"
                     :data-ui-code-theme="uiThemeVars.codeTheme"
                 >
-                    <n-layout-sider
+                    <div
                         class="app-sider"
-                        :class="{ 'is-collapsed': collapsed }"
-                        bordered
-                        show-trigger="bar"
-                        :collapsed="collapsed"
-                        :width="240"
-                        :collapsed-width="64"
-                        collapse-mode="width"
-                        @collapse="handleManualCollapse"
-                        @expand="handleManualExpand"
+                        :class="{
+                            'is-collapsed': collapsed,
+                            'has-expand-animation': sidebarExpandAnimation
+                        }"
                         @mouseenter="handleMouseEnter"
                         @mouseleave="handleMouseLeave"
                     >
-                        <div
-                            class="brand-shell"
-                            :style="{ cursor: sidebarLogoNavEnabled ? 'pointer' : undefined }"
-                            @click="sidebarLogoNavEnabled ? handleMenuSelect('home') : undefined"
-                        >
-                            <n-icon class="brand-logo" :component="LuoguLogo" />
-                            <span v-if="!collapsed" class="brand-text">洛谷保存站</span>
-                        </div>
-
-                        <n-menu
-                            v-model:value="activeKey"
-                            :collapsed="collapsed"
-                            :collapsed-width="64"
-                            :collapsed-icon-size="24"
-                            :icon-size="24"
-                            :indent="20"
-                            :options="menuOptions"
-                            :responsive="true"
-                            :accordion="true"
-                            @update:value="handleMenuSelect"
+                        <GlassSurface
+                            class="app-sider__surface"
+                            :backdrop="RootBackdrop"
+                            :shape="sidebarShape"
+                            :effects="sidebarEffects"
+                            :highlight="() => null"
                         />
-                    </n-layout-sider>
+
+                        <div class="app-sider__body">
+                            <div
+                                class="brand-shell"
+                                :style="{ cursor: sidebarLogoNavEnabled ? 'pointer' : undefined }"
+                                @click="
+                                    sidebarLogoNavEnabled ? handleMenuSelect('home') : undefined
+                                "
+                            >
+                                <n-icon class="brand-logo" :component="LuoguLogo" />
+                                <span v-if="!collapsed" class="brand-text">洛谷保存站</span>
+                            </div>
+
+                            <div class="app-sider__menu">
+                                <n-menu
+                                    v-model:value="activeKey"
+                                    :collapsed="collapsed"
+                                    :collapsed-width="64"
+                                    :collapsed-icon-size="24"
+                                    :icon-size="24"
+                                    :indent="20"
+                                    :options="menuOptions"
+                                    :responsive="true"
+                                    :accordion="true"
+                                    @update:value="handleMenuSelect"
+                                />
+                            </div>
+                        </div>
+                    </div>
 
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
@@ -164,7 +172,6 @@ import { provide, ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {
     NLayout,
-    NLayoutSider,
     NLayoutContent,
     NLayoutFooter,
     NSpace,
@@ -219,8 +226,12 @@ import TrackingConsent from '@/components/TrackingConsent.vue';
 import StarPrompt from '@/components/StarPrompt.vue';
 import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
 import GlassTopBar from '@/components/GlassTopBar.vue';
+import GlassSurface from '@/liquid-glass/components/GlassSurface.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
+import { dp } from '@/liquid-glass/core/geometry';
+import { RoundedRectangle } from '@/liquid-glass/core/shapes';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';
 import UserNotificationCenter from '@/components/UserNotificationCenter.vue';
@@ -235,16 +246,38 @@ import { getCurrentUser } from '@/api/auth.ts';
 const router = useRouter();
 const route = useRoute();
 
+const SIDEBAR_RADIUS = 24;
+
 const activeKey = computed(
     () => (route.meta.activeMenu as string) || (route.path as string).slice(1)
 );
 const collapsed = ref(true);
-const manualToggle = ref(false);
 const trackingConsentBlocking = ref(true);
 const sidebarLogoNavEnabled = useLocalStorage(SIDEBAR_LOGO_NAV_STORAGE_KEY, true);
+const sidebarExpandAnimation = useLocalStorage(SIDEBAR_EXPAND_ANIMATION_STORAGE_KEY, false);
 provide('sidebarLogoNavEnabled', sidebarLogoNavEnabled);
+provide('sidebarExpandAnimation', sidebarExpandAnimation);
+
+const sidebarShape = RoundedRectangle(SIDEBAR_RADIUS);
+
+const sidebarEffects = (scope: BackdropEffectScope): void => {
+    scope.vibrancy();
+    scope.blur(dp(16));
+    scope.lens(dp(24), dp(48));
+};
 
 const isMobileViewport = () => window.innerWidth <= 768;
+
+/** 悬停展开、移开收起。宽度是否过渡由设置里的开关决定，默认直接切换。 */
+const handleMouseEnter = () => {
+    if (isMobileViewport()) return;
+    collapsed.value = false;
+};
+
+const handleMouseLeave = () => {
+    if (isMobileViewport()) return;
+    collapsed.value = true;
+};
 
 const mobileViewportMedia = window.matchMedia('(max-width: 768px)');
 const showMobileTabBar = ref(mobileViewportMedia.matches);
@@ -257,30 +290,6 @@ mobileViewportMedia.addEventListener('change', event => {
 const showMobileTopBar = computed(
     () => showMobileTabBar.value && !MOBILE_TAB_KEYS.includes(String(route.meta.activeMenu ?? ''))
 );
-
-const handleMouseEnter = () => {
-    if (isMobileViewport()) return;
-    if (collapsed.value && !manualToggle.value) {
-        collapsed.value = false;
-    }
-};
-
-const handleMouseLeave = () => {
-    if (isMobileViewport()) return;
-    if (!collapsed.value && !manualToggle.value) {
-        collapsed.value = true;
-    }
-};
-
-const handleManualCollapse = () => {
-    manualToggle.value = true;
-    collapsed.value = true;
-};
-
-const handleManualExpand = () => {
-    manualToggle.value = true;
-    collapsed.value = false;
-};
 
 const canShowAdminMenu = computed(() =>
     hasAnyPermission(currentRole.value, [
@@ -387,6 +396,7 @@ import {
     THEME_PRESET_STORAGE_KEY,
     THEME_STORAGE_KEY,
     SIDEBAR_LOGO_NAV_STORAGE_KEY,
+    SIDEBAR_EXPAND_ANIMATION_STORAGE_KEY,
     MOBILE_TAB_KEYS
 } from '@/utils/constants.ts';
 import { useLocalStorage } from '@/composables/useLocalStorage.ts';
@@ -950,24 +960,66 @@ setInterval(() => {
 
 .app-shell {
     position: relative;
-    padding-left: 64px;
+    padding-left: calc(var(--ui-sidebar-inset) * 2 + var(--ui-sidebar-width-collapsed));
 }
 
 .app-main {
     background: var(--ui-card-color);
 }
 
+/* 一整块浮在页面上的玻璃板，四边留白。这里不能有背景色与阴影：玻璃采样的就是它们背后的内容。 */
 .app-sider {
-    position: fixed !important;
-    inset: 0 auto 0 0;
+    --sidebar-width: var(--ui-sidebar-width-collapsed);
+
+    position: fixed;
+    top: var(--ui-sidebar-inset);
+    bottom: var(--ui-sidebar-inset);
+    left: var(--ui-sidebar-inset);
     z-index: 1100;
-    background: var(--ui-card-color) !important;
-    border-right: 1px solid var(--ui-border-color) !important;
-    backdrop-filter: none;
-    box-shadow: var(--ui-card-shadow);
+    width: var(--sidebar-width);
+    background: transparent;
+}
+
+.app-sider:not(.is-collapsed) {
+    --sidebar-width: var(--ui-sidebar-width);
+}
+
+/* 宽度过渡期间玻璃面每帧都在改尺寸，折射滤镜会跟着反复重建，所以默认关闭。 */
+.app-sider.has-expand-animation {
+    transition: width 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.app-sider__surface {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 与玻璃面平级：玻璃面 content 层带形状的 clip-path，放进那里的内容会被裁，也会截断嵌套玻璃。 */
+.app-sider__body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.app-sider__menu {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* 内容照常滚动，滚动条不画：它贴着玻璃边缘会读成玻璃的边。 */
+    scrollbar-width: none;
+}
+
+.app-sider__menu::-webkit-scrollbar {
+    display: none;
 }
 
 .brand-shell {
+    flex: none;
     height: 72px;
     display: flex;
     align-items: center;
@@ -977,7 +1029,6 @@ setInterval(() => {
     overflow: hidden;
     box-sizing: border-box;
     border-bottom: 1px solid var(--ui-border-color);
-    background: var(--ui-card-color);
 }
 
 .brand-logo {
@@ -1101,19 +1152,6 @@ setInterval(() => {
 
     :deep(.n-layout-content) {
         padding: 0 !important;
-    }
-
-    :deep(.n-layout-toggle-bar) {
-        pointer-events: none;
-        border-color: var(--ui-border-color) !important;
-        background: transparent !important;
-        color: var(--ui-muted-text-color);
-        box-shadow: none !important;
-    }
-
-    :deep(.n-layout-toggle-bar .n-layout-toggle-bar__top),
-    :deep(.n-layout-toggle-bar .n-layout-toggle-bar__bottom) {
-        background-color: var(--ui-muted-text-color) !important;
     }
 
     .app-footer {
