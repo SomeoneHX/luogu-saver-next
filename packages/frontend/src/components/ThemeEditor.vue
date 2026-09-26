@@ -1,35 +1,13 @@
 <script setup lang="ts">
-import { inject, onBeforeUnmount, onMounted, ref } from 'vue';
-import { NDrawer, NDrawerContent } from 'naive-ui';
+import { ref } from 'vue';
 import { Settings } from 'lucide-vue-next';
 
 import GlassBottomSheet from '@/components/GlassBottomSheet.vue';
 import ThemeEditorFields from '@/components/ThemeEditorFields.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
-import { uiThemeKey } from '@/styles/theme/themeKeys.ts';
-
-const uiTheme = inject(uiThemeKey);
-
-if (!uiTheme) {
-    throw new Error('ThemeEditor 必须在 provider 内部使用');
-}
 
 const show = ref(false);
-
-const mobileViewport = window.matchMedia('(max-width: 768px)');
-const isMobileViewport = ref(mobileViewport.matches);
-const handleViewportChange = (event: MediaQueryListEvent) => {
-    isMobileViewport.value = event.matches;
-};
-
-onMounted(() => {
-    mobileViewport.addEventListener('change', handleViewportChange);
-});
-
-onBeforeUnmount(() => {
-    mobileViewport.removeEventListener('change', handleViewportChange);
-});
 </script>
 
 <template>
@@ -42,27 +20,9 @@ onBeforeUnmount(() => {
         <Settings :size="20" aria-hidden="true" />
     </LiquidButton>
 
-    <GlassBottomSheet v-if="isMobileViewport" v-model:show="show" title="主题编辑器">
+    <GlassBottomSheet v-model:show="show" title="主题编辑器">
         <ThemeEditorFields />
     </GlassBottomSheet>
-
-    <n-drawer
-        v-else
-        v-model:show="show"
-        width="min(420px, 66.666vw)"
-        placement="right"
-        :theme-overrides="{
-            color: uiTheme?.cardColor,
-            borderRadius: uiTheme?.cardRadius,
-            boxShadow: uiTheme?.cardShadow,
-            titleTextColor: uiTheme?.cardTitleColor,
-            textColor: uiTheme?.textColor
-        }"
-    >
-        <n-drawer-content title="主题编辑器" :style="{ '--n-color': uiTheme?.cardColor }">
-            <ThemeEditorFields />
-        </n-drawer-content>
-    </n-drawer>
 </template>
 
 <style scoped>

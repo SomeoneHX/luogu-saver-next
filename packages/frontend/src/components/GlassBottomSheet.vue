@@ -224,6 +224,16 @@ onBeforeUnmount(clearSlideTimer);
     transition: none;
 }
 
+/* Edge to edge is what a sheet wants on a phone; on a desktop viewport it would just be a slab. */
+@media (min-width: 769px) {
+    .glass-sheet__panel {
+        right: 0;
+        left: 0;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+}
+
 .glass-sheet__surface {
     position: absolute;
     inset: 0;
