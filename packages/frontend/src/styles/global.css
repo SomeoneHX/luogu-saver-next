@@ -172,15 +172,6 @@
     }
 }
 
-/* 面板打开期间隐藏页面滚动条：它会落在面板外侧那圈缝隙里。 */
-body.has-glass-sheet .n-layout-scroll-container {
-    scrollbar-width: none;
-}
-
-body.has-glass-sheet .n-layout-scroll-container::-webkit-scrollbar {
-    display: none;
-}
-
 .user-Red {
     color: var(--ui-user-red-color) !important;
 }

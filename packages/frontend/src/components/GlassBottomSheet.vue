@@ -22,8 +22,6 @@ const DISMISS_DISTANCE_RATIO = 0.35;
 const DISMISS_VELOCITY = 0.5;
 /** Kept in step with the panel's transition so the sheet is gone once it has slid away. */
 const SLIDE_DURATION = 340;
-/** Marker class on the body while the sheet is up, so the page scrollbar can be hidden. */
-const OPEN_CLASS = 'has-glass-sheet';
 /** How much the page is dimmed behind the panel. The surface undoes exactly this much. */
 const SCRIM_ALPHA = 0.3;
 /** Upper bound of the overshoot when the grip is dragged past the top — it approaches, never reaches. */
@@ -121,7 +119,6 @@ watch(
     () => props.show,
     async value => {
         clearSlideTimer();
-        document.body.classList.toggle(OPEN_CLASS, value);
         if (!value) {
             translateY.value = '110%';
             scrimOpacity.value = 0;
@@ -140,10 +137,7 @@ watch(
     { immediate: true }
 );
 
-onBeforeUnmount(() => {
-    clearSlideTimer();
-    document.body.classList.remove(OPEN_CLASS);
-});
+onBeforeUnmount(clearSlideTimer);
 </script>
 
 <template>
