@@ -151,6 +151,17 @@
     box-shadow: none !important;
 }
 
+/* n-back-top 根元素里的玻璃按钮按悬浮控件尺寸走，而不是 LiquidButton 自带的 48px 高与内容宽度。 */
+.back-top-action .liquid-button {
+    width: var(--ui-floating-control-size) !important;
+    height: var(--ui-floating-control-size) !important;
+}
+
+/* 内容层不留 LiquidButton 的 16px 内边距：44px 宽的按钮里它会把这个尺寸的图标横向压扁。 */
+.app-floating-control .liquid-button__content {
+    padding: 0 !important;
+}
+
 @media (max-width: 768px) {
     .back-top-action {
         bottom: calc(
