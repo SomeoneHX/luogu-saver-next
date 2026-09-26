@@ -22,8 +22,10 @@ const DISMISS_DISTANCE_RATIO = 0.35;
 const DISMISS_VELOCITY = 0.5;
 /** Kept in step with the panel's transition so the sheet is gone once it has slid away. */
 const SLIDE_DURATION = 340;
-/** Marker class on the body while the sheet is up, so the page chrome can step aside. */
+/** Marker class on the body while the sheet is up, so the page scrollbar can be hidden. */
 const OPEN_CLASS = 'has-glass-sheet';
+/** How much the page is dimmed behind the panel. The surface undoes exactly this much. */
+const SCRIM_ALPHA = 0.3;
 /** Upper bound of the overshoot when the grip is dragged past the top — it approaches, never reaches. */
 const OVERSCROLL_LIMIT = 160;
 
@@ -34,6 +36,7 @@ const emit = defineEmits<{ 'update:show': [value: boolean] }>();
 const shape = RoundedRectangle(PANEL_RADIUS);
 const panelEl = ref<HTMLElement | null>(null);
 const translateY = ref('110%');
+const scrimOpacity = ref(0);
 const dragging = ref(false);
 const tracker = new VelocityTracker();
 
@@ -59,6 +62,7 @@ function clearSlideTimer(): void {
 function requestClose(): void {
     if (!props.show || slideTimer !== null) return;
     translateY.value = '110%';
+    scrimOpacity.value = 0;
     slideTimer = window.setTimeout(() => {
         slideTimer = null;
         emit('update:show', false);
@@ -120,6 +124,7 @@ watch(
         document.body.classList.toggle(OPEN_CLASS, value);
         if (!value) {
             translateY.value = '110%';
+            scrimOpacity.value = 0;
             return;
         }
         // Reset to the off-screen position, then move on the next frame so the transition runs.
@@ -129,6 +134,7 @@ watch(
         requestAnimationFrame(() => {
             dragging.value = false;
             translateY.value = '0px';
+            scrimOpacity.value = 1;
         });
     },
     { immediate: true }
@@ -144,6 +150,11 @@ onBeforeUnmount(() => {
     <Teleport to="body">
         <div v-if="show" class="glass-sheet" @click.self="requestClose">
             <div
+                class="glass-sheet__scrim"
+                :style="{ opacity: scrimOpacity, background: `rgba(0, 0, 0, ${SCRIM_ALPHA})` }"
+            ></div>
+
+            <div
                 ref="panelEl"
                 class="glass-sheet__panel"
                 :class="{ 'is-dragging': dragging }"
@@ -158,6 +169,7 @@ onBeforeUnmount(() => {
                     :shape="shape"
                     :effects="effects"
                     :highlight="noHighlight"
+                    :backdrop-scrim="SCRIM_ALPHA"
                 />
 
                 <div class="glass-sheet__foreground">
@@ -191,6 +203,13 @@ onBeforeUnmount(() => {
     position: fixed;
     inset: 0;
     z-index: 1300;
+}
+
+.glass-sheet__scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
 }
 
 /*
