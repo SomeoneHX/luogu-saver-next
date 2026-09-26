@@ -57,7 +57,12 @@
 
                     <n-dialog-provider :theme-overrides="themeOverrides.Dialog">
                         <n-layout class="app-main" :native-scrollbar="false">
-                            <n-layout-content content-style="padding: var(--ui-page-padding);">
+                            <n-layout-content
+                                content-style="
+                                padding: var(--ui-page-padding);
+                                padding-left: calc(var(--ui-page-padding) + var(--sidebar-reserve));
+                            "
+                            >
                                 <div class="router-view">
                                     <SiteNotificationCenter />
                                     <UserNotificationCenter />
@@ -961,15 +966,19 @@ setInterval(() => {
 }
 
 .app-shell {
-    /* 悬浮侧栏占掉的横向空间，页脚的反向负边距也要跨过它。 */
+    /* 悬浮侧栏占掉的横向空间。它不算进 shell 的内边距：n-layout 自带 overflow: hidden，
+       页脚要铺到最左就必须让 .app-main 全宽、由内容区内边距来让位。 */
     --sidebar-reserve: calc(var(--ui-sidebar-inset) * 2 + var(--ui-sidebar-width-collapsed));
 
     position: relative;
-    padding-left: var(--sidebar-reserve);
 }
 
 .app-main {
-    background: var(--ui-card-color);
+    background: linear-gradient(
+        to right,
+        var(--ui-body-color) var(--sidebar-reserve),
+        var(--ui-card-color) var(--sidebar-reserve)
+    );
 }
 
 /* 一整块浮在页面上的玻璃板，四边留白。这里不能有背景色与阴影：玻璃采样的就是它们背后的内容。 */
@@ -1060,7 +1069,9 @@ setInterval(() => {
     margin: var(--ui-page-padding) calc(-1 * var(--ui-page-padding))
         calc(-1 * var(--ui-page-padding));
     margin-left: calc(-1 * (var(--ui-page-padding) + var(--sidebar-reserve)));
+    /* 背景铺到最左，文字停在内容区里原来的位置。 */
     padding: var(--ui-space-4) var(--ui-space-10);
+    padding-left: calc(var(--ui-space-10) + var(--sidebar-reserve));
     background: var(--ui-translucent-card-color);
     color: var(--ui-footer-text-color);
     backdrop-filter: blur(16px);
@@ -1132,7 +1143,6 @@ setInterval(() => {
     .app-shell {
         position: relative;
         --sidebar-reserve: 0px;
-        padding-left: 0;
     }
 
     /* Mobile navigation is the liquid glass tab bar; the sider is desktop-only. */
