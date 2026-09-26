@@ -22,6 +22,10 @@ const DISMISS_DISTANCE_RATIO = 0.35;
 const DISMISS_VELOCITY = 0.5;
 /** Kept in step with the panel's transition so the sheet is gone once it has slid away. */
 const SLIDE_DURATION = 340;
+/** Marker class on the body while the sheet is up, so the page chrome can step aside. */
+const OPEN_CLASS = 'has-glass-sheet';
+/** Upper bound of the overshoot when the grip is dragged past the top — it approaches, never reaches. */
+const OVERSCROLL_LIMIT = 160;
 
 const props = withDefaults(defineProps<{ show: boolean; title?: string }>(), { title: '' });
 
@@ -75,9 +79,15 @@ function onGripDown(event: PointerEvent): void {
     tracker.addPosition(performance.now(), { x: 0, y: 0 });
 }
 
+/** Dragging past the top edge gives way under the finger: the further it goes, the less it moves. */
+function overscroll(distance: number): number {
+    return (distance * OVERSCROLL_LIMIT) / (distance + OVERSCROLL_LIMIT);
+}
+
 function onGripMove(event: PointerEvent): void {
     if (!dragging.value || event.pointerId !== activePointer) return;
-    const offset = Math.max(0, event.clientY - startY);
+    const delta = event.clientY - startY;
+    const offset = delta >= 0 ? delta : -overscroll(-delta);
     translateY.value = `${offset}px`;
     tracker.addPosition(performance.now(), { x: 0, y: offset });
 }
@@ -107,6 +117,7 @@ watch(
     () => props.show,
     async value => {
         clearSlideTimer();
+        document.body.classList.toggle(OPEN_CLASS, value);
         if (!value) {
             translateY.value = '110%';
             return;
@@ -123,7 +134,10 @@ watch(
     { immediate: true }
 );
 
-onBeforeUnmount(clearSlideTimer);
+onBeforeUnmount(() => {
+    clearSlideTimer();
+    document.body.classList.remove(OPEN_CLASS);
+});
 </script>
 
 <template>
@@ -252,5 +266,11 @@ onBeforeUnmount(clearSlideTimer);
     padding: 0 var(--ui-space-5) var(--ui-space-5);
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* The content still scrolls; the bar is dropped because it reads as an edge of the glass. */
+    scrollbar-width: none;
+}
+
+.glass-sheet__body::-webkit-scrollbar {
+    display: none;
 }
 </style>

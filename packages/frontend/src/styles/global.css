@@ -172,6 +172,26 @@
     }
 }
 
+/* 面板打开期间底栏、悬浮控件与页面滚动条淡出：它们会从面板四周的缝隙里露出来。 */
+.liquid-tab-bar,
+.app-floating-control {
+    transition: opacity 0.22s ease;
+}
+
+body.has-glass-sheet .liquid-tab-bar,
+body.has-glass-sheet .app-floating-control {
+    pointer-events: none;
+    opacity: 0;
+}
+
+body.has-glass-sheet .n-layout-scroll-container {
+    scrollbar-width: none;
+}
+
+body.has-glass-sheet .n-layout-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
 .user-Red {
     color: var(--ui-user-red-color) !important;
 }
