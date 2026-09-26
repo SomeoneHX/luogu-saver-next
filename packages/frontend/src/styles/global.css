@@ -152,20 +152,10 @@
     box-shadow: none !important;
 }
 
-/* 涟漪宿主承担悬浮控件的定位与尺寸，内容层与玻璃按钮逐层撑满它。 */
-.app-floating-control .ripple-host__content {
-    width: 100%;
-    height: 100%;
-}
-
-.app-floating-control .liquid-button {
-    width: 100% !important;
-    height: 100% !important;
-}
-
-/* 涟漪只剪进宿主的圆角里：宿主的 `overflow` 是直角裁切，不裁圆角，免得打断玻璃的 backdrop 捕获。 */
-.ripple-host__clip {
-    border-radius: inherit;
+/* n-back-top 根元素里的玻璃按钮按悬浮控件尺寸走，而不是 LiquidButton 自带的 48px 高与内容宽度。 */
+.back-top-action .liquid-button {
+    width: var(--ui-floating-control-size) !important;
+    height: var(--ui-floating-control-size) !important;
 }
 
 /* 内容层不留 LiquidButton 的 16px 内边距：44px 宽的按钮里它会把这个尺寸的图标横向压扁。 */
