@@ -23,7 +23,7 @@
                             :backdrop="RootBackdrop"
                             :shape="sidebarShape"
                             :effects="sidebarEffects"
-                            :highlight="() => null"
+                            :highlight="sidebarHighlight"
                         />
 
                         <div class="app-sider__body">
@@ -228,8 +228,8 @@ import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
 import GlassTopBar from '@/components/GlassTopBar.vue';
 import GlassSurface from '@/liquid-glass/components/GlassSurface.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
-import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
-import { RootBackdrop } from '@/liquid-glass/core/backdrop';
+import type { BackdropEffectScope, Highlight } from '@/liquid-glass/core/backdrop';
+import { HighlightStyles, RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { dp } from '@/liquid-glass/core/geometry';
 import { RoundedRectangle } from '@/liquid-glass/core/shapes';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
@@ -260,9 +260,11 @@ provide('sidebarExpandAnimation', sidebarExpandAnimation);
 
 const sidebarShape = RoundedRectangle(SIDEBAR_RADIUS);
 
+const sidebarHighlight = (): Highlight => HighlightStyles.Plain(1);
+
 const sidebarEffects = (scope: BackdropEffectScope): void => {
     scope.vibrancy();
-    scope.blur(dp(16));
+    scope.blur(dp(4));
     scope.lens(dp(24), dp(48));
 };
 
@@ -959,8 +961,11 @@ setInterval(() => {
 }
 
 .app-shell {
+    /* 悬浮侧栏占掉的横向空间，页脚的反向负边距也要跨过它。 */
+    --sidebar-reserve: calc(var(--ui-sidebar-inset) * 2 + var(--ui-sidebar-width-collapsed));
+
     position: relative;
-    padding-left: calc(var(--ui-sidebar-inset) * 2 + var(--ui-sidebar-width-collapsed));
+    padding-left: var(--sidebar-reserve);
 }
 
 .app-main {
@@ -1054,6 +1059,7 @@ setInterval(() => {
 .app-footer {
     margin: var(--ui-page-padding) calc(-1 * var(--ui-page-padding))
         calc(-1 * var(--ui-page-padding));
+    margin-left: calc(-1 * (var(--ui-page-padding) + var(--sidebar-reserve)));
     padding: var(--ui-space-4) var(--ui-space-10);
     background: var(--ui-translucent-card-color);
     color: var(--ui-footer-text-color);
@@ -1125,6 +1131,7 @@ setInterval(() => {
 @media (max-width: 768px) {
     .app-shell {
         position: relative;
+        --sidebar-reserve: 0px;
         padding-left: 0;
     }
 

@@ -9,8 +9,8 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 import GlassSurface from '@/liquid-glass/components/GlassSurface.vue';
-import type { BackdropEffectScope } from '@/liquid-glass/core/backdrop';
-import { RootBackdrop } from '@/liquid-glass/core/backdrop';
+import type { BackdropEffectScope, Highlight } from '@/liquid-glass/core/backdrop';
+import { HighlightStyles, RootBackdrop } from '@/liquid-glass/core/backdrop';
 import { dp } from '@/liquid-glass/core/geometry';
 import { RoundedRectangle } from '@/liquid-glass/core/shapes';
 import { VelocityTracker } from '@/liquid-glass/core/velocity-tracker';
@@ -42,11 +42,11 @@ let startY = 0;
 let activePointer: number | null = null;
 let slideTimer: number | null = null;
 
-const noHighlight = () => null;
+const sheetHighlight = (): Highlight => HighlightStyles.Plain(1);
 
 const effects = (scope: BackdropEffectScope): void => {
     scope.vibrancy();
-    scope.blur(dp(16));
+    scope.blur(dp(4));
     scope.lens(dp(24), dp(48));
 };
 
@@ -162,7 +162,7 @@ onBeforeUnmount(clearSlideTimer);
                     :backdrop="RootBackdrop"
                     :shape="shape"
                     :effects="effects"
-                    :highlight="noHighlight"
+                    :highlight="sheetHighlight"
                     :backdrop-scrim="SCRIM_ALPHA"
                 />
 
