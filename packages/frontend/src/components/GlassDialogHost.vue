@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /** 渲染 `useGlassDialog()` 推入队列的对话框，一条一层。挂在 `App` 里一次即可。 */
-import { NButton } from 'naive-ui';
-
 import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import {
     clickGlassDialogNegative,
     clickGlassDialogPositive,
@@ -11,14 +10,14 @@ import {
     type GlassDialogRecord
 } from '@/composables/useGlassDialog.ts';
 
-const buttonTypes = {
-    info: 'primary',
+const confirmVariants = {
+    info: 'accent',
     success: 'success',
-    warning: 'warning',
-    error: 'error'
+    warning: 'accent',
+    error: 'danger'
 } as const;
 
-const buttonType = (dialog: GlassDialogRecord) => buttonTypes[dialog.type];
+const confirmVariant = (dialog: GlassDialogRecord) => confirmVariants[dialog.type];
 </script>
 
 <template>
@@ -34,16 +33,20 @@ const buttonType = (dialog: GlassDialogRecord) => buttonTypes[dialog.type];
         <p v-if="dialog.content" class="glass-dialog-host__text">{{ dialog.content }}</p>
 
         <template #footer>
-            <n-button v-if="dialog.negativeText" @click="clickGlassDialogNegative(dialog.id)">
+            <GlassDialogButton
+                v-if="dialog.negativeText"
+                variant="plain"
+                @click="clickGlassDialogNegative(dialog.id)"
+            >
                 {{ dialog.negativeText }}
-            </n-button>
-            <n-button
-                :type="buttonType(dialog)"
+            </GlassDialogButton>
+            <GlassDialogButton
+                :variant="confirmVariant(dialog)"
                 :loading="dialog.loading"
                 @click="clickGlassDialogPositive(dialog.id)"
             >
                 {{ dialog.positiveText }}
-            </n-button>
+            </GlassDialogButton>
         </template>
     </GlassDialog>
 </template>

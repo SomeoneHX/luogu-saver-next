@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NAlert, NButton, NInput, useMessage } from 'naive-ui';
+import { NAlert, NInput, useMessage } from 'naive-ui';
 import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import { createDeletionRequest, type DeletionRequestTargetType } from '@/api/deletion-request';
 
 const props = defineProps<{
@@ -79,12 +80,12 @@ const handleSubmit = async () => {
         />
 
         <template #footer>
-            <div class="modal-actions">
-                <n-button :disabled="submitting" @click="close">取消</n-button>
-                <n-button type="error" :loading="submitting" @click="handleSubmit">
-                    提交申请
-                </n-button>
-            </div>
+            <GlassDialogButton variant="plain" :disabled="submitting" @click="close">
+                取消
+            </GlassDialogButton>
+            <GlassDialogButton variant="danger" :loading="submitting" @click="handleSubmit">
+                提交申请
+            </GlassDialogButton>
         </template>
     </GlassDialog>
 </template>
@@ -101,11 +102,5 @@ const handleSubmit = async () => {
 
 .policy-link:hover {
     color: var(--ui-link-hover-color);
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
 }
 </style>

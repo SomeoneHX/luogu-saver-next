@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { NAlert, NButton } from 'naive-ui';
+import { NAlert } from 'naive-ui';
 import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import {
     getCurrentNotifications,
     markNotificationRead,
@@ -193,25 +194,25 @@ onMounted(() => {
         <template #footer>
             <div v-if="visiblePopup" class="popup-actions">
                 <div v-if="visiblePopups.length > 1" class="popup-switcher">
-                    <n-button
-                        size="small"
+                    <GlassDialogButton
+                        variant="plain"
                         :disabled="activePopupIndex === 0"
                         @click="showPreviousPopup"
                     >
                         上一条
-                    </n-button>
+                    </GlassDialogButton>
                     <span class="popup-index">{{ popupPositionText }}</span>
-                    <n-button
-                        size="small"
+                    <GlassDialogButton
+                        variant="plain"
                         :disabled="activePopupIndex >= visiblePopups.length - 1"
                         @click="showNextPopup"
                     >
                         下一条
-                    </n-button>
+                    </GlassDialogButton>
                 </div>
-                <n-button type="primary" @click="dismissNotification(visiblePopup)">
+                <GlassDialogButton @click="dismissNotification(visiblePopup)">
                     知道了
-                </n-button>
+                </GlassDialogButton>
             </div>
         </template>
     </GlassDialog>
@@ -271,6 +272,8 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    /* 对话框的按钮行是右对齐的，这里要自己撑满才能把切换器留在左边。 */
+    width: 100%;
 }
 
 .popup-switcher {

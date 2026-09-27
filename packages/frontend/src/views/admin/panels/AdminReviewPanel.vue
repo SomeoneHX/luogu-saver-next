@@ -14,6 +14,7 @@ import {
     useMessage
 } from 'naive-ui';
 import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import type { DataTableColumns } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 import Card from '@/components/Card.vue';
@@ -382,16 +383,20 @@ onMounted(() => {
         </n-space>
 
         <template #footer>
-            <div class="modal-actions">
-                <n-button :disabled="reviewSubmitting" @click="closeReviewModal">取消</n-button>
-                <n-button
-                    :type="reviewAction === 'approve' ? 'success' : 'error'"
-                    :loading="reviewSubmitting"
-                    @click="submitReview"
-                >
-                    确认{{ reviewAction === 'approve' ? '通过' : '拒绝' }}
-                </n-button>
-            </div>
+            <GlassDialogButton
+                variant="plain"
+                :disabled="reviewSubmitting"
+                @click="closeReviewModal"
+            >
+                取消
+            </GlassDialogButton>
+            <GlassDialogButton
+                :variant="reviewAction === 'approve' ? 'success' : 'danger'"
+                :loading="reviewSubmitting"
+                @click="submitReview"
+            >
+                确认{{ reviewAction === 'approve' ? '通过' : '拒绝' }}
+            </GlassDialogButton>
         </template>
     </GlassDialog>
 </template>
@@ -419,11 +424,5 @@ onMounted(() => {
 
 .review-card :deep(.handled-line) {
     font-size: 13px;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
 }
 </style>
