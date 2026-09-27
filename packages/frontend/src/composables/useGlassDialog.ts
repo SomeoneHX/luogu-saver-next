@@ -27,6 +27,8 @@ export interface GlassDialogRecord {
     closeOnEsc: boolean;
     maskClosable: boolean;
     loading: boolean;
+    /** 已在离场：宿主据此收起它，动画放完后由 `removeGlassDialog` 真正删掉。 */
+    closing: boolean;
     onPositiveClick?: () => unknown;
     onNegativeClick?: () => unknown;
 }
@@ -48,13 +50,20 @@ function open(type: GlassDialogType, options: GlassDialogOptions): { destroy: ()
         closeOnEsc: options.closeOnEsc ?? true,
         maskClosable: options.maskClosable ?? true,
         loading: false,
+        closing: false,
         onPositiveClick: options.onPositiveClick,
         onNegativeClick: options.onNegativeClick
     });
     return { destroy: () => dismissGlassDialog(id) };
 }
 
+/** 开始离场：先把这条标成收起，等 `GlassDialog` 报回动画放完再删。 */
 export function dismissGlassDialog(id: number): void {
+    const dialog = glassDialogStack.find(item => item.id === id);
+    if (dialog) dialog.closing = true;
+}
+
+export function removeGlassDialog(id: number): void {
     const index = glassDialogStack.findIndex(dialog => dialog.id === id);
     if (index >= 0) glassDialogStack.splice(index, 1);
 }
@@ -64,7 +73,7 @@ async function runHandler(
     pick: (dialog: GlassDialogRecord) => (() => unknown) | undefined
 ) {
     const dialog = glassDialogStack.find(item => item.id === id);
-    if (!dialog || dialog.loading) return;
+    if (!dialog || dialog.loading || dialog.closing) return;
 
     let result: unknown;
     try {

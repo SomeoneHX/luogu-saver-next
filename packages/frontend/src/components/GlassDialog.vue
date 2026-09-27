@@ -28,7 +28,11 @@ const props = withDefaults(
     { title: '', maskClosable: true, closeOnEsc: true }
 );
 
-const emit = defineEmits<{ 'update:show': [value: boolean] }>();
+const emit = defineEmits<{
+    'update:show': [value: boolean];
+    /** 离场动画放完，宿主可以真正把这条删掉了。 */
+    closed: [];
+}>();
 
 const uiThemeVars = inject(uiThemeKey);
 const isLightTheme = computed(() => isLightColor(uiThemeVars?.value.bodyColor ?? '#ffffff'));
@@ -75,36 +79,43 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
     <Teleport to="body">
-        <div v-if="show" class="glass-dialog" @click.self="onScrimClick">
-            <div class="glass-dialog__scrim" :style="{ background: dimColor }"></div>
+        <Transition name="glass-dialog" @after-leave="emit('closed')">
+            <div v-if="show" class="glass-dialog" @click.self="onScrimClick">
+                <div class="glass-dialog__scrim" :style="{ background: dimColor }"></div>
 
-            <div class="glass-dialog__panel" role="dialog" aria-modal="true" :aria-label="title">
-                <GlassSurface
-                    class="glass-dialog__surface"
-                    :backdrop="RootBackdrop"
-                    :shape="shape"
-                    :effects="effects"
-                    :highlight="highlight"
-                    :on-draw-surface="onDrawSurface"
-                />
+                <div
+                    class="glass-dialog__panel"
+                    role="dialog"
+                    aria-modal="true"
+                    :aria-label="title"
+                >
+                    <GlassSurface
+                        class="glass-dialog__surface"
+                        :backdrop="RootBackdrop"
+                        :shape="shape"
+                        :effects="effects"
+                        :highlight="highlight"
+                        :on-draw-surface="onDrawSurface"
+                    />
 
-                <div class="glass-dialog__content">
-                    <h2 v-if="title" class="glass-dialog__title">{{ title }}</h2>
-                    <div
-                        class="glass-dialog__body"
-                        :class="{
-                            'is-titleless': !title,
-                            'is-footerless': !$slots.footer
-                        }"
-                    >
-                        <slot />
-                    </div>
-                    <div v-if="$slots.footer" class="glass-dialog__actions">
-                        <slot name="footer" />
+                    <div class="glass-dialog__content">
+                        <h2 v-if="title" class="glass-dialog__title">{{ title }}</h2>
+                        <div
+                            class="glass-dialog__body"
+                            :class="{
+                                'is-titleless': !title,
+                                'is-footerless': !$slots.footer
+                            }"
+                        >
+                            <slot />
+                        </div>
+                        <div v-if="$slots.footer" class="glass-dialog__actions">
+                            <slot name="footer" />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </Teleport>
 </template>
 
@@ -117,6 +128,34 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
     align-items: center;
     justify-content: center;
     padding: var(--ui-space-4);
+}
+
+/*
+ * 进场从稍小的一档淡入，离场放大一档淡出。缩放只加在卡片上：压暗层是全屏的，
+ * 跟着缩放会在边缘露出没盖住的页面。
+ */
+.glass-dialog-enter-active,
+.glass-dialog-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.glass-dialog-enter-from,
+.glass-dialog-leave-to {
+    opacity: 0;
+}
+
+.glass-dialog-enter-active .glass-dialog__panel,
+.glass-dialog-leave-active .glass-dialog__panel {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+    will-change: transform;
+}
+
+.glass-dialog-enter-from .glass-dialog__panel {
+    transform: scale(0.92);
+}
+
+.glass-dialog-leave-to .glass-dialog__panel {
+    transform: scale(1.06);
 }
 
 .glass-dialog__scrim {

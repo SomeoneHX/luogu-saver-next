@@ -6,7 +6,8 @@ import {
     clickGlassDialogNegative,
     clickGlassDialogPositive,
     dismissGlassDialog,
-    glassDialogStack
+    glassDialogStack,
+    removeGlassDialog
 } from '@/composables/useGlassDialog.ts';
 </script>
 
@@ -14,11 +15,12 @@ import {
     <GlassDialog
         v-for="dialog in glassDialogStack"
         :key="dialog.id"
-        :show="true"
+        :show="!dialog.closing"
         :title="dialog.title"
         :close-on-esc="dialog.closeOnEsc"
         :mask-closable="dialog.maskClosable"
         @update:show="value => !value && dismissGlassDialog(dialog.id)"
+        @closed="removeGlassDialog(dialog.id)"
     >
         <p v-if="dialog.content" class="glass-dialog-host__text">{{ dialog.content }}</p>
 
