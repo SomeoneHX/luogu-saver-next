@@ -10,9 +10,9 @@ import {
     NRadioGroup,
     NSpace,
     NSpin,
-    NTag,
-    useMessage
+    NTag
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import GlassDialog from '@/components/GlassDialog.vue';
 import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import type { DataTableColumns } from 'naive-ui';
@@ -29,7 +29,7 @@ import { currentAuth } from '@/utils/auth.ts';
 import { hasPermission, Permission } from '@/utils/permissions.ts';
 import { formatDate } from '@/utils/render';
 
-const message = useMessage();
+const message = useGlassToast();
 
 const canManageContent = computed(() =>
     hasPermission(currentAuth.value?.role, Permission.MANAGE_CONTENT)

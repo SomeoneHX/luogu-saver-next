@@ -13,9 +13,9 @@ import {
     NAlert,
     NPagination,
     NTimeline,
-    NTimelineItem,
-    useMessage
+    NTimelineItem
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { useGlassDialog } from '@/composables/useGlassDialog';
 import { RefreshCw, Trophy, BookOpenText, CircleUserRound, Share2, Hammer } from 'lucide-vue-next';
 
@@ -33,7 +33,7 @@ import { useLuoguSource } from '@/utils/luogu-source.ts';
 import { formatDate } from '@/utils/render.ts';
 
 const route = useRoute();
-const message = useMessage();
+const message = useGlassToast();
 const dialog = useGlassDialog();
 const { buildLuoguUrl } = useLuoguSource();
 const {

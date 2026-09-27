@@ -1,12 +1,13 @@
 import { ref, onUnmounted } from 'vue';
-import { useMessage } from 'naive-ui';
+
 import { useRouter } from 'vue-router';
 import socket from '@/utils/websocket';
 import { useGlassDialog } from '@/composables/useGlassDialog';
+import { useGlassToast } from '@/composables/useGlassToast';
 
 export function useContentSaver() {
     const dialog = useGlassDialog();
-    const message = useMessage();
+    const message = useGlassToast();
     const router = useRouter();
     const isSaving = ref(false);
     const hasUpdate = ref(false);

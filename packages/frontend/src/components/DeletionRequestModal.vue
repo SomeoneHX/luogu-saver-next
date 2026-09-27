@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NAlert, NInput, useMessage } from 'naive-ui';
+import { NAlert, NInput } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import GlassDialog from '@/components/GlassDialog.vue';
 import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import { createDeletionRequest, type DeletionRequestTargetType } from '@/api/deletion-request';
@@ -16,7 +17,7 @@ const emit = defineEmits<{
     (e: 'submitted'): void;
 }>();
 
-const message = useMessage();
+const message = useGlassToast();
 const reason = ref('');
 const submitting = ref(false);
 

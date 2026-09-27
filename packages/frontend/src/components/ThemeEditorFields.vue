@@ -11,9 +11,9 @@ import {
     NInput,
     NInputNumber,
     NSelect,
-    NSpace,
-    useMessage
+    NSpace
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 
 import {
     uiThemeKey,
@@ -26,7 +26,7 @@ import { presets } from '@/styles/theme/presets.ts';
 const uiTheme = inject(uiThemeKey);
 const mode = inject(uiThemeModeKey);
 const preset = inject(uiThemePresetKey);
-const message = useMessage();
+const message = useGlassToast();
 
 if (!uiTheme || !mode || !preset) {
     throw new Error('ThemeEditorFields 必须在 provider 内部使用');

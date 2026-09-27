@@ -2,7 +2,6 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
-    useMessage,
     NSpace,
     NButton,
     NIcon,
@@ -14,6 +13,7 @@ import {
     NSpin,
     NResult
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { useGlassDialog } from '@/composables/useGlassDialog';
 import {
     Share2,
@@ -65,7 +65,7 @@ import { useLuoguSource } from '@/utils/luogu-source.ts';
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
+const message = useGlassToast();
 const dialog = useGlassDialog();
 const {
     isSaving,

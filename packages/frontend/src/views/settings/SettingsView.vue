@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, type Ref } from 'vue';
-import { NAlert, NButton, NIcon, NSelect, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
+import { NAlert, NButton, NIcon, NSelect, NSpace, NSpin, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import {
     ChartNoAxesCombined,
     Cloud,
@@ -36,7 +37,7 @@ import { formatDate } from '@/utils/render.ts';
 import { useKnowledgeBase } from '@/utils/knowledge-base.ts';
 import { useLuoguSource } from '@/utils/luogu-source.ts';
 
-const message = useMessage();
+const message = useGlassToast();
 const loading = ref(false);
 const currentUser = ref<AuthMeResponse | null>(null);
 const errorMessage = ref('');

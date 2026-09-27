@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import {
-    NAlert,
-    NButton,
-    NEmpty,
-    NFormItem,
-    NIcon,
-    NInput,
-    NSpace,
-    NSpin,
-    NTag,
-    useMessage
-} from 'naive-ui';
+import { NAlert, NButton, NEmpty, NFormItem, NIcon, NInput, NSpace, NSpin, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { Plus, ArrowDown, ArrowUp, Save, Trash2 } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import GlassSwitch from '@/components/GlassSwitch.vue';
@@ -30,7 +20,7 @@ import type { NotificationChannel } from '@/api/notification.ts';
 import { currentAuth } from '@/utils/auth.ts';
 import { hasPermission, Permission } from '@/utils/permissions.ts';
 
-const message = useMessage();
+const message = useGlassToast();
 
 const loadingAnnouncement = ref(false);
 const savingAnnouncement = ref(false);

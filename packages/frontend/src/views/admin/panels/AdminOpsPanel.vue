@@ -8,9 +8,9 @@ import {
     NInputNumber,
     NSpace,
     NSpin,
-    NTag,
-    useMessage
+    NTag
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import Card from '@/components/Card.vue';
 import {
     rebuildArticleEmbeddings,
@@ -27,7 +27,7 @@ const DISCOVERY_RUNS_ROOM = 'discovery:runs';
 const DISCOVERY_RUNS_EVENT = 'discovery:runs:update';
 const SOCKET_JOIN_ERROR_EVENT = 'join:error';
 
-const message = useMessage();
+const message = useGlassToast();
 const socket = websocket.getInstance();
 const { setupTaskUpdateListener } = useContentSaver();
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NButton, NIcon, NInput, NPopover, NTimeline, NTimelineItem, useMessage } from 'naive-ui';
+import { NButton, NIcon, NInput, NPopover, NTimeline, NTimelineItem } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { Star, Clock3, Trash2, Settings } from 'lucide-vue-next';
 import SidebarWidget from '@/components/SidebarWidget.vue';
 import TableOfContents from '@/components/TableOfContents.vue';
@@ -27,7 +28,7 @@ const emit = defineEmits<{
     'select-version': [version: number];
 }>();
 
-const message = useMessage();
+const message = useGlassToast();
 const versionPopoverVisible = ref(false);
 
 const editingBookmarkId = ref<string | null>(null);

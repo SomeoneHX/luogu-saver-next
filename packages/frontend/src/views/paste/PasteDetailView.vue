@@ -1,17 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-    NButton,
-    NDivider,
-    NIcon,
-    NResult,
-    NSkeleton,
-    NSpace,
-    NSpin,
-    NTag,
-    useMessage
-} from 'naive-ui';
+import { NButton, NDivider, NIcon, NResult, NSkeleton, NSpace, NSpin, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { useGlassDialog } from '@/composables/useGlassDialog';
 import {
     ArrowLeft,
@@ -48,7 +39,7 @@ import { ROLE_ADMIN } from '@/utils/permissions.ts';
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
+const message = useGlassToast();
 const dialog = useGlassDialog();
 const {
     isSaving,

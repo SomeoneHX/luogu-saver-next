@@ -1,17 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import {
-    NButton,
-    NEmpty,
-    NIcon,
-    NProgress,
-    NSpace,
-    NSpin,
-    NTag,
-    NTooltip,
-    useMessage
-} from 'naive-ui';
+import { NButton, NEmpty, NIcon, NProgress, NSpace, NSpin, NTag, NTooltip } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import {
     CircleCheck,
     CircleX,
@@ -37,7 +28,7 @@ type TaskLayer = {
 };
 
 const route = useRoute();
-const message = useMessage();
+const message = useGlassToast();
 const workflowId = computed(() => String(route.params.id || ''));
 const workflow = ref<WorkflowDetailResponse | null>(null);
 const loading = ref(true);

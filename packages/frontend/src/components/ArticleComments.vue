@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { NSkeleton, NSpace, NEmpty, NButton, NIcon, NTime, useMessage } from 'naive-ui';
+import { NSkeleton, NSpace, NEmpty, NButton, NIcon, NTime } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { MessagesSquare, RefreshCw } from 'lucide-vue-next';
 
 import { getArticleComments, refreshArticleComments } from '@/api/comment';
@@ -15,7 +16,7 @@ const props = defineProps<{
     articleId: string;
 }>();
 
-const message = useMessage();
+const message = useGlassToast();
 
 const loading = ref(true);
 const refreshing = ref(false);

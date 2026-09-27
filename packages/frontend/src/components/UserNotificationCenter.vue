@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NBadge, NButton, NDrawer, NDrawerContent, NEmpty, NSpin, useMessage } from 'naive-ui';
+import { NBadge, NButton, NDrawer, NDrawerContent, NEmpty, NSpin } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { Bell } from 'lucide-vue-next';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
@@ -16,7 +17,7 @@ import { formatDate } from '@/utils/render';
 
 const UNREAD_POLL_INTERVAL_MS = 120_000;
 
-const message = useMessage();
+const message = useGlassToast();
 
 const drawerVisible = ref(false);
 const notifications = ref<UserNotificationItem[]>([]);
