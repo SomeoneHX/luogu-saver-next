@@ -132,8 +132,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 }
 
 /*
- * 进场从稍小的一档淡入，离场放大一档淡出。缩放只加在卡片上：压暗层是全屏的，
- * 跟着缩放会在边缘露出没盖住的页面。
+ * 进场从放大一档收进来，离场再放大一档淡出去，两端共用同一个缩放值。缩放只加在卡片上：
+ * 压暗层是全屏的，跟着缩放会在边缘露出没盖住的页面。
  */
 .glass-dialog-enter-active,
 .glass-dialog-leave-active {
@@ -151,10 +151,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
     will-change: transform;
 }
 
-.glass-dialog-enter-from .glass-dialog__panel {
-    transform: scale(0.92);
-}
-
+.glass-dialog-enter-from .glass-dialog__panel,
 .glass-dialog-leave-to .glass-dialog__panel {
     transform: scale(1.06);
 }
