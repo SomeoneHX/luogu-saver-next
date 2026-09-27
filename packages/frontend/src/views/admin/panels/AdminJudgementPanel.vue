@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NAlert, NButton, NInput, useDialog, useMessage } from 'naive-ui';
+import { NAlert, NButton, NInput, useMessage } from 'naive-ui';
+import { useGlassDialog } from '@/composables/useGlassDialog';
 import Card from '@/components/Card.vue';
 import { hideAdminJudgementHistories } from '@/api/admin.ts';
 import { currentAuth } from '@/utils/auth.ts';
 import { hasPermission, Permission } from '@/utils/permissions.ts';
 
 const message = useMessage();
-const dialog = useDialog();
+const dialog = useGlassDialog();
 const uidInput = ref('');
 const submitting = ref(false);
 const canManageContent = computed(() =>

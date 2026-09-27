@@ -10,9 +10,9 @@ import {
     NSpace,
     NSpin,
     NTag,
-    useDialog,
     useMessage
 } from 'naive-ui';
+import { useGlassDialog } from '@/composables/useGlassDialog';
 import {
     ArrowLeft,
     CalendarDays,
@@ -49,7 +49,7 @@ import { ROLE_ADMIN } from '@/utils/permissions.ts';
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
-const dialog = useDialog();
+const dialog = useGlassDialog();
 const {
     isSaving,
     hasUpdate,
@@ -139,7 +139,6 @@ const trackSaveTask = (taskId?: string) => {
                     notifyWorkflowSubmitted(response, '重试请求已提交');
                 },
                 maskClosable: false,
-                closable: false,
                 closeOnEsc: false
             });
         }

@@ -53,6 +53,7 @@
                                 <div class="router-view">
                                     <SiteNotificationCenter />
                                     <UserNotificationCenter />
+                                    <GlassDialogHost />
                                     <n-back-top
                                         class="app-floating-control back-top-action"
                                         aria-label="返回顶部"
@@ -225,6 +226,7 @@ import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';
 import UserNotificationCenter from '@/components/UserNotificationCenter.vue';
+import GlassDialogHost from '@/components/GlassDialogHost.vue';
 import { currentRole, isAuthenticated, setCurrentAuth } from '@/utils/auth.ts';
 import { hasAnyPermission, Permission, ROLE_ADMIN } from '@/utils/permissions.ts';
 import { getCurrentUser } from '@/api/auth.ts';
