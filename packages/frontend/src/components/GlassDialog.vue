@@ -132,16 +132,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 }
 
 /*
- * 进场从放大一档收进来，离场再放大一档淡出去，两端共用同一个缩放值。缩放只加在卡片上：
- * 压暗层是全屏的，跟着缩放会在边缘露出没盖住的页面。
+ * 压暗层淡入淡出，卡片只做缩放，内容层再淡一档。
+ *
+ * 淡入不能加在卡片或它任何祖先上：`opacity < 1` 会让那个元素成为 backdrop root，玻璃在这段
+ * 时间里采不到背后的页面，表现就是"动画放完了玻璃才出现"。压暗层是卡片的兄弟节点、内容层是
+ * 玻璃面的兄弟节点，两者都不挡采样。
  */
-.glass-dialog-enter-active,
-.glass-dialog-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.glass-dialog-enter-from,
-.glass-dialog-leave-to {
+.glass-dialog-enter-from .glass-dialog__scrim,
+.glass-dialog-enter-from .glass-dialog__content,
+.glass-dialog-leave-to .glass-dialog__scrim,
+.glass-dialog-leave-to .glass-dialog__content {
     opacity: 0;
 }
 
@@ -151,6 +151,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
     will-change: transform;
 }
 
+/* 进场从放大一档收进来，离场再放大一档淡出去，两端共用同一个缩放值。 */
 .glass-dialog-enter-from .glass-dialog__panel,
 .glass-dialog-leave-to .glass-dialog__panel {
     transform: scale(1.06);
@@ -159,6 +160,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 .glass-dialog__scrim {
     position: absolute;
     inset: 0;
+    opacity: 1;
+    transition: opacity 0.2s ease;
     pointer-events: none;
 }
 
@@ -186,6 +189,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
     flex-direction: column;
     min-height: 0;
     color: var(--ui-text-color);
+    transition: opacity 0.2s ease;
 }
 
 .glass-dialog__title {
