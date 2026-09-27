@@ -136,15 +136,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 }
 
 /*
- * 压暗层淡入淡出，卡片只做缩放，内容层再淡一档。
- *
- * 淡入不能加在卡片或它任何祖先上：`opacity < 1` 会让那个元素成为 backdrop root，玻璃在这段
- * 时间里采不到背后的页面，表现就是"动画放完了玻璃才出现"。压暗层是卡片的兄弟节点、内容层是
- * 玻璃面的兄弟节点，两者都不挡采样。
+ * 淡入淡出加在玻璃的各个层（lens / overlay / additive / shadow）与内容层上，而不是卡片或它的任何
+ * 祖先：`opacity < 1` 的祖先会成为 backdrop root，玻璃在那段时间里只能采到自己的子树，表现就是
+ * "动画放完了玻璃才出现"。这些层都是叶子节点——库本身也是用 lens 的 opacity 做 alpha 动画的——
+ * 所以淡它们既不影响采样，也能把整张卡片（含白色底）一起淡掉。
  */
+.glass-dialog-enter-active :deep(.glass-surface > *),
+.glass-dialog-leave-active :deep(.glass-surface > *) {
+    transition: opacity 0.2s ease;
+}
+
+.glass-dialog-enter-from :deep(.glass-surface > *),
+.glass-dialog-leave-to :deep(.glass-surface > *),
 .glass-dialog-enter-from .glass-dialog__scrim,
-.glass-dialog-enter-from .glass-dialog__content,
 .glass-dialog-leave-to .glass-dialog__scrim,
+.glass-dialog-enter-from .glass-dialog__content,
 .glass-dialog-leave-to .glass-dialog__content {
     opacity: 0;
 }
