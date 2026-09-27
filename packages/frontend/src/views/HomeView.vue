@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NButton, NEmpty, NIcon, NInput, NStatistic } from 'naive-ui';
-import { ArrowRight, Clipboard, Megaphone, Newspaper, Search } from 'lucide-vue-next';
+import { NEmpty, NIcon, NStatistic } from 'naive-ui';
+import { Clipboard, Megaphone, Newspaper } from 'lucide-vue-next';
 import { getArticleCount } from '@/api/article.ts';
 import { getPasteCount } from '@/api/paste.ts';
 import { getCurrentAnnouncement, type Announcement } from '@/api/announcement.ts';
 import { getCurrentAdvertisements, type Advertisement } from '@/api/advertisement.ts';
 import AdvertisementCarousel from '@/components/AdvertisementCarousel.vue';
 import Card from '@/components/Card.vue';
+import GlassSearchField from '@/components/GlassSearchField.vue';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import ThemeEditor from '@/components/ThemeEditor.vue';
 import { uiThemeKey } from '@/styles/theme/themeKeys.ts';
@@ -111,33 +112,11 @@ function handleSearch() {
                 <p class="home-slogan">Save everything, keep it alive.</p>
             </div>
 
-            <n-input
-                v-model:value="searchText"
-                class="home-search"
-                size="large"
-                round
-                aria-label="搜索"
+            <GlassSearchField
+                v-model="searchText"
                 placeholder="输入链接、文章 ID、关键词或用户名"
-                @keydown.enter="handleSearch"
-            >
-                <template #prefix>
-                    <n-icon :component="Search" />
-                </template>
-                <template #suffix>
-                    <n-button
-                        circle
-                        type="primary"
-                        size="small"
-                        class="home-search-button"
-                        aria-label="搜索"
-                        @click="handleSearch"
-                    >
-                        <template #icon>
-                            <n-icon :component="ArrowRight" />
-                        </template>
-                    </n-button>
-                </template>
-            </n-input>
+                @submit="handleSearch"
+            />
         </header>
 
         <div class="home-information">
@@ -260,34 +239,6 @@ function handleSearch() {
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0;
-}
-
-.home-search {
-    width: min(100%, 720px);
-    overflow: hidden;
-    border-radius: var(--ui-pill-radius);
-    background: transparent;
-    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
-}
-
-.home-search :deep(.n-input-wrapper) {
-    min-height: 54px;
-    padding-left: var(--ui-space-5);
-    padding-right: var(--ui-space-4);
-}
-
-.home-search :deep(.n-input__input) {
-    display: flex;
-    align-items: center;
-}
-
-.home-search :deep(.n-input__input-el) {
-    font-size: 16px;
-}
-
-.home-search-button {
-    width: 28px;
-    height: 28px;
 }
 
 .home-information {
@@ -413,11 +364,6 @@ function handleSearch() {
 
     .home-slogan {
         font-size: 14px;
-    }
-
-    .home-search :deep(.n-input-wrapper) {
-        min-height: 50px;
-        padding-left: var(--ui-space-4);
     }
 
     .stats-section {
