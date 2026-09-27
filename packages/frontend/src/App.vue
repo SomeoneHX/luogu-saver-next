@@ -220,6 +220,7 @@ import StarPrompt from '@/components/StarPrompt.vue';
 import MobileLiquidTabBar from '@/components/MobileLiquidTabBar.vue';
 import GlassTopBar from '@/components/GlassTopBar.vue';
 import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import { requestRedraw } from '@/liquid-glass/core/animation';
 import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import LuoguLogo from '@/components/icons/LuoguLogo.vue';
 import SiteNotificationCenter from '@/components/SiteNotificationCenter.vue';
@@ -439,6 +440,10 @@ const uiThemeVars = ref<UiThemeVars>(
 provide(uiThemeKey, uiThemeVars);
 provide(uiThemeModeKey, uiThemeMode);
 provide(uiThemePresetKey, uiThemePreset);
+
+// 玻璃面把主题色画在自己的 canvas 上，而重绘签名只记录回调存不存在、不记录它读到什么，
+// 所以主题一变必须显式请求重绘，否则底栏会一直留着上一个模式的底色。
+watch(uiThemeVars, requestRedraw, { deep: true });
 
 const systemThemeMedia = window.matchMedia?.('(prefers-color-scheme: dark)');
 const applySystemTheme = () => {
