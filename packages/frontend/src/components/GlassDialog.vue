@@ -79,7 +79,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
     <Teleport to="body">
-        <Transition name="glass-dialog" @after-leave="emit('closed')">
+        <!-- `appear`：命令式对话框是挂载时就已经在显示，不加它首次渲染不会播进场。 -->
+        <Transition name="glass-dialog" appear @after-leave="emit('closed')">
             <div v-if="show" class="glass-dialog" @click.self="onScrimClick">
                 <div class="glass-dialog__scrim" :style="{ background: dimColor }"></div>
 
