@@ -57,23 +57,29 @@ function onDrawSurface(
 
 <template>
     <Transition name="glass-toast" appear :duration="200" @after-leave="emit('closed')">
-        <GlassSurface
-            v-if="!closing"
-            class="glass-toast"
-            content-class="glass-toast__row"
-            :backdrop="RootBackdrop"
-            :shape="Capsule"
-            :effects="effects"
-            :highlight="highlight"
-            :on-draw-surface="onDrawSurface"
-        >
-            <component :is="icon" :size="18" :style="{ color: accent }" aria-hidden="true" />
-            <span class="glass-toast__text">{{ text }}</span>
-        </GlassSurface>
+        <div v-if="!closing" class="glass-toast">
+            <GlassSurface
+                content-class="glass-toast__row"
+                :backdrop="RootBackdrop"
+                :shape="Capsule"
+                :effects="effects"
+                :highlight="highlight"
+                :on-draw-surface="onDrawSurface"
+            >
+                <component :is="icon" :size="18" :style="{ color: accent }" aria-hidden="true" />
+                <span class="glass-toast__text">{{ text }}</span>
+            </GlassSurface>
+        </div>
     </Transition>
 </template>
 
 <style scoped>
+/* 过渡类落在这层壳上，玻璃面是它的后代——淡出规则按后代选择器找 `.glass-surface`，
+   类若加在玻璃面自己身上就落空了：缩放会动、淡出不会。 */
+.glass-toast {
+    display: inline-flex;
+}
+
 .glass-toast-enter-active,
 .glass-toast-leave-active {
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
