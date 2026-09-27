@@ -153,32 +153,31 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 .glass-dialog__title {
     margin: 0;
-    padding: var(--ui-space-6) var(--ui-space-6) var(--ui-space-3);
-    font-size: 20px;
-    font-weight: 600;
+    padding: 24px 28px 12px 28px;
+    font-size: 24px;
+    font-weight: 500;
 }
 
 .glass-dialog__body {
     min-height: 0;
-    padding: 0 var(--ui-space-6);
+    padding: 12px 24px;
     overflow-y: auto;
 }
 
 /* 没有标题 / 没有按钮行时，由内容自己把上下留白补上。 */
 .glass-dialog__body.is-titleless {
-    padding-top: var(--ui-space-6);
+    padding-top: 24px;
 }
 
 .glass-dialog__body.is-footerless {
-    padding-bottom: var(--ui-space-6);
+    padding-bottom: 24px;
 }
 
 .glass-dialog__actions {
     display: flex;
     flex: none;
     align-items: center;
-    justify-content: flex-end;
-    gap: var(--ui-space-3);
-    padding: var(--ui-space-5) var(--ui-space-6);
+    gap: var(--ui-space-4);
+    padding: 12px 24px 24px 24px;
 }
 </style>

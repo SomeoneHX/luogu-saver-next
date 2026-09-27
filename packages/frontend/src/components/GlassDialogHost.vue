@@ -6,18 +6,8 @@ import {
     clickGlassDialogNegative,
     clickGlassDialogPositive,
     dismissGlassDialog,
-    glassDialogStack,
-    type GlassDialogRecord
+    glassDialogStack
 } from '@/composables/useGlassDialog.ts';
-
-const confirmVariants = {
-    info: 'accent',
-    success: 'success',
-    warning: 'accent',
-    error: 'danger'
-} as const;
-
-const confirmVariant = (dialog: GlassDialogRecord) => confirmVariants[dialog.type];
 </script>
 
 <template>
@@ -41,7 +31,6 @@ const confirmVariant = (dialog: GlassDialogRecord) => confirmVariants[dialog.typ
                 {{ dialog.negativeText }}
             </GlassDialogButton>
             <GlassDialogButton
-                :variant="confirmVariant(dialog)"
                 :loading="dialog.loading"
                 @click="clickGlassDialogPositive(dialog.id)"
             >
@@ -55,6 +44,8 @@ const confirmVariant = (dialog: GlassDialogRecord) => confirmVariants[dialog.typ
 .glass-dialog-host__text {
     margin: 0;
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.4;
+    /* 上游把正文降一档不透明度，读作次要信息。 */
+    opacity: 0.68;
 }
 </style>

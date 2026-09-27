@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /**
- * 玻璃对话框里的胶囊按钮，对应上游 `DialogContent` 的取消 / 强调两种：
- * 取消是半透明白（暗色下为半透明黑），强调是主题强调色，文字白色。
+ * 玻璃对话框里的胶囊按钮，对应上游 `DialogContent` 的那两枚：
+ * 次要键是半透明白（暗色下半透明黑），主键是实心主题色 + 白字，按压效果由 `RippleSurface` 提供。
  */
 import { computed, inject } from 'vue';
 
+import RippleSurface from '@/liquid-glass/components/RippleSurface.vue';
 import { uiThemeKey } from '@/styles/theme/themeKeys.ts';
 import { isLightColor } from '@/utils/ui-theme.ts';
 
@@ -17,7 +18,7 @@ const props = withDefaults(
     { variant: 'accent', loading: false, disabled: false }
 );
 
-const emit = defineEmits<{ click: [event: MouseEvent] }>();
+const emit = defineEmits<{ click: [] }>();
 
 const uiThemeVars = inject(uiThemeKey);
 const isLightTheme = computed(() => isLightColor(uiThemeVars?.value.bodyColor ?? '#ffffff'));
@@ -36,40 +37,64 @@ const background = computed(() => {
 });
 
 const color = computed(() => (props.variant === 'plain' ? 'var(--ui-text-color)' : '#ffffff'));
+
+/** 上游：取消键的涟漪取当前模式的反色，强调键用白色。 */
+const rippleColor = computed(() => {
+    if (props.variant !== 'plain') return '#ffffff';
+    return isLightTheme.value ? '#000000' : '#ffffff';
+});
+
+const inactive = computed(() => props.disabled || props.loading);
+
+/** 涟漪宿主是 div，键盘路径要自己补上。 */
+function onKeydown(event: KeyboardEvent): void {
+    if (inactive.value || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    emit('click');
+}
 </script>
 
 <template>
-    <button
-        type="button"
+    <RippleSurface
         class="glass-dialog-button"
+        :class="{ 'is-inactive': inactive }"
         :style="{ background, color }"
-        :disabled="disabled || loading"
-        @click="emit('click', $event)"
+        :color="rippleColor"
+        role="button"
+        :tabindex="inactive ? -1 : 0"
+        :aria-disabled="inactive"
+        @click="emit('click')"
+        @keydown="onKeydown"
     >
         <span v-if="loading" class="glass-dialog-button__spinner" aria-hidden="true"></span>
         <slot />
-    </button>
+    </RippleSurface>
 </template>
 
 <style scoped>
 .glass-dialog-button {
-    display: inline-flex;
+    display: flex;
+    flex: 1 1 0;
     align-items: center;
     justify-content: center;
-    gap: var(--ui-space-2);
-    min-width: 88px;
-    height: 44px;
-    padding: 0 var(--ui-space-5);
-    font: inherit;
-    font-size: 15px;
-    border: 0;
+    height: 48px;
+    font-size: 16px;
     border-radius: var(--ui-pill-radius);
     cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.glass-dialog-button:disabled {
-    cursor: default;
+.glass-dialog-button :deep(.ripple-host__content) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-space-2);
+}
+
+.glass-dialog-button.is-inactive {
     opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
 }
 
 .glass-dialog-button__spinner {

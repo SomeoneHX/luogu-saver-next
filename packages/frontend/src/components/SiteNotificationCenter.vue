@@ -272,8 +272,13 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    /* 对话框的按钮行是右对齐的，这里要自己撑满才能把切换器留在左边。 */
+    /* 对话框的按钮行是等分撑满的，这里要自己撑满才能把切换器留在左边。 */
     width: 100%;
+}
+
+/* 切换器与确认键挤在一行，两者都不参与对话框那套等分。 */
+.popup-actions :deep(.glass-dialog-button) {
+    flex: 0 1 auto;
 }
 
 .popup-switcher {
