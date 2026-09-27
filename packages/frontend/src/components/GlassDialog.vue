@@ -79,8 +79,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 <template>
     <Teleport to="body">
-        <!-- `appear`：命令式对话框是挂载时就已经在显示，不加它首次渲染不会播进场。 -->
-        <Transition name="glass-dialog" appear @after-leave="emit('closed')">
+        <!--
+            `appear`：命令式对话框是挂载时就已经在显示，不加它首次渲染不会播进场。
+            `:duration`：动画都在子节点上（玻璃的祖先不能带 opacity），Vue 自己测不到时长，
+            显式给出来它才会等动画放完再移除节点；与下面样式里的 0.2s 对应。
+        -->
+        <Transition name="glass-dialog" appear :duration="200" @after-leave="emit('closed')">
             <div v-if="show" class="glass-dialog" @click.self="onScrimClick">
                 <div class="glass-dialog__scrim" :style="{ background: dimColor }"></div>
 
