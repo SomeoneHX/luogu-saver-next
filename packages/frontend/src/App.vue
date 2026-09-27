@@ -63,7 +63,13 @@
                                             <ArrowUp :size="22" aria-hidden="true" />
                                         </LiquidButton>
                                     </n-back-top>
-                                    <router-view />
+                                    <router-view v-slot="{ Component }">
+                                        <Transition :name="pageTransition" mode="out-in">
+                                            <div :key="route.path" class="page">
+                                                <component :is="Component" />
+                                            </div>
+                                        </Transition>
+                                    </router-view>
                                 </div>
                                 <n-layout-footer bordered class="app-footer">
                                     <n-grid class="footer-grid" cols="1 s:2" responsive="screen">
@@ -261,6 +267,29 @@ mobileViewportMedia.addEventListener('change', event => {
 /** 顶栏只出现在底栏覆盖不到的路由上。 */
 const showMobileTopBar = computed(
     () => showMobileTabBar.value && !MOBILE_TAB_KEYS.includes(String(route.meta.activeMenu ?? ''))
+);
+
+/**
+ * 移动端切页动画：底栏里的两个页面按索引左右滑，其余切换淡一档；桌面端不套动画。
+ * 索引取自 `MOBILE_TAB_KEYS`，与底栏的排列一致。
+ */
+const pageTransition = ref('');
+
+watch(
+    () => route.meta.activeMenu,
+    (to, from) => {
+        if (!showMobileTabBar.value) {
+            pageTransition.value = '';
+            return;
+        }
+        const toIndex = MOBILE_TAB_KEYS.indexOf(String(to ?? ''));
+        const fromIndex = MOBILE_TAB_KEYS.indexOf(String(from ?? ''));
+        if (toIndex < 0 || fromIndex < 0 || toIndex === fromIndex) {
+            pageTransition.value = 'page-fade';
+            return;
+        }
+        pageTransition.value = toIndex > fromIndex ? 'page-slide-forward' : 'page-slide-back';
+    }
 );
 
 const handleMouseEnter = () => {
@@ -1068,6 +1097,42 @@ setInterval(() => {
     max-width: min(1680px, 100%);
     margin: 0 auto;
     min-height: calc(100vh - var(--ui-page-padding) - var(--ui-page-padding));
+}
+
+/*
+ * 切页：底栏里的两个页面按索引左右滑，其余淡一档。位移只用在滑动上——`transform` 会让页面内
+ * `position: fixed` 的元素改以它为包含块，而带 fixed 元素的几页（文章 / 剪贴板 / 用户）都不在底栏里。
+ * 横向溢出由 `.n-layout-scroll-container` 的 `overflow-x: hidden` 收掉。
+ */
+.page-slide-forward-enter-active,
+.page-slide-forward-leave-active,
+.page-slide-back-enter-active,
+.page-slide-back-leave-active {
+    transition:
+        transform 0.18s cubic-bezier(0.2, 0, 0, 1),
+        opacity 0.18s ease;
+}
+
+.page-slide-forward-enter-from,
+.page-slide-back-leave-to {
+    opacity: 0;
+    transform: translateX(24px);
+}
+
+.page-slide-back-enter-from,
+.page-slide-forward-leave-to {
+    opacity: 0;
+    transform: translateX(-24px);
+}
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+    transition: opacity 0.18s ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+    opacity: 0;
 }
 
 :deep(.n-back-top:hover) {
