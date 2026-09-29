@@ -3,18 +3,18 @@ import { computed, h, onMounted, ref } from 'vue';
 import {
     NAlert,
     NButton,
-    NCard,
     NDataTable,
     NEllipsis,
     NInput,
-    NModal,
     NRadioButton,
     NRadioGroup,
     NSpace,
     NSpin,
-    NTag,
-    useMessage
+    NTag
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
+import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import type { DataTableColumns } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 import Card from '@/components/Card.vue';
@@ -29,7 +29,7 @@ import { currentAuth } from '@/utils/auth.ts';
 import { hasPermission, Permission } from '@/utils/permissions.ts';
 import { formatDate } from '@/utils/render';
 
-const message = useMessage();
+const message = useGlassToast();
 
 const canManageContent = computed(() =>
     hasPermission(currentAuth.value?.role, Permission.MANAGE_CONTENT)
@@ -358,48 +358,47 @@ onMounted(() => {
         </n-spin>
     </Card>
 
-    <n-modal :show="reviewAction !== null" @update:show="value => !value && closeReviewModal()">
-        <n-card
-            v-if="reviewTarget"
-            :bordered="false"
-            role="dialog"
-            aria-modal="true"
-            :title="reviewModalTitle"
-            :style="{ width: 'min(520px, calc(100vw - 32px))' }"
-        >
-            <n-space vertical size="large">
-                <n-alert :type="reviewAction === 'approve' ? 'warning' : 'info'" :bordered="true">
-                    <template v-if="reviewAction === 'approve'">
-                        同意后，{{ reviewTarget.targetType === 'article' ? '文章' : '剪贴板' }}
-                        {{ reviewTarget.targetId }} 将被删除，申请人会收到通知。
-                    </template>
-                    <template v-else> 拒绝后，内容保持不变，申请人会收到通知。 </template>
-                </n-alert>
+    <GlassDialog
+        :show="reviewAction !== null"
+        :title="reviewModalTitle"
+        @update:show="value => !value && closeReviewModal()"
+    >
+        <n-space v-if="reviewTarget" vertical size="large">
+            <n-alert :type="reviewAction === 'approve' ? 'warning' : 'info'" :bordered="true">
+                <template v-if="reviewAction === 'approve'">
+                    同意后，{{ reviewTarget.targetType === 'article' ? '文章' : '剪贴板' }}
+                    {{ reviewTarget.targetId }} 将被删除，申请人会收到通知。
+                </template>
+                <template v-else> 拒绝后，内容保持不变，申请人会收到通知。 </template>
+            </n-alert>
 
-                <n-input
-                    v-model:value="reviewComment"
-                    type="textarea"
-                    placeholder="处理备注（可选，会随通知发送给申请人）"
-                    maxlength="500"
-                    show-count
-                    :autosize="{ minRows: 3, maxRows: 6 }"
-                />
-            </n-space>
+            <n-input
+                v-model:value="reviewComment"
+                type="textarea"
+                placeholder="处理备注（可选，会随通知发送给申请人）"
+                maxlength="500"
+                show-count
+                :autosize="{ minRows: 3, maxRows: 6 }"
+            />
+        </n-space>
 
-            <template #footer>
-                <div class="modal-actions">
-                    <n-button :disabled="reviewSubmitting" @click="closeReviewModal">取消</n-button>
-                    <n-button
-                        :type="reviewAction === 'approve' ? 'success' : 'error'"
-                        :loading="reviewSubmitting"
-                        @click="submitReview"
-                    >
-                        确认{{ reviewAction === 'approve' ? '通过' : '拒绝' }}
-                    </n-button>
-                </div>
-            </template>
-        </n-card>
-    </n-modal>
+        <template #footer>
+            <GlassDialogButton
+                variant="plain"
+                :disabled="reviewSubmitting"
+                @click="closeReviewModal"
+            >
+                取消
+            </GlassDialogButton>
+            <GlassDialogButton
+                :variant="reviewAction === 'approve' ? 'success' : 'danger'"
+                :loading="reviewSubmitting"
+                @click="submitReview"
+            >
+                确认{{ reviewAction === 'approve' ? '通过' : '拒绝' }}
+            </GlassDialogButton>
+        </template>
+    </GlassDialog>
 </template>
 
 <style scoped>
@@ -425,11 +424,5 @@ onMounted(() => {
 
 .review-card :deep(.handled-line) {
     font-size: 13px;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
 }
 </style>

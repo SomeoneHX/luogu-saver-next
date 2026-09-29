@@ -1,15 +1,7 @@
 <script setup lang="ts">
 import { computed, h, onMounted, ref } from 'vue';
-import {
-    NAlert,
-    NAvatar,
-    NButton,
-    NDataTable,
-    NInput,
-    NInputNumber,
-    NSpin,
-    useMessage
-} from 'naive-ui';
+import { NAlert, NAvatar, NButton, NDataTable, NInput, NInputNumber, NSpin } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import type { DataTableColumns } from 'naive-ui';
 import Card from '@/components/Card.vue';
 import { getAdminUsers, updateAdminUserRole, type AdminUser } from '@/api/admin.ts';
@@ -17,7 +9,7 @@ import { currentAuth } from '@/utils/auth.ts';
 import { hasPermission, Permission } from '@/utils/permissions.ts';
 import { formatDate } from '@/utils/render';
 
-const message = useMessage();
+const message = useGlassToast();
 
 const users = ref<AdminUser[]>([]);
 const loading = ref(false);

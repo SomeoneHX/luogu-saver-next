@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, type Ref } from 'vue';
-import {
-    NAlert,
-    NButton,
-    NIcon,
-    NSelect,
-    NSpace,
-    NSpin,
-    NSwitch,
-    NTag,
-    useMessage
-} from 'naive-ui';
+import { NAlert, NButton, NIcon, NSelect, NSpace, NSpin, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import {
     ChartNoAxesCombined,
     Cloud,
@@ -23,6 +14,7 @@ import {
 } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
+import GlassSwitch from '@/components/GlassSwitch.vue';
 import {
     clearAuthToken,
     isAuthenticated,
@@ -45,7 +37,7 @@ import { formatDate } from '@/utils/render.ts';
 import { useKnowledgeBase } from '@/utils/knowledge-base.ts';
 import { useLuoguSource } from '@/utils/luogu-source.ts';
 
-const message = useMessage();
+const message = useGlassToast();
 const loading = ref(false);
 const currentUser = ref<AuthMeResponse | null>(null);
 const errorMessage = ref('');
@@ -236,7 +228,7 @@ onMounted(loadCurrentUser);
                                 开启后用于匿名推荐；关闭后后续请求不会发送设备 ID。
                             </div>
                         </div>
-                        <n-switch v-model:value="trackingEnabled" />
+                        <GlassSwitch v-model:value="trackingEnabled" />
                     </div>
 
                     <div class="detail-list">
@@ -371,7 +363,7 @@ onMounted(loadCurrentUser);
                             <div class="setting-title">侧边栏 Logo 点击导航</div>
                             <div class="setting-desc">启用后点击侧边栏 Logo 会跳转到首页</div>
                         </div>
-                        <n-switch v-model:value="logoNavEnabled" />
+                        <GlassSwitch v-model:value="logoNavEnabled" />
                     </div>
                 </n-space>
             </Card>
@@ -431,6 +423,11 @@ onMounted(loadCurrentUser);
     min-height: 100%;
     min-width: 0;
     overflow: hidden;
+}
+
+/* 圆角裁切的祖先会让 Chromium 不渲染 backdrop-filter 的 url() 滤镜，含玻璃开关的卡片不裁切。 */
+.settings-card:has(.glass-switch) {
+    overflow: visible;
 }
 
 .compact-card {

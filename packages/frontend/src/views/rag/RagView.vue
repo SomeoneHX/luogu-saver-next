@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NAlert, NButton, NCheckbox, NInput, NProgress, NSpace, NTag, useMessage } from 'naive-ui';
+import { NAlert, NButton, NCheckbox, NInput, NProgress, NSpace, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { MessageCircleMore, Newspaper } from 'lucide-vue-next';
 import CardTitle from '@/components/CardTitle.vue';
 import Card from '@/components/Card.vue';
@@ -26,7 +27,7 @@ type ProgressStep = {
     detail: string;
 };
 
-const message = useMessage();
+const message = useGlassToast();
 const router = useRouter();
 const question = ref('');
 const loading = ref(false);

@@ -15,9 +15,9 @@ import {
     NInputNumber,
     NPagination,
     NSelect,
-    NSpin,
-    useMessage
+    NSpin
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import type { DataTableColumns } from 'naive-ui';
 import { Hammer, ExternalLink, RefreshCw, Search } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
@@ -38,7 +38,7 @@ const DEFAULT_PAGE_SIZE = 50;
 
 type ExpandedPanel = 'permissions' | 'display' | null;
 
-const message = useMessage();
+const message = useGlassToast();
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
 const judgements = ref<JudgementItem[]>([]);

@@ -12,9 +12,9 @@ import {
     NSelect,
     NSpace,
     NSpin,
-    NTag,
-    useMessage
+    NTag
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { CalendarDays, Newspaper, User, Search } from 'lucide-vue-next';
 import CardTitle from '@/components/CardTitle.vue';
 import Card from '@/components/Card.vue';
@@ -25,7 +25,7 @@ import { getCategoryTagStyle } from '@/utils/article.ts';
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
+const message = useGlassToast();
 const AUTHOR_UID_PATTERN = /(?:^|\s)(?:author|uid|作者)\s*[:：]\s*(\d+)(?=\s|$)/i;
 
 function parseRouteNumber(value: unknown): number | null {

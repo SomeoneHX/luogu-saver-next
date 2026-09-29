@@ -2,7 +2,6 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
-    useMessage,
     NSpace,
     NButton,
     NIcon,
@@ -12,9 +11,10 @@ import {
     NTimeline,
     NTimelineItem,
     NSpin,
-    NResult,
-    useDialog
+    NResult
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
+import { useGlassDialog } from '@/composables/useGlassDialog';
 import {
     Share2,
     Copy,
@@ -65,8 +65,8 @@ import { useLuoguSource } from '@/utils/luogu-source.ts';
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
-const dialog = useDialog();
+const message = useGlassToast();
+const dialog = useGlassDialog();
 const {
     isSaving,
     hasUpdate,
@@ -248,7 +248,6 @@ const trackSaveTask = (taskId?: string) => {
                     notifyWorkflowSubmitted(response, '重试请求已提交');
                 },
                 maskClosable: false,
-                closable: false,
                 closeOnEsc: false
             });
         }

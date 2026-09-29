@@ -1,11 +1,13 @@
 import { ref, onUnmounted } from 'vue';
-import { useDialog, useMessage } from 'naive-ui';
+
 import { useRouter } from 'vue-router';
 import socket from '@/utils/websocket';
+import { useGlassDialog } from '@/composables/useGlassDialog';
+import { useGlassToast } from '@/composables/useGlassToast';
 
 export function useContentSaver() {
-    const dialog = useDialog();
-    const message = useMessage();
+    const dialog = useGlassDialog();
+    const message = useGlassToast();
     const router = useRouter();
     const isSaving = ref(false);
     const hasUpdate = ref(false);
@@ -51,7 +53,6 @@ export function useContentSaver() {
             content: '该内容尚未被收录，是否立即保存？',
             positiveText: '立即保存',
             negativeText: '返回',
-            closable: false,
             closeOnEsc: false,
             maskClosable: false,
             onPositiveClick: async () => {

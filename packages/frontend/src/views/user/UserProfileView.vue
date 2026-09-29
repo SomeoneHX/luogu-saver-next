@@ -13,10 +13,10 @@ import {
     NAlert,
     NPagination,
     NTimeline,
-    NTimelineItem,
-    useDialog,
-    useMessage
+    NTimelineItem
 } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
+import { useGlassDialog } from '@/composables/useGlassDialog';
 import { RefreshCw, Trophy, BookOpenText, CircleUserRound, Share2, Hammer } from 'lucide-vue-next';
 
 import { getUserProfile, refreshUserProfile } from '@/api/user';
@@ -33,8 +33,8 @@ import { useLuoguSource } from '@/utils/luogu-source.ts';
 import { formatDate } from '@/utils/render.ts';
 
 const route = useRoute();
-const message = useMessage();
-const dialog = useDialog();
+const message = useGlassToast();
+const dialog = useGlassDialog();
 const { buildLuoguUrl } = useLuoguSource();
 const {
     isSaving,
@@ -205,7 +205,6 @@ function trackSaveTask(taskId?: string) {
                     saveDialogShown.value = false;
                 },
                 maskClosable: false,
-                closable: false,
                 closeOnEsc: false
             });
         }
@@ -230,7 +229,6 @@ function promptSaveProfileIfNeeded() {
         content: '该用户主页尚未被收录，是否立即发起保存任务？',
         positiveText: '立即保存',
         negativeText: '取消',
-        closable: false,
         closeOnEsc: false,
         maskClosable: false,
         onPositiveClick: async () => {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { NAlert, NButton, NCard, NModal } from 'naive-ui';
+import { NAlert } from 'naive-ui';
+import GlassDialog from '@/components/GlassDialog.vue';
+import GlassDialogButton from '@/components/GlassDialogButton.vue';
 import {
     getCurrentNotifications,
     markNotificationRead,
@@ -177,44 +179,43 @@ onMounted(() => {
         </n-alert>
     </div>
 
-    <n-modal :show="popupVisible" @update:show="handlePopupShowChange">
-        <n-card
+    <GlassDialog
+        :show="popupVisible"
+        :title="visiblePopup?.title ?? ''"
+        @update:show="handlePopupShowChange"
+    >
+        <!-- Admin-managed HTML notification content. -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div
             v-if="visiblePopup"
-            :bordered="false"
-            role="dialog"
-            aria-modal="true"
-            :title="visiblePopup.title"
-            :style="{ width: 'min(560px, calc(100vw - 32px))' }"
-        >
-            <!-- Admin-managed HTML notification content. -->
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="notification-html popup-content" v-html="visiblePopup.content"></div>
-            <template #footer>
-                <div class="popup-actions">
-                    <div v-if="visiblePopups.length > 1" class="popup-switcher">
-                        <n-button
-                            size="small"
-                            :disabled="activePopupIndex === 0"
-                            @click="showPreviousPopup"
-                        >
-                            上一条
-                        </n-button>
-                        <span class="popup-index">{{ popupPositionText }}</span>
-                        <n-button
-                            size="small"
-                            :disabled="activePopupIndex >= visiblePopups.length - 1"
-                            @click="showNextPopup"
-                        >
-                            下一条
-                        </n-button>
-                    </div>
-                    <n-button type="primary" @click="dismissNotification(visiblePopup)">
-                        知道了
-                    </n-button>
+            class="notification-html popup-content"
+            v-html="visiblePopup.content"
+        ></div>
+        <template #footer>
+            <div v-if="visiblePopup" class="popup-actions">
+                <div v-if="visiblePopups.length > 1" class="popup-switcher">
+                    <GlassDialogButton
+                        variant="plain"
+                        :disabled="activePopupIndex === 0"
+                        @click="showPreviousPopup"
+                    >
+                        上一条
+                    </GlassDialogButton>
+                    <span class="popup-index">{{ popupPositionText }}</span>
+                    <GlassDialogButton
+                        variant="plain"
+                        :disabled="activePopupIndex >= visiblePopups.length - 1"
+                        @click="showNextPopup"
+                    >
+                        下一条
+                    </GlassDialogButton>
                 </div>
-            </template>
-        </n-card>
-    </n-modal>
+                <GlassDialogButton @click="dismissNotification(visiblePopup)">
+                    知道了
+                </GlassDialogButton>
+            </div>
+        </template>
+    </GlassDialog>
 </template>
 
 <style scoped>
@@ -271,6 +272,13 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    /* 对话框的按钮行是等分撑满的，这里要自己撑满才能把切换器留在左边。 */
+    width: 100%;
+}
+
+/* 切换器与确认键挤在一行，两者都不参与对话框那套等分。 */
+.popup-actions :deep(.glass-dialog-button) {
+    flex: 0 1 auto;
 }
 
 .popup-switcher {

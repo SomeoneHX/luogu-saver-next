@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NIcon, NTooltip, useMessage } from 'naive-ui';
+import { NButton, NIcon, NTooltip } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { LayoutGrid, Star } from 'lucide-vue-next';
 import { canUseFocusView, type ViewMode } from '@/composables/useViewMode';
 
@@ -11,7 +12,7 @@ const emit = defineEmits<{
     'update:modelValue': [value: ViewMode];
 }>();
 
-const message = useMessage();
+const message = useGlassToast();
 
 const handleSwitch = (mode: ViewMode) => {
     if (mode === 'focus' && !canUseFocusView(window.innerWidth)) {

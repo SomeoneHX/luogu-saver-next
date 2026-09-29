@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import {
-    NBadge,
-    NButton,
-    NDrawer,
-    NDrawerContent,
-    NEmpty,
-    NIcon,
-    NSpin,
-    useMessage
-} from 'naive-ui';
+import { NBadge, NButton, NDrawer, NDrawerContent, NEmpty, NSpin } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { Bell } from 'lucide-vue-next';
+import LiquidButton from '@/liquid-glass/components/LiquidButton.vue';
+import { RootBackdrop } from '@/liquid-glass/core/backdrop';
 import {
     getUnreadNotificationCount,
     getUserNotifications,
@@ -23,7 +17,7 @@ import { formatDate } from '@/utils/render';
 
 const UNREAD_POLL_INTERVAL_MS = 120_000;
 
-const message = useMessage();
+const message = useGlassToast();
 
 const drawerVisible = ref(false);
 const notifications = ref<UserNotificationItem[]>([]);
@@ -132,17 +126,14 @@ onBeforeUnmount(() => {
     <template v-if="isAuthenticated">
         <div class="notification-bell-shell">
             <n-badge :value="unreadCount" :max="99" :show="unreadCount > 0">
-                <n-button
-                    circle
-                    secondary
+                <LiquidButton
+                    :backdrop="RootBackdrop"
                     class="app-floating-control notification-bell"
                     aria-label="站内通知"
                     @click="openDrawer"
                 >
-                    <template #icon>
-                        <n-icon :component="Bell" />
-                    </template>
-                </n-button>
+                    <Bell :size="20" aria-hidden="true" />
+                </LiquidButton>
             </n-badge>
         </div>
 
@@ -211,10 +202,6 @@ onBeforeUnmount(() => {
     top: var(--ui-floating-control-inset);
     right: var(--ui-floating-control-inset);
     z-index: 1100;
-}
-
-.notification-bell {
-    box-shadow: var(--ui-elevated-shadow);
 }
 
 .empty-state {

@@ -19,6 +19,9 @@
     --ui-floating-control-size: 44px;
     --ui-floating-control-inset: var(--ui-space-6);
     --ui-floating-control-gap: var(--ui-space-3);
+    /* 64px glass bar + 8px bottom gutter + 16px clearance above it. */
+    --ui-mobile-tab-bar-height: calc(88px + env(safe-area-inset-bottom));
+    --ui-mobile-top-bar-height: calc(56px + env(safe-area-inset-top));
     --ui-body-color: #f6f9fd;
     --ui-body-gradient-start: #f7fbff;
     --ui-body-gradient-end: #eef6ff;
@@ -106,22 +109,31 @@
     --article-tag-color: var(--ui-muted-text-color);
 }
 
+/* 悬浮控件的外观由 LiquidButton 的玻璃面提供，这里只管尺寸、图标配色与定位。 */
 .app-floating-control {
     width: var(--ui-floating-control-size) !important;
     height: var(--ui-floating-control-size) !important;
     min-width: var(--ui-floating-control-size) !important;
     padding: 0 !important;
     color: var(--ui-back-top-icon-color) !important;
-    background: var(--ui-back-top-color) !important;
     border: 0 !important;
     border-radius: var(--ui-pill-radius) !important;
-    box-shadow: var(--ui-elevated-shadow) !important;
+}
+
+/*
+ * The liquid glass library's additive layer blends with `plus-lighter`, which makes its parent
+ * `.glass-surface` an isolated group; the lens sibling's `backdrop-filter: url(#…)` then samples
+ * that group instead of the page, so the SVG refraction graph receives an empty `SourceGraphic`
+ * and the lens never bends anything. Compositing the layer normally costs the additive highlight
+ * and restores the refraction.
+ */
+.glass-surface__additive {
+    mix-blend-mode: normal !important;
 }
 
 .app-floating-control:hover,
 .app-floating-control:focus {
     color: var(--ui-back-top-icon-hover-color) !important;
-    background: var(--ui-back-top-hover-color) !important;
 }
 
 .app-floating-control .n-button__border,
@@ -129,20 +141,33 @@
     border: 0 !important;
 }
 
+/* n-back-top 的根元素只负责定位与显隐，它的白底和阴影由里面的玻璃按钮取代。 */
 .back-top-action {
     right: var(--ui-floating-control-inset) !important;
     bottom: calc(
         var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
             var(--ui-floating-control-gap)
     ) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* n-back-top 根元素里的玻璃按钮按悬浮控件尺寸走，而不是 LiquidButton 自带的 48px 高与内容宽度。 */
+.back-top-action .liquid-button {
+    width: var(--ui-floating-control-size) !important;
+    height: var(--ui-floating-control-size) !important;
+}
+
+/* 内容层不留 LiquidButton 的 16px 内边距：44px 宽的按钮里它会把这个尺寸的图标横向压扁。 */
+.app-floating-control .liquid-button__content {
+    padding: 0 !important;
 }
 
 @media (max-width: 768px) {
     .back-top-action {
         bottom: calc(
-            var(--ui-floating-control-inset) + var(--ui-floating-control-size) +
-                var(--ui-floating-control-size) + var(--ui-floating-control-gap) +
-                var(--ui-floating-control-gap)
+            var(--ui-mobile-tab-bar-height) + var(--ui-floating-control-gap) +
+                var(--ui-floating-control-size) + var(--ui-floating-control-gap)
         ) !important;
     }
 }

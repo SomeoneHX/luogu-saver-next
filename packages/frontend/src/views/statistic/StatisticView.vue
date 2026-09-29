@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { NButton, NIcon, NSpin, NTag, useMessage } from 'naive-ui';
+import { NButton, NIcon, NSpin, NTag } from 'naive-ui';
+import { useGlassToast } from '@/composables/useGlassToast';
 import { CircleCheck, Activity, RefreshCw, Server, Clock3, TriangleAlert } from 'lucide-vue-next';
 import Card from '@/components/Card.vue';
 import CardTitle from '@/components/CardTitle.vue';
@@ -18,7 +19,7 @@ import { formatDate } from '@/utils/render.ts';
 const QUEUE_STATS_ROOM = 'stats:queues';
 const QUEUE_STATS_EVENT = 'stats:queues:update';
 
-const message = useMessage();
+const message = useGlassToast();
 const loading = ref(false);
 const stats = ref<QueueStatsResponse | null>(null);
 const socket = websocket.getInstance();
